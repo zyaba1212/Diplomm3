@@ -25,12 +25,21 @@
             </div>
             
             <div class="control-group">
+                <label class="control-label">{% trans "Вращение:" %}</label>
+                <div class="btn-group rotation-controls">
+                    <button id="btnRotate" class="rotation-btn active">{% trans "Вкл" %}</button>
+                    <button id="btnStop" class="rotation-btn">{% trans "Выкл" %}</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
                 <label class="control-label">{% trans "Элементы:" %}</label>
                 <div class="checkbox-group">
                     <label><input type="checkbox" id="chkSatellites" checked> {% trans "Спутники" %}</label>
                     <label><input type="checkbox" id="chkStations" checked> {% trans "Станции" %}</label>
                     <label><input type="checkbox" id="chkRouters" checked> {% trans "Маршрутизаторы" %}</label>
                     <label><input type="checkbox" id="chkCables" checked> {% trans "Кабели" %}</label>
+		    <label><input type="checkbox" id="chkProposed" checked> {% trans "Предложенные" %}</label>
                 </div>
             </div>
             

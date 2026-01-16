@@ -230,3 +230,201 @@ def admin_custom_view(request):
     }
     
     return render(request, 'admin/custom_admin.html', context)
+
+def add_demo_data():
+    """Добавление демо данных для тестирования"""
+    from django.utils import timezone
+    from datetime import timedelta
+    import uuid
+    
+    # Добавляем демо новости если их нет
+    if not NewsArticle.objects.exists():
+        NewsArticle.objects.create(
+            title='SUI представляет новые решения для оффлайн-транзакций',
+            content='Эксперименты с использованием радиоволн и Bluetooth для обработки транзакций без интернета открывают новые возможности для инфокоммуникационных систем.',
+            source='twitter',
+            url='https://twitter.com/sui/status/demo',
+            published_date=timezone.now()
+        )
+        NewsArticle.objects.create(
+            title='Starlink расширяет покрытие в удаленных регионах',
+            content='Новые спутники обеспечивают интернетом труднодоступные районы, что может быть использовано в гибридных сетевых архитектурах.',
+            source='reddit',
+            url='https://reddit.com/r/spacex/demo',
+            published_date=timezone.now() - timedelta(days=1)
+        )
+        NewsArticle.objects.create(
+            title='Развитие сетей 6G и квантовой связи',
+            content='Новые технологии открывают возможности для обработки транзакций в условиях частичного отсутствия соединения.',
+            source='habr',
+            url='https://habr.com/ru/post/demo',
+            published_date=timezone.now() - timedelta(days=2)
+        )
+        print("Демо новости добавлены")
+    
+    # Добавляем демо оборудование если его нет
+    if not NetworkElement.objects.exists():
+        # Спутники
+        NetworkElement.objects.create(
+            element_id=uuid.uuid4(),
+            name='Спутник Starlink-001',
+            element_type='satellite',
+            network_type='proposed',
+            latitude=40.7128,
+            longitude=-74.0060,
+            altitude=550,
+            description='Низкоорбитальный спутник Starlink для обеспечения связи',
+            image_url='https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Starlink_Logo.svg/1200px-Starlink_Logo.svg.png',
+            specifications={'bandwidth': '1 Gbps', 'users': '1000', 'frequency': 'Ka-band'}
+        )
+        
+        # Наземные станции
+        NetworkElement.objects.create(
+            element_id=uuid.uuid4(),
+            name='Наземная станция Минск',
+            element_type='ground_station',
+            network_type='existing',
+            latitude=53.9045,
+            longitude=27.5615,
+            altitude=0,
+            description='Главная наземная станция в Минске',
+            image_url='https://cdn-icons-png.flaticon.com/512/3095/3095110.png',
+            specifications={'capacity': '10 Gbps', 'antennas': '4', 'type': 'Satellite Gateway'}
+        )
+        
+        NetworkElement.objects.create(
+            element_id=uuid.uuid4(),
+            name='Маршрутизатор Cisco ASR-1000',
+            element_type='router',
+            network_type='existing',
+            latitude=55.7558,
+            longitude=37.6173,
+            altitude=0,
+            description='Московский узел связи',
+            image_url='https://cdn-icons-png.flaticon.com/512/3095/3095105.png',
+            specifications={'ports': '48', 'throughput': '100 Gbps', 'model': 'Cisco ASR 1000'}
+        )
+        
+        # Добавляем соединения
+        elements = NetworkElement.objects.all()
+        if elements.count() >= 3:
+            NetworkConnection.objects.create(
+                from_element=elements[0],
+                to_element=elements[1],
+                connection_type='satellite_link',
+                bandwidth='1 Gbps',
+                latency='25ms'
+            )
+            NetworkConnection.objects.create(
+                from_element=elements[1],
+                to_element=elements[2],
+                connection_type='fiber',
+                bandwidth='10 Gbps',
+                latency='5ms'
+            )
+        print("Демо оборудование добавлено")
+
+# Добавь этот вызов в функцию index (первую страницу)
+def index(request):
+    """Главная страница"""
+    # Автоматически добавляем демо данные при первом посещении
+    try:
+        add_demo_data()
+    except Exception as e:
+        print(f"Ошибка при добавлении демо данных: {e}")
+    
+    context = {
+        'title': _('Z96A - Архитектура сети будущего'),
+        'description': _('Инновационная система обработки транзакций для инфокоммуникационных систем'),
+    }
+    return render(request, 'index.html', context)
+
+def api_get_network_data_simple(request):
+    """Простая версия API для тестирования"""
+    # Сохраняем все наши сложные данные, но добавляем fallback
+    try:
+        # Пробуем вернуть нормальные данные
+        elements = NetworkElement.objects.filter(is_active=True)
+        connections = NetworkConnection.objects.all()
+        
+        data = {
+            'elements': [
+                {
+                    'id': str(elem.element_id),
+                    'name': elem.name,
+                    'type': elem.element_type,
+                    'network': elem.network_type,
+                    'lat': elem.latitude,
+                    'lng': elem.longitude,
+                    'alt': elem.altitude,
+                    'description': elem.description,
+                    'image_url': elem.image_url if elem.image_url else '',
+                }
+                for elem in elements
+            ],
+            'connections': [
+                {
+                    'from': str(conn.from_element.element_id),
+                    'to': str(conn.to_element.element_id),
+                    'type': conn.connection_type,
+                }
+                for conn in connections
+            ]
+        }
+        return JsonResponse(data)
+    except Exception as e:
+        # Если ошибка - возвращаем демо данные
+        print(f"API Error: {e}")
+        return JsonResponse({
+            'elements': [
+                {
+                    'id': 'demo1',
+                    'name': 'Спутник Starlink',
+                    'type': 'satellite',
+                    'network': 'existing',
+                    'lat': 40.7128,
+                    'lng': -74.0060,
+                    'alt': 550,
+                    'description': 'Наш существующий спутник'
+                }
+            ],
+            'connections': []
+        })
+
+def create_demo_data():
+    """Создание демо данных если база пустая"""
+    try:
+        if not NetworkElement.objects.exists():
+            from django.utils import timezone
+            import uuid
+            
+            # Оборудование
+            NetworkElement.objects.create(
+                element_id=uuid.uuid4(),
+                name='Тестовый спутник',
+                element_type='satellite',
+                network_type='existing',
+                latitude=40.7128,
+                longitude=-74.0060,
+                altitude=550,
+                description='Тестовое оборудование'
+            )
+            
+            # Новости
+            if not NewsArticle.objects.exists():
+                NewsArticle.objects.create(
+                    title='Тестовая новость',
+                    content='Проверка работы сайта',
+                    source='test',
+                    url='#',
+                    published_date=timezone.now()
+                )
+            
+            print("Демо данные созданы автоматически")
+    except Exception as e:
+        print(f"Ошибка создания демо данных: {e}")
+
+# Вызови эту функцию в начале главной страницы
+def index(request):
+    create_demo_data()  # Добавь эту строку
+    return render(request, 'index.html')

@@ -7,20 +7,25 @@ class NetworkGlobe {
         this.renderer = null;
         this.controls = null;
         this.earth = null;
+        this.clouds = null;
         this.satellites = [];
-        this.groundStations = [];
+        this.equipment = []; 
         this.connections = [];
+	this.cables = [];
+	this.cableData = null;
         this.selectedElement = null;
         
         // Настройки
         this.settings = {
             showExisting: true,
+	    showProposed: true,
             showProposed: true,
             showSatellites: true,
             showStations: true,
             showRouters: true,
             showCables: true,
-            zoomLevel: 50
+            zoomLevel: 50,
+            isRotating: true // Добавляем вращение
         };
         
         // Данные
@@ -43,6 +48,7 @@ class NetworkGlobe {
     
     async init() {
         await this.loadNetworkData();
+	await this.loadCableData();
         this.setupScene();
         this.createEarth();
         this.createNetworkElements();
@@ -50,64 +56,48 @@ class NetworkGlobe {
         this.setupEventListeners();
         this.animate();
         this.updateCounters();
+
+	console.log('Cables loaded:', this.cableData?.cables?.length || 0);
     }
     
-    async loadNetworkData() {
-        try {
-            const response = await fetch('/api/network-data/');
-            this.networkData = await response.json();
-        } catch (error) {
-            console.error('Error loading network data:', error);
-            // Загружаем демо данные
-            this.loadDemoData();
+async loadCableData() {
+    try {
+        // ПРОБУЕМ ТАК
+        const response = await fetch('/static/data/cables.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-    }
-    
-    loadDemoData() {
-        this.networkData = {
-            elements: [
+        this.cableData = await response.json();
+        console.log('Cable data loaded:', this.cableData);
+    } catch (error) {
+        console.error('Error loading cable data:', error);
+        // Создаем демо данные если файл не найден
+        this.cableData = {
+            cables: [
                 {
-                    id: '1',
-                    name: 'Спутник Starlink-001',
-                    type: 'satellite',
-                    network: 'proposed',
-                    lat: 40.7128,
-                    lng: -74.0060,
-                    alt: 550,
-                    description: 'Низкоорбитальный спутник Starlink'
-                },
-                {
-                    id: '2',
-                    name: 'Наземная станция Минск',
-                    type: 'ground_station',
-                    network: 'existing',
-                    lat: 53.9045,
-                    lng: 27.5615,
-                    alt: 0,
-                    description: 'Главная наземная станция в Минске'
-                },
-                {
-                    id: '3',
-                    name: 'Маршрутизатор Cisco ASR-1000',
-                    type: 'router',
-                    network: 'existing',
-                    lat: 55.7558,
-                    lng: 37.6173,
-                    alt: 0,
-                    description: 'Московский узел связи'
-                }
-            ],
-            connections: [
-                {
-                    from: '1',
-                    to: '2',
-                    type: 'satellite_link',
-                    bandwidth: '1 Gbps',
-                    latency: '25ms'
+                    id: 'test1',
+                    name: 'Тестовый кабель',
+                    type: 'submarine',
+                    color: '#ff0000',
+                    route: [
+                        {lat: 40.7128, lng: -74.0060, name: 'Нью-Йорк'},
+                        {lat: 51.5074, lng: -0.1278, name: 'Лондон'}
+                    ]
                 }
             ]
         };
     }
+}
+    
+  async loadNetworkData() {
+    try {
+        const response = await fetch('/ru/api/network-data/');
+        this.networkData = await response.json();
+    } catch (error) {
+        console.error('Error loading network data:', error);
+        this.loadDemoData();
+    }
+}
     
     setupScene() {
         const canvas = document.getElementById('globeCanvas');
@@ -233,22 +223,39 @@ class NetworkGlobe {
             const elementMesh = this.createElementMesh(element, position);
             
             if (elementMesh) {
+                // ДЛЯ НАЗЕМНОГО ОБОРУДОВАНИЯ - ПРИВЯЗЫВАЕМ К ПОВЕРХНОСТИ
+                if (element.type !== 'satellite') {
+                    // Направляем оборудование "вверх" от поверхности
+                    const upVector = position.clone().normalize();
+                    
+                    // Для станций и роутеров - ставим на поверхность
+                    if (element.alt === 0) {
+                        // Немного приподнимаем над поверхностью
+                        const surfacePos = position.clone().normalize().multiplyScalar(10.01);
+                        elementMesh.position.copy(surfacePos);
+                    } else {
+                        elementMesh.position.copy(position);
+                    }
+                } else {
+                    // Для спутников - обычная позиция
+                    elementMesh.position.copy(position);
+                }
+                
                 this.scene.add(elementMesh);
                 
                 // Сохраняем ссылку на данные
-                elementMesh.userData = { ...element, originalPosition: position.clone() };
+                elementMesh.userData = { 
+                    ...element, 
+                    originalPosition: position.clone(),
+                    isSatellite: element.type === 'satellite'
+                };
                 
-                // Добавляем в соответствующий массив
-                switch(element.type) {
-                    case 'satellite':
-                        this.satellites.push(elementMesh);
-                        break;
-                    case 'ground_station':
-                        this.groundStations.push(elementMesh);
-                        break;
-                    case 'router':
-                        this.groundStations.push(elementMesh);
-                        break;
+                // Добавляем в общий массив
+                this.equipment.push(elementMesh);
+                
+                // Для спутников отдельный массив
+                if (element.type === 'satellite') {
+                    this.satellites.push(elementMesh);
                 }
             }
         });
@@ -278,6 +285,8 @@ class NetworkGlobe {
                     color: this.colors.station,
                     emissive: 0x222222
                 });
+                // Направляем конус вверх от поверхности
+                geometry.rotateX(Math.PI);
                 break;
                 
             case 'router':
@@ -300,6 +309,7 @@ class NetworkGlobe {
         mesh.position.copy(position);
         mesh.scale.set(scale, scale, scale);
         
+	/*
         // Добавляем свечение для предложенных элементов
         if (element.network === 'proposed') {
             const glowGeometry = new THREE.SphereGeometry(0.25, 16, 16);
@@ -315,7 +325,7 @@ class NetworkGlobe {
             // Анимация пульсации
             this.animatePulsation(glow);
         }
-        
+        */
         return mesh;
     }
     
@@ -370,8 +380,7 @@ class NetworkGlobe {
     }
     
     findElementById(id) {
-        const allElements = [...this.satellites, ...this.groundStations];
-        return allElements.find(el => el.userData.id === id);
+        return this.equipment.find(el => el.userData.id === id);
     }
     
     shouldShowElement(element) {
@@ -382,8 +391,9 @@ class NetworkGlobe {
             case 'satellite':
                 return this.settings.showSatellites;
             case 'ground_station':
-            case 'router':
                 return this.settings.showStations;
+            case 'router':
+                return this.settings.showRouters;
             default:
                 return true;
         }
@@ -395,7 +405,7 @@ class NetworkGlobe {
     
     clearNetworkElements() {
         // Удаляем все элементы и соединения
-        [...this.satellites, ...this.groundStations].forEach(mesh => {
+        this.equipment.forEach(mesh => {
             this.scene.remove(mesh);
         });
         
@@ -404,7 +414,7 @@ class NetworkGlobe {
         });
         
         this.satellites = [];
-        this.groundStations = [];
+        this.equipment = [];
         this.connections = [];
     }
     
@@ -438,8 +448,7 @@ class NetworkGlobe {
             raycaster.setFromCamera(mouse, this.camera);
             
             // Проверяем пересечение с элементами сети
-            const allElements = [...this.satellites, ...this.groundStations];
-            const intersects = raycaster.intersectObjects(allElements);
+            const intersects = raycaster.intersectObjects(this.equipment);
             
             if (intersects.length > 0) {
                 const element = intersects[0].object;
@@ -463,12 +472,11 @@ class NetworkGlobe {
             raycaster.setFromCamera(mouse, this.camera);
             
             // Подсветка при наведении
-            const allElements = [...this.satellites, ...this.groundStations];
-            const intersects = raycaster.intersectObjects(allElements);
-            
-            allElements.forEach(el => {
+            this.equipment.forEach(el => {
                 el.material.emissive.setHex(0x222222);
             });
+            
+            const intersects = raycaster.intersectObjects(this.equipment);
             
             if (intersects.length > 0) {
                 const element = intersects[0].object;
@@ -485,8 +493,7 @@ class NetworkGlobe {
         this.showElementInfo(elementData);
         
         // Подсветка выбранного элемента
-        const allElements = [...this.satellites, ...this.groundStations];
-        allElements.forEach(el => {
+        this.equipment.forEach(el => {
             if (el.userData.id === elementData.id) {
                 el.material.emissive.setHex(0xffaa00);
             } else {
@@ -507,8 +514,7 @@ class NetworkGlobe {
         this.selectedElement = null;
         
         // Сбрасываем подсветку
-        const allElements = [...this.satellites, ...this.groundStations];
-        allElements.forEach(el => {
+        this.equipment.forEach(el => {
             el.material.emissive.setHex(0x222222);
         });
         
@@ -557,7 +563,7 @@ class NetworkGlobe {
             <p>${elementData.description}</p>
             ${specsHtml}
             ${proposalsHtml}
-            ${elementData.image_url ? `<img src="${elementData.image_url}" alt="${elementData.name}">` : ''}
+            ${elementData.image_url ? `<img src="${elementData.image_url}" alt="${elementData.name}" style="max-width:100%; border-radius:4px; margin-top:10px;">` : ''}
         `;
     }
     
@@ -598,25 +604,39 @@ class NetworkGlobe {
     
     setupEventListeners() {
         // Кнопки переключения сети
-        document.getElementById('btnExisting')?.addEventListener('click', () => {
+        document.getElementById('btnExisting')?.addEventListener('click', (e) => {
             this.settings.showExisting = true;
             this.settings.showProposed = false;
             this.updateNetworkView();
             this.updateNetworkMode('Существующая');
+            this.updateNetworkButtons('existing');
         });
         
-        document.getElementById('btnProposed')?.addEventListener('click', () => {
+        document.getElementById('btnProposed')?.addEventListener('click', (e) => {
             this.settings.showExisting = false;
             this.settings.showProposed = true;
             this.updateNetworkView();
             this.updateNetworkMode('Предложенная');
+            this.updateNetworkButtons('proposed');
         });
         
-        document.getElementById('btnBoth')?.addEventListener('click', () => {
+        document.getElementById('btnBoth')?.addEventListener('click', (e) => {
             this.settings.showExisting = true;
             this.settings.showProposed = true;
             this.updateNetworkView();
             this.updateNetworkMode('Обе сети');
+            this.updateNetworkButtons('both');
+        });
+        
+        // Кнопки вращения
+        document.getElementById('btnRotate')?.addEventListener('click', (e) => {
+            this.settings.isRotating = true;
+            this.updateRotationButtons('rotate');
+        });
+        
+        document.getElementById('btnStop')?.addEventListener('click', (e) => {
+            this.settings.isRotating = false;
+            this.updateRotationButtons('stop');
         });
         
         // Чекбоксы элементов
@@ -645,6 +665,11 @@ class NetworkGlobe {
             this.settings.zoomLevel = parseInt(e.target.value);
             this.updateZoom();
         });
+        // ДОБАВЛЯЕМ ОБРАБОТЧИК ДЛЯ ПРЕДЛОЖЕННЫХ ЭЛЕМЕНТОВ
+        document.getElementById('chkProposed')?.addEventListener('change', (e) => {
+            this.settings.showProposed = e.target.checked;
+            this.updateNetworkView();
+        });
         
         // Ресайз окна
         window.addEventListener('resize', () => this.onWindowResize());
@@ -659,6 +684,40 @@ class NetworkGlobe {
         const modeElement = document.getElementById('networkMode');
         if (modeElement) {
             modeElement.textContent = mode;
+        }
+    }
+    
+    updateNetworkButtons(activeType) {
+        const existingBtn = document.getElementById('btnExisting');
+        const proposedBtn = document.getElementById('btnProposed');
+        const bothBtn = document.getElementById('btnBoth');
+        
+        [existingBtn, proposedBtn, bothBtn].forEach(btn => {
+            if (btn) btn.classList.remove('active');
+        });
+        
+        if (activeType === 'existing' && existingBtn) {
+            existingBtn.classList.add('active');
+        } else if (activeType === 'proposed' && proposedBtn) {
+            proposedBtn.classList.add('active');
+        } else if (activeType === 'both' && bothBtn) {
+            bothBtn.classList.add('active');
+        }
+    }
+    
+    updateRotationButtons(activeBtn) {
+        const rotateBtn = document.getElementById('btnRotate');
+        const stopBtn = document.getElementById('btnStop');
+        
+        if (rotateBtn && stopBtn) {
+            rotateBtn.classList.remove('active');
+            stopBtn.classList.remove('active');
+            
+            if (activeBtn === 'rotate') {
+                rotateBtn.classList.add('active');
+            } else {
+                stopBtn.classList.add('active');
+            }
         }
     }
     
@@ -729,29 +788,55 @@ class NetworkGlobe {
     animate() {
         requestAnimationFrame(() => this.animate());
         
-        // Вращение Земли
-        if (this.earth) {
-            this.earth.rotation.y += 0.001;
-        }
-        
-        // Вращение облаков
-        if (this.clouds) {
-            this.clouds.rotation.y += 0.0015;
-        }
-        
-        // Анимация спутников
-        this.satellites.forEach((satellite, index) => {
-            const time = Date.now() * 0.001;
-            const angle = time * 0.5 + index;
-            const radius = 12 + Math.sin(time + index) * 0.5;
+        // Вращение Земли - ТОЛЬКО ЕСЛИ ВКЛЮЧЕНО
+        if (this.settings.isRotating) {
+            if (this.earth) {
+                this.earth.rotation.y += 0.001;
+            }
             
-            satellite.position.x = Math.cos(angle) * radius;
-            satellite.position.z = Math.sin(angle) * radius;
-            satellite.position.y = Math.sin(time * 0.7 + index) * 2;
+            // Вращение облаков
+            if (this.clouds) {
+                this.clouds.rotation.y += 0.0015;
+            }
             
-            satellite.rotation.x = time;
-            satellite.rotation.y = time * 0.5;
-        });
+            // Анимация спутников - ТОЛЬКО ЕСЛИ ВКЛЮЧЕНО
+            this.satellites.forEach((satellite, index) => {
+                if (satellite.userData.isSatellite) {
+                    const time = Date.now() * 0.001;
+                    const angle = time * 0.5 + index;
+                    const radius = 12 + Math.sin(time + index) * 0.5;
+                    
+                    satellite.position.x = Math.cos(angle) * radius;
+                    satellite.position.z = Math.sin(angle) * radius;
+                    satellite.position.y = Math.sin(time * 0.7 + index) * 2;
+                    
+                    satellite.rotation.x = time;
+                    satellite.rotation.y = time * 0.5;
+                }
+            });
+            
+            // Наземное оборудование ВРАЩАЕТСЯ ВМЕСТЕ С ЗЕМЛЁЙ
+            this.equipment.forEach(item => {
+                if (!item.userData.isSatellite && this.earth) {
+                    // Обновляем позицию относительно вращающейся Земли
+                    const lat = item.userData.lat || 0;
+                    const lng = item.userData.lng || 0;
+                    const alt = item.userData.alt || 0;
+                    
+                    // Добавляем вращение Земли к долготе
+                    const rotatedLng = lng + (this.earth.rotation.y * 57.2958); // радианы в градусы
+                    const newPos = this.latLngAltToVector3(lat, rotatedLng, alt);
+                    
+                    if (alt === 0) {
+                        // Для наземного - на поверхности
+                        const surfacePos = newPos.clone().normalize().multiplyScalar(10.01);
+                        item.position.copy(surfacePos);
+                    } else {
+                        item.position.copy(newPos);
+                    }
+                }
+            });
+        }
         
         // Обновление контролов
         if (this.controls) {

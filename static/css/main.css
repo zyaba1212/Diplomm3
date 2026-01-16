@@ -1,7 +1,7 @@
 /* Основные стили Z96A */
 @font-face {
     font-family: 'CGXYZ PC';
-    src: url('../fonts/CGXYZ_PC.ttf') format('truetype');
+    src: local('Arial'), local('Helvetica Neue'), local('Segoe UI');
     font-weight: normal;
     font-style: normal;
 }

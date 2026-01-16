@@ -45,30 +45,73 @@
     font-size: 0.9rem;
 }
 
+/* Группа кнопок - ИСПРАВЛЕНО: все кнопки видны */
 .btn-group {
     display: flex;
     gap: 0.5rem;
+    flex-wrap: nowrap; /* Не переносить на новую строку */
+}
+
+.btn-group .network-btn {
+    min-width: 80px; /* Минимальная ширина для всех кнопок */
+    white-space: nowrap; /* Не переносить текст */
 }
 
 .network-btn {
     flex: 1;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(108, 99, 255, 0.3);
-    color: white;
-    padding: 0.5rem;
+    color: #aaa;
+    padding: 0.6rem;
     border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+}
+
+.network-btn.active {
+    background: linear-gradient(90deg, var(--color-accent), var(--color-nebula-purple));
+    border-color: var(--color-accent);
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(108, 99, 255, 0.3);
+}
+
+.network-btn:hover:not(.active) {
+    background: rgba(108, 99, 255, 0.2);
+    color: white;
+}
+
+/* Кнопки управления вращением */
+.rotation-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.rotation-btn {
+    flex: 1;
+    padding: 0.6rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    border-radius: 4px;
+    color: #aaa;
     cursor: pointer;
     transition: all 0.3s ease;
     font-family: var(--font-main);
 }
 
-.network-btn.active {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
+.rotation-btn.active {
+    background: linear-gradient(90deg, var(--color-cyber-green), #00cc7a);
+    border-color: var(--color-cyber-green);
+    color: var(--color-dark);
+    font-weight: bold;
 }
 
-.network-btn:hover:not(.active) {
-    background: rgba(108, 99, 255, 0.2);
+.rotation-btn:hover:not(.active) {
+    background: rgba(0, 255, 157, 0.2);
+    color: white;
 }
 
 .checkbox-group {
@@ -128,12 +171,86 @@
     padding: 1rem;
     border-radius: 8px;
     min-height: 150px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.element-info h3 {
+    color: var(--color-accent-light);
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.element-info h4 {
+    color: var(--color-cyber-green);
+    margin: 1rem 0 0.5rem 0;
+    font-size: 1rem;
+}
+
+.element-info p {
+    color: #ddd;
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.element-info ul {
+    list-style: none;
+    padding-left: 1rem;
+    color: #ddd;
+}
+
+.element-info li {
+    margin-bottom: 0.3rem;
+    padding-left: 1rem;
+    position: relative;
+}
+
+.element-info li:before {
+    content: "•";
+    color: var(--color-accent);
+    position: absolute;
+    left: 0;
 }
 
 .element-info img {
     max-width: 100%;
     border-radius: 4px;
     margin-top: 0.5rem;
+    border: 1px solid rgba(108, 99, 255, 0.3);
+}
+
+.proposal-info {
+    background: rgba(0, 255, 157, 0.1);
+    border: 1px solid rgba(0, 255, 157, 0.3);
+    border-radius: 6px;
+    padding: 0.8rem;
+    margin-top: 1rem;
+}
+
+.proposal-info h4 {
+    color: var(--color-cyber-green) !important;
+    margin-top: 0 !important;
+}
+
+.add-element-btn {
+    width: 100%;
+    padding: 0.8rem;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-nebula-purple));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    margin-top: 1rem;
+    cursor: pointer;
+    font-family: var(--font-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: transform 0.3s ease;
+}
+
+.add-element-btn:hover {
+    transform: translateY(-2px);
 }
 
 /* Кнопка предложения */
@@ -152,6 +269,7 @@
     align-items: center;
     gap: 0.5rem;
     transition: transform 0.3s ease;
+    margin-top: 0.5rem;
 }
 
 .propose-btn:hover {
@@ -205,6 +323,7 @@
     border: 1px solid rgba(108, 99, 255, 0.3);
     display: flex;
     gap: 1.5rem;
+    z-index: 10;
 }
 
 .hud-item {
@@ -429,5 +548,32 @@
     
     .control-panel {
         max-height: 300px;
+    }
+    
+    .btn-group {
+        flex-wrap: wrap; /* На мобильных можно переносить */
+    }
+    
+    .btn-group .network-btn {
+        min-width: 70px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .hud {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.6rem;
+    }
+    
+    .hud-item {
+        flex-direction: row;
+        gap: 0.5rem;
+    }
+    
+    .btn-group .network-btn {
+        min-width: 60px;
+        padding: 0.5rem;
     }
 }
