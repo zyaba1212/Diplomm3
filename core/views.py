@@ -10,6 +10,12 @@ from .parser import fetch_news_articles
 
 def index(request):
     """Главная страница"""
+    # Автоматически добавляем демо данные при первом посещении
+    try:
+        add_demo_data()
+    except Exception as e:
+        print(f"Ошибка при добавлении демо данных: {e}")
+    
     context = {
         'title': _('Z96A - Архитектура сети будущего'),
         'description': _('Инновационная система обработки транзакций для инфокоммуникационных систем'),
@@ -120,39 +126,47 @@ def api_connect_wallet(request):
 @csrf_exempt
 def api_get_network_data(request):
     """API для получения данных сети для 3D визуализации"""
-    elements = NetworkElement.objects.filter(is_active=True)
-    connections = NetworkConnection.objects.all()
-    
-    data = {
-        'elements': [
-            {
-                'id': str(elem.element_id),
-                'name': elem.name,
-                'type': elem.element_type,
-                'network': elem.network_type,
-                'lat': elem.latitude,
-                'lng': elem.longitude,
-                'alt': elem.altitude,
-                'description': elem.description,
-                'image_url': elem.image_url if elem.image_url else '',
-                'proposed_by': elem.proposed_by.nickname if elem.proposed_by else None,
-                'specifications': elem.specifications,
-            }
-            for elem in elements
-        ],
-        'connections': [
-            {
-                'from': str(conn.from_element.element_id),
-                'to': str(conn.to_element.element_id),
-                'type': conn.connection_type,
-                'bandwidth': conn.bandwidth,
-                'latency': conn.latency,
-            }
-            for conn in connections
-        ]
-    }
-    
-    return JsonResponse(data)
+    try:
+        elements = NetworkElement.objects.filter(is_active=True)
+        connections = NetworkConnection.objects.all()
+        
+        data = {
+            'elements': [
+                {
+                    'id': str(elem.element_id),
+                    'name': elem.name,
+                    'type': elem.element_type,
+                    'network': elem.network_type,
+                    'lat': elem.latitude,
+                    'lng': elem.longitude,
+                    'alt': elem.altitude,
+                    'description': elem.description,
+                    'image_url': elem.image_url if elem.image_url else '',
+                    'proposed_by': elem.proposed_by.nickname if elem.proposed_by else None,
+                    'specifications': elem.specifications,
+                }
+                for elem in elements
+            ],
+            'connections': [
+                {
+                    'from': str(conn.from_element.element_id),
+                    'to': str(conn.to_element.element_id),
+                    'type': conn.connection_type,
+                    'bandwidth': conn.bandwidth,
+                    'latency': conn.latency,
+                }
+                for conn in connections
+            ]
+        }
+        
+        return JsonResponse(data)
+    except Exception as e:
+        print(f"API Error in api_get_network_data: {e}")
+        return JsonResponse({
+            'elements': [],
+            'connections': [],
+            'error': str(e)
+        }, status=500)
 
 @csrf_exempt
 def api_submit_proposal(request):
@@ -194,23 +208,30 @@ def api_submit_proposal(request):
 
 def api_get_news(request):
     """API для получения новостей"""
-    articles = NewsArticle.objects.filter(is_active=True).order_by('-published_date')[:20]
-    
-    data = {
-        'articles': [
-            {
-                'id': article.id,
-                'title': article.title,
-                'content_preview': article.content[:200] + '...' if len(article.content) > 200 else article.content,
-                'source': article.source,
-                'url': article.url,
-                'published_date': article.published_date.strftime('%Y-%m-%d %H:%M'),
-            }
-            for article in articles
-        ]
-    }
-    
-    return JsonResponse(data)
+    try:
+        articles = NewsArticle.objects.filter(is_active=True).order_by('-published_date')[:20]
+        
+        data = {
+            'articles': [
+                {
+                    'id': article.id,
+                    'title': article.title,
+                    'content_preview': article.content[:200] + '...' if len(article.content) > 200 else article.content,
+                    'source': article.source,
+                    'url': article.url,
+                    'published_date': article.published_date.strftime('%Y-%m-%d %H:%M'),
+                }
+                for article in articles
+            ]
+        }
+        
+        return JsonResponse(data)
+    except Exception as e:
+        print(f"API Error in api_get_news: {e}")
+        return JsonResponse({
+            'articles': [],
+            'error': str(e)
+        }, status=500)
 
 @login_required
 def admin_custom_view(request):
@@ -324,20 +345,6 @@ def add_demo_data():
             )
         print("Демо оборудование добавлено")
 
-# Добавь этот вызов в функцию index (первую страницу)
-def index(request):
-    """Главная страница"""
-    # Автоматически добавляем демо данные при первом посещении
-    try:
-        add_demo_data()
-    except Exception as e:
-        print(f"Ошибка при добавлении демо данных: {e}")
-    
-    context = {
-        'title': _('Z96A - Архитектура сети будущего'),
-        'description': _('Инновационная система обработки транзакций для инфокоммуникационных систем'),
-    }
-    return render(request, 'index.html', context)
 
 def api_get_network_data_simple(request):
     """Простая версия API для тестирования"""
@@ -423,8 +430,3 @@ def create_demo_data():
             print("Демо данные созданы автоматически")
     except Exception as e:
         print(f"Ошибка создания демо данных: {e}")
-
-# Вызови эту функцию в начале главной страницы
-def index(request):
-    create_demo_data()  # Добавь эту строку
-    return render(request, 'index.html')
