@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Z96A - О проекте" %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<style>
+.about-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.about-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.about-header h1 {
+    font-size: 2.8rem;
+    background: linear-gradient(90deg, #6c63ff, #00ff9d);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 1rem;
+}
+
+.about-header p {
+    color: #aaa;
+    font-size: 1.2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.student-info {
+    background: rgba(30, 30, 46, 0.8);
+    border-radius: 16px;
+    padding: 3rem;
+    margin-bottom: 3rem;
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    text-align: center;
+}
+
+.student-avatar {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 2rem;
+    background: linear-gradient(135deg, #6c63ff, #4a235a);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: white;
+    border: 5px solid rgba(108, 99, 255, 0.3);
+}
+
+.student-details h2 {
+    color: #6c63ff;
+    margin-bottom: 1rem;
+    font-size: 2rem;
+}
+
+.student-meta {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.meta-item {
+    text-align: center;
+    padding: 1rem 2rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    border: 1px solid rgba(108, 99, 255, 0.2);
+}
+
+.meta-item i {
+    font-size: 1.5rem;
+    color: #6c63ff;
+    margin-bottom: 0.5rem;
+}
+
+.project-details {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 16px;
+    padding: 3rem;
+    margin-bottom: 3rem;
+}
+
+.project-details h2 {
+    color: #00ff9d;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-size: 2rem;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.detail-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid rgba(108, 99, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.detail-card:hover {
+    border-color: #6c63ff;
+    transform: translateY(-5px);
+}
+
+.detail-card h3 {
+    color: #6c63ff;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.detail-card p {
+    color: #ddd;
+    line-height: 1.6;
+}
+
+.tech-stack {
+    background: rgba(30, 30, 46, 0.8);
+    border-radius: 16px;
+    padding: 3rem;
+    margin-bottom: 3rem;
+    border: 1px solid rgba(108, 99, 255, 0.3);
+}
+
+.tech-stack h2 {
+    color: #6c63ff;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-size: 2rem;
+}
+
+.tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.tech-item {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid rgba(108, 99, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.tech-item:hover {
+    border-color: #00ff9d;
+    transform: translateY(-3px);
+}
+
+.tech-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #6c63ff;
+}
+
+.tech-item h4 {
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.tech-item p {
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+.contact-info {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 16px;
+    padding: 3rem;
+    text-align: center;
+}
+
+.contact-info h2 {
+    color: #00ff9d;
+    margin-bottom: 2rem;
+    font-size: 2rem;
+}
+
+.contact-links {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.contact-link {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem 2rem;
+    background: rgba(108, 99, 255, 0.1);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    border-radius: 12px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.contact-link:hover {
+    background: rgba(108, 99, 255, 0.2);
+    transform: translateY(-3px);
+}
+
+.contact-link i {
+    font-size: 1.5rem;
+    color: #6c63ff;
+}
+
+@media (max-width: 768px) {
+    .about-page {
+        padding: 1rem;
+    }
+    
+    .student-info,
+    .project-details,
+    .tech-stack,
+    .contact-info {
+        padding: 2rem 1rem;
+    }
+    
+    .student-meta {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="about-page">
+    <div class="about-header">
+        <h1>{% trans "О проекте Z96A" %}</h1>
+        <p>{% trans "Дипломный проект по созданию архитектуры системы обработки транзакций для инфокоммуникационных систем" %}</p>
+    </div>
+    
+    <div class="student-info">
+        <div class="student-avatar">
+            DZ
+        </div>
+        <div class="student-details">
+            <h2>Зыблиенко Дмитрий</h2>
+            <p style="color: #aaa; font-size: 1.1rem; margin-bottom: 1rem;">
+                {% trans "Студент специальности 'Сопровождение программного обеспечения'" %}
+            </p>
+            <div class="student-meta">
+                <div class="meta-item">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h4>{% trans "Учебное заведение" %}</h4>
+                    <p>{% trans "Белорусская Государственная Академия Связи" %}</p>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-book"></i>
+                    <h4>{% trans "Специальность" %}</h4>
+                    <p>{% trans "Сопровождение ПО" %}</p>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h4>{% trans "Год" %}</h4>
+                    <p>2024-2026</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="project-details">
+        <h2>{% trans "Детали проекта" %}</h2>
+        <div class="details-grid">
+            <div class="detail-card">
+                <h3><i class="fas fa-bullseye"></i> {% trans "Цель проекта" %}</h3>
+                <p>{% trans "Разработка архитектуры системы обработки транзакций, работающей в условиях частичного отсутствия сетевого соединения, с использованием гибридных технологий связи." %}</p>
+            </div>
+            <div class="detail-card">
+                <h3><i class="fas fa-lightbulb"></i> {% trans "Вдохновение" %}</h3>
+                <p>{% trans "Эксперименты SUI с оффлайн-транзакциями и технология Starlink для обеспечения связи в удаленных регионах." %}</p>
+            </div>
+            <div class="detail-card">
+                <h3><i class="fas fa-rocket"></i> {% trans "Инновации" %}</h3>
+                <p>{% trans "Интеграция блокчейн-технологий, спутниковой связи и адаптивных сетевых протоколов в единую систему." %}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tech-stack">
+        <h2>{% trans "Технологический стек" %}</h2>
+        <div class="tech-grid">
+            <div class="tech-item">
+                <div class="tech-icon">
+                    <i class="fab fa-python"></i>
+                </div>
+                <h4>Django</h4>
+                <p>{% trans "Бэкенд фреймворк" %}</p>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <h4>Three.js</h4>
+                <p>{% trans "3D визуализация" %}</p>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">
+                    <i class="fas fa-link"></i>
+                </div>
+                <h4>Solana</h4>
+                <p>{% trans "Блокчейн интеграция" %}</p>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h4>SQLite3</h4>
+                <p>{% trans "База данных" %}</p>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">
+                    <i class="fab fa-js"></i>
+                </div>
+                <h4>JavaScript</h4>
+                <p>{% trans "Интерактивность" %}</p>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">
+                    <i class="fab fa-html5"></i>
+                </div>
+                <h4>HTML/CSS</h4>
+                <p>{% trans "Интерфейс" %}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="contact-info">
+        <h2>{% trans "Контактная информация" %}</h2>
+        <p style="color: #aaa; max-width: 600px; margin: 0 auto 2rem;">
+            {% trans "Для вопросов, предложений или сотрудничества свяжитесь со мной:" %}
+        </p>
+        <div class="contact-links">
+            <a href="mailto:student@bgac.by" class="contact-link">
+                <i class="fas fa-envelope"></i>
+                <span>{% trans "Электронная почта" %}</span>
+            </a>
+            <a href="https://bgac.by" target="_blank" class="contact-link">
+                <i class="fas fa-university"></i>
+                <span>{% trans "Сайт академии" %}</span>
+            </a>
+            <a href="#" class="contact-link">
+                <i class="fas fa-file-alt"></i>
+                <span>{% trans "Документация проекта" %}</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% load static %}
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Z96A - Архитектура сети будущего{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>∑</text></svg>">
+    
+    {% load static %}
+    {% load i18n %}
+
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    
+    <!-- Three.js для 3D глобуса -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.min.js"></script>
+    
+    <!-- Solana Web3 -->
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="logo-container">
+            <div class="logo-icon">∑</div>
+            <h1 class="logo-text">Z96A</h1>
+        </div>
+        
+        <nav class="main-nav">
+            <a href="{% url 'index' %}" class="nav-link">{% trans "Главная" %}</a>
+            <a href="{% url 'architecture' %}" class="nav-link">{% trans "Архитектура сети" %}</a>
+            <a href="{% url 'news' %}" class="nav-link">{% trans "Новости" %}</a>
+            <a href="{% url 'discussion' %}" class="nav-link">{% trans "Обсуждение" %}</a>
+            <a href="{% url 'about' %}" class="nav-link">{% trans "О проекте" %}</a>
+            <a href="{% url 'roadmap' %}" class="nav-link">{% trans "Дорожная карта" %}</a>
+        </nav>
+        
+        <div class="header-controls">
+            <!-- Языковой переключатель -->
+            <div class="language-switcher">
+                <form action="{% url 'set_language' %}" method="post" class="language-form">
+                    {% csrf_token %}
+                    <input name="next" type="hidden" value="{{ request.path }}">
+                    <select name="language" onchange="this.form.submit()" class="language-select">
+                        <option value="ru" {% if current_language == 'ru' %}selected{% endif %}>РУ</option>
+                        <option value="en" {% if current_language == 'en' %}selected{% endif %}>EN</option>
+                    </select>
+                </form>
+            </div>
+            
+            <!-- Кнопка подключения кошелька -->
+            <button id="connectWalletBtn" class="wallet-btn">
+                <i class="fas fa-wallet"></i>
+                <span>{% trans "Подключить кошелек" %}</span>
+            </button>
+            
+            <!-- Информация о пользователе -->
+            <div id="userInfo" class="user-info" style="display: none;">
+                <span id="userNickname"></span>
+                <button id="disconnectWalletBtn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Футер -->
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Z96A</h3>
+                <p>{% trans "Архитектура сети будущего" %}</p>
+                <p>© 2024-2026 Дипломный проект</p>
+            </div>
+            <div class="footer-section">
+                <h4>{% trans "Контакты" %}</h4>
+                <p>{% trans "Белорусская Государственная Академия Связи" %}</p>
+            </div>
+            <div class="footer-section">
+                <h4>{% trans "Технологии" %}</h4>
+                <p>Django • Three.js • Solana • Web3</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Скрипты -->
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/wallet.js' %}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

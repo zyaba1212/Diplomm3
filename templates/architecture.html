@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Z96A - Архитектура сети" %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/globe.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="architecture-container">
+    <!-- Панель управления -->
+    <div class="control-panel">
+        <div class="control-section">
+            <h3><i class="fas fa-sliders-h"></i> {% trans "Управление" %}</h3>
+            
+            <div class="control-group">
+                <label class="control-label">{% trans "Тип сети:" %}</label>
+                <div class="btn-group">
+                    <button id="btnExisting" class="network-btn active">{% trans "Существующая" %}</button>
+                    <button id="btnProposed" class="network-btn">{% trans "Предложенная" %}</button>
+                    <button id="btnBoth" class="network-btn">{% trans "Обе" %}</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">{% trans "Элементы:" %}</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="chkSatellites" checked> {% trans "Спутники" %}</label>
+                    <label><input type="checkbox" id="chkStations" checked> {% trans "Станции" %}</label>
+                    <label><input type="checkbox" id="chkRouters" checked> {% trans "Маршрутизаторы" %}</label>
+                    <label><input type="checkbox" id="chkCables" checked> {% trans "Кабели" %}</label>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">{% trans "Слои:" %}</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="chkStratosphere" checked> {% trans "Стратосфера" %}</label>
+                    <label><input type="checkbox" id="chkTroposphere"> {% trans "Тропосфера" %}</label>
+                    <label><input type="checkbox" id="chkGround" checked> {% trans "Наземный" %}</label>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">{% trans "Зум:" %}</label>
+                <input type="range" id="zoomSlider" min="1" max="100" value="50" class="slider">
+            </div>
+        </div>
+        
+        <div class="control-section">
+            <h3><i class="fas fa-info-circle"></i> {% trans "Информация" %}</h3>
+            <div id="elementInfo" class="element-info">
+                <p>{% trans "Выберите элемент сети для получения информации" %}</p>
+            </div>
+        </div>
+        
+        <div class="control-section">
+            <h3><i class="fas fa-lightbulb"></i> {% trans "Предложения" %}</h3>
+            <button id="btnPropose" class="propose-btn">
+                <i class="fas fa-plus"></i> {% trans "Предложить улучшение" %}
+            </button>
+            <div id="proposalsList" class="proposals-list"></div>
+        </div>
+    </div>
+    
+    <!-- 3D контейнер для глобуса -->
+    <div class="globe-container">
+        <canvas id="globeCanvas"></canvas>
+        <div class="hud">
+            <div class="hud-item">
+                <span class="hud-label">{% trans "Элементов:" %}</span>
+                <span id="elementCount" class="hud-value">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">{% trans "Соединений:" %}</span>
+                <span id="connectionCount" class="hud-value">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">{% trans "Режим:" %}</span>
+                <span id="networkMode" class="hud-value">{% trans "Существующая" %}</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Панель новостей (слева) -->
+    <div class="news-panel" id="newsPanel">
+        <div class="news-header">
+            <h3><i class="fas fa-newspaper"></i> {% trans "Последние новости" %}</h3>
+            <button class="panel-toggle" onclick="toggleNewsPanel()">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        </div>
+        <div class="news-content" id="newsContent">
+            <!-- Новости будут загружены через JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для предложений -->
+<div id="proposalModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>{% trans "Предложить улучшение сети" %}</h2>
+        
+        <form id="proposalForm">
+            <div class="form-group">
+                <label for="proposalType">{% trans "Тип предложения:" %}</label>
+                <select id="proposalType" class="form-control">
+                    <option value="equipment">{% trans "Новое оборудование" %}</option>
+                    <option value="connection">{% trans "Новое соединение" %}</option>
+                    <option value="optimization">{% trans "Оптимизация" %}</option>
+                    <option value="other">{% trans "Другое" %}</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="proposalTitle">{% trans "Название:" %}</label>
+                <input type="text" id="proposalTitle" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="proposalDescription">{% trans "Описание:" %}</label>
+                <textarea id="proposalDescription" class="form-control" rows="4" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="proposalLocation">{% trans "Местоположение (широта, долгота):" %}</label>
+                <input type="text" id="proposalLocation" class="form-control" placeholder="55.7558, 37.6173">
+            </div>
+            
+            <div class="form-group">
+                <label for="proposalSpecs">{% trans "Характеристики (JSON):" %}</label>
+                <textarea id="proposalSpecs" class="form-control" rows="3" placeholder='{"bandwidth": "10 Gbps", "latency": "5ms"}'></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="submit-btn">{% trans "Отправить через блокчейн" %}</button>
+                <button type="button" class="cancel-btn">{% trans "Отмена" %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/globe.js' %}"></script>
+<script src="{% static 'js/news.js' %}"></script>
+<script>
+    // Загрузка новостей при открытии страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        loadNewsArticles();
+        initGlobe();
+    });
+</script>
+{% endblock %}

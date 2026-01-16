@@ -1,0 +1,492 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Z96A - Новости" %}{% endblock %}
+
+{% block extra_head %}
+<style>
+.news-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.news-page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.news-page-header h1 {
+    font-size: 2.5rem;
+    background: linear-gradient(90deg, #6c63ff, #00ff9d);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 1rem;
+}
+
+.news-page-header p {
+    color: #aaa;
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.news-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.source-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.source-filter {
+    padding: 0.6rem 1.2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.source-filter:hover {
+    background: rgba(108, 99, 255, 0.2);
+}
+
+.source-filter.active {
+    background: #6c63ff;
+    border-color: #6c63ff;
+}
+
+.refresh-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.refresh-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    background: linear-gradient(90deg, #6c63ff, #4a235a);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.3s ease;
+}
+
+.refresh-btn:hover {
+    transform: translateY(-2px);
+}
+
+.auto-refresh {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+.news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.news-card {
+    background: rgba(30, 30, 46, 0.8);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.news-card:hover {
+    transform: translateY(-5px);
+    border-color: #6c63ff;
+    box-shadow: 0 10px 20px rgba(108, 99, 255, 0.2);
+}
+
+.news-card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.news-card-source {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #00ff9d;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.news-card-date {
+    color: #aaa;
+    font-size: 0.8rem;
+}
+
+.news-card-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin: 1rem 0;
+    color: white;
+    line-height: 1.4;
+}
+
+.news-card-content {
+    padding: 0 1.5rem 1.5rem;
+    flex: 1;
+}
+
+.news-card-preview {
+    color: #ddd;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.news-card-footer {
+    padding: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.news-card-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.read-full {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    background: rgba(108, 99, 255, 0.2);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.read-full:hover {
+    background: rgba(108, 99, 255, 0.3);
+}
+
+.share-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.share-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.loading-news {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(108, 99, 255, 0.3);
+    border-top: 4px solid #6c63ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1.5rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.page-btn {
+    padding: 0.8rem 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.page-btn:hover:not(:disabled) {
+    background: rgba(108, 99, 255, 0.2);
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.page-number {
+    padding: 0.8rem 1.2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.page-number:hover {
+    background: rgba(108, 99, 255, 0.2);
+}
+
+.page-number.active {
+    background: #6c63ff;
+    border-color: #6c63ff;
+}
+
+.stats-section {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-top: 3rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(108, 99, 255, 0.2);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #6c63ff;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .news-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .news-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .source-filters {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="news-page">
+    <div class="news-page-header">
+        <h1>{% trans "Новости инфокоммуникационных технологий" %}</h1>
+        <p>{% trans "Актуальные новости о сетях, связи, блокчейне и технологиях будущего из различных источников" %}</p>
+    </div>
+    
+    <div class="news-controls">
+        <div class="source-filters">
+            <button class="source-filter active" data-source="all">{% trans "Все источники" %}</button>
+            <button class="source-filter" data-source="twitter">Twitter/X</button>
+            <button class="source-filter" data-source="reddit">Reddit</button>
+            <button class="source-filter" data-source="habr">Habr</button>
+        </div>
+        
+        <div class="refresh-controls">
+            <button id="refreshNewsBtn" class="refresh-btn">
+                <i class="fas fa-sync-alt"></i> {% trans "Обновить" %}
+            </button>
+            <div class="auto-refresh">
+                <input type="checkbox" id="autoRefresh" checked>
+                <label for="autoRefresh">{% trans "Автообновление (5 мин)" %}</label>
+            </div>
+        </div>
+    </div>
+    
+    <div class="news-search-container">
+        <div class="news-search">
+            <input type="text" id="newsSearchInput" placeholder="{% trans "Поиск новостей..." %}">
+            <i class="fas fa-search"></i>
+        </div>
+    </div>
+    
+    <div id="newsContainer" class="news-container">
+        <div class="loading-news">
+            <div class="spinner"></div>
+            <p>{% trans "Загрузка новостей..." %}</p>
+        </div>
+    </div>
+    
+    <div class="pagination" id="pagination" style="display: none;">
+        <button class="page-btn" id="prevPage" disabled>
+            <i class="fas fa-chevron-left"></i> {% trans "Назад" %}
+        </button>
+        <div class="page-numbers" id="pageNumbers"></div>
+        <button class="page-btn" id="nextPage">
+            {% trans "Далее" %} <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+    
+    <div class="stats-section">
+        <h2><i class="fas fa-chart-bar"></i> {% trans "Статистика новостей" %}</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <div class="stat-value" id="totalArticles">0</div>
+                <div class="stat-label">{% trans "Всего статей" %}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fab fa-twitter"></i>
+                </div>
+                <div class="stat-value" id="twitterArticles">0</div>
+                <div class="stat-label">{% trans "Twitter/X" %}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fab fa-reddit"></i>
+                </div>
+                <div class="stat-value" id="redditArticles">0</div>
+                <div class="stat-label">{% trans "Reddit" %}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <div class="stat-value" id="habrArticles">0</div>
+                <div class="stat-label">{% trans "Habr" %}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/news.js' %}"></script>
+<script>
+// Дополнительные функции для страницы новостей
+document.addEventListener('DOMContentLoaded', function() {
+    const newsManager = new NewsManager();
+    window.Z96A.news = newsManager;
+    
+    // Кнопка обновления
+    document.getElementById('refreshNewsBtn').addEventListener('click', () => {
+        newsManager.loadArticles();
+    });
+    
+    // Автообновление
+    const autoRefreshCheckbox = document.getElementById('autoRefresh');
+    let autoRefreshInterval = null;
+    
+    function setupAutoRefresh() {
+        if (autoRefreshCheckbox.checked) {
+            autoRefreshInterval = setInterval(() => {
+                newsManager.loadArticles();
+            }, 5 * 60 * 1000); // 5 минут
+        } else if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+            autoRefreshInterval = null;
+        }
+    }
+    
+    autoRefreshCheckbox.addEventListener('change', setupAutoRefresh);
+    setupAutoRefresh(); // Инициализация
+    
+    // Поиск
+    const searchInput = document.getElementById('newsSearchInput');
+    if (searchInput) {
+        const debouncedSearch = window.Z96A.utils.debounce((query) => {
+            newsManager.searchArticles(query);
+        }, 300);
+        
+        searchInput.addEventListener('input', (e) => {
+            debouncedSearch(e.target.value);
+        });
+    }
+    
+    // Обновляем статистику при загрузке новостей
+    const originalLoadArticles = newsManager.loadArticles.bind(newsManager);
+    newsManager.loadArticles = async function() {
+        await originalLoadArticles();
+        updateStats();
+    };
+    
+    function updateStats() {
+        const articles = newsManager.articles || [];
+        
+        document.getElementById('totalArticles').textContent = articles.length;
+        document.getElementById('twitterArticles').textContent = 
+            articles.filter(a => a.source === 'twitter').length;
+        document.getElementById('redditArticles').textContent = 
+            articles.filter(a => a.source === 'reddit').length;
+        document.getElementById('habrArticles').textContent = 
+            articles.filter(a => a.source === 'habr').length;
+    }
+    
+    // Инициализация статистики
+    updateStats();
+});
+</script>
+{% endblock %}

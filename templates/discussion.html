@@ -1,0 +1,1056 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Z96A - Обсуждение" %}{% endblock %}
+
+{% block extra_head %}
+<style>
+.discussion-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.discussion-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.discussion-header h1 {
+    font-size: 2.5rem;
+    background: linear-gradient(90deg, #6c63ff, #00ff9d);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 1rem;
+}
+
+.discussion-header p {
+    color: #aaa;
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.discussion-container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+@media (max-width: 992px) {
+    .discussion-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.comments-section {
+    background: rgba(30, 30, 46, 0.8);
+    border-radius: 12px;
+    padding: 2rem;
+    border: 1px solid rgba(108, 99, 255, 0.3);
+}
+
+.new-comment-form {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border: 1px solid rgba(108, 99, 255, 0.2);
+}
+
+.new-comment-form h3 {
+    color: #6c63ff;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.comment-input {
+    width: 100%;
+    min-height: 120px;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    border-radius: 8px;
+    color: white;
+    font-family: inherit;
+    resize: vertical;
+    margin-bottom: 1rem;
+}
+
+.comment-input:focus {
+    outline: none;
+    border-color: #6c63ff;
+}
+
+.comment-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.submit-comment-btn {
+    padding: 0.8rem 1.5rem;
+    background: linear-gradient(90deg, #6c63ff, #4a235a);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: transform 0.3s ease;
+}
+
+.submit-comment-btn:hover {
+    transform: translateY(-2px);
+}
+
+.submit-comment-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.cancel-comment-btn {
+    padding: 0.8rem 1.5rem;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.comments-list {
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.comments-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.comments-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+    background: #6c63ff;
+    border-radius: 3px;
+}
+
+.comment-item {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.comment-item:hover {
+    border-color: rgba(108, 99, 255, 0.3);
+    transform: translateX(5px);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.comment-author {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.author-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #6c63ff, #00ff9d);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+
+.author-info h4 {
+    color: white;
+    margin-bottom: 0.2rem;
+}
+
+.author-wallet {
+    font-size: 0.8rem;
+    color: #aaa;
+    font-family: monospace;
+}
+
+.comment-date {
+    color: #aaa;
+    font-size: 0.8rem;
+}
+
+.comment-content {
+    color: #ddd;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.like-btn, .reply-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #aaa;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.like-btn:hover, .reply-btn:hover {
+    background: rgba(108, 99, 255, 0.1);
+    color: white;
+}
+
+.like-btn.liked {
+    background: rgba(255, 99, 132, 0.1);
+    border-color: rgba(255, 99, 132, 0.3);
+    color: #ff6384;
+}
+
+.like-count {
+    margin-left: 0.3rem;
+}
+
+.replies {
+    margin-left: 2rem;
+    margin-top: 1rem;
+    padding-left: 1.5rem;
+    border-left: 2px solid rgba(108, 99, 255, 0.3);
+}
+
+.reply-form {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px solid rgba(108, 99, 255, 0.2);
+}
+
+.reply-input {
+    width: 100%;
+    min-height: 80px;
+    padding: 0.8rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    border-radius: 6px;
+    color: white;
+    font-family: inherit;
+    resize: vertical;
+    margin-bottom: 0.8rem;
+}
+
+.reply-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.8rem;
+}
+
+.no-comments {
+    text-align: center;
+    padding: 3rem;
+    color: #aaa;
+}
+
+.no-comments i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #6c63ff;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.stats-card, .rules-card, .top-users-card {
+    background: rgba(30, 30, 46, 0.8);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid rgba(108, 99, 255, 0.3);
+}
+
+.sidebar h3 {
+    color: #6c63ff;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 0.3rem;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+.rules-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.rules-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ddd;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.rules-list li:before {
+    content: "✓";
+    color: #00ff9d;
+    font-weight: bold;
+}
+
+.users-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.user-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.8rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    margin-bottom: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.user-item:hover {
+    background: rgba(108, 99, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #6c63ff, #4a235a);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+
+.user-info h4 {
+    color: white;
+    margin-bottom: 0.2rem;
+    font-size: 0.9rem;
+}
+
+.user-comments {
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+.loading-comments {
+    text-align: center;
+    padding: 3rem;
+}
+
+.comment-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="discussion-page">
+    <div class="discussion-header">
+        <h1>{% trans "Обсуждение архитектуры сети" %}</h1>
+        <p>{% trans "Присоединяйтесь к обсуждению, задавайте вопросы, делитесь идеями и предложениями по улучшению сети" %}</p>
+    </div>
+    
+    <div class="discussion-container">
+        <div class="comments-section">
+            <div class="new-comment-form" id="newCommentForm">
+                <h3><i class="fas fa-comment-medical"></i> {% trans "Новый комментарий" %}</h3>
+                <textarea class="comment-input" id="commentInput" 
+                          placeholder="{% trans "Введите ваш комментарий здесь..." %}"
+                          {% if not user.is_authenticated %}disabled{% endif %}></textarea>
+                <div class="comment-form-actions">
+                    <button class="cancel-comment-btn" id="cancelCommentBtn">
+                        {% trans "Отмена" %}
+                    </button>
+                    <button class="submit-comment-btn" id="submitCommentBtn" 
+                            {% if not user.is_authenticated %}disabled{% endif %}>
+                        <i class="fas fa-paper-plane"></i> {% trans "Отправить" %}
+                    </button>
+                </div>
+                {% if not user.is_authenticated %}
+                <p style="color: #ff6b6b; margin-top: 1rem; font-size: 0.9rem;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {% trans "Для отправки комментариев необходимо подключить кошелек" %}
+                </p>
+                {% endif %}
+            </div>
+            
+            <div class="comments-list" id="commentsList">
+                <div class="loading-comments">
+                    <div class="spinner"></div>
+                    <p>{% trans "Загрузка комментариев..." %}</p>
+                </div>
+            </div>
+            
+            <div class="comment-pagination" id="commentPagination" style="display: none;">
+                <button class="page-btn" id="prevComments" disabled>
+                    <i class="fas fa-chevron-left"></i> {% trans "Назад" %}
+                </button>
+                <div class="page-numbers" id="commentPages"></div>
+                <button class="page-btn" id="nextComments">
+                    {% trans "Далее" %} <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <div class="stats-card">
+                <h3><i class="fas fa-chart-bar"></i> {% trans "Статистика" %}</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalComments">0</div>
+                        <div class="stat-label">{% trans "Комментарии" %}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalReplies">0</div>
+                        <div class="stat-label">{% trans "Ответы" %}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalLikes">0</div>
+                        <div class="stat-label">{% trans "Лайки" %}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="activeUsers">0</div>
+                        <div class="stat-label">{% trans "Участники" %}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="rules-card">
+                <h3><i class="fas fa-gavel"></i> {% trans "Правила обсуждения" %}</h3>
+                <ul class="rules-list">
+                    <li>{% trans "Будьте уважительны к другим участникам" %}</li>
+                    <li>{% trans "Обсуждайте только темы, связанные с проектом" %}</li>
+                    <li>{% trans "Не спамьте и не размещайте рекламу" %}</li>
+                    <li>{% trans "Используйте конструктивную критику" %}</li>
+                    <li>{% trans "Помогайте новым участникам" %}</li>
+                </ul>
+            </div>
+            
+            <div class="top-users-card">
+                <h3><i class="fas fa-crown"></i> {% trans "Активные участники" %}</h3>
+                <div class="users-list" id="topUsersList">
+                    <div class="user-item">
+                        <div class="user-avatar">D</div>
+                        <div class="user-info">
+                            <h4>Digital_Explorer</h4>
+                            <div class="user-comments">42 комментария</div>
+                        </div>
+                    </div>
+                    <div class="user-item">
+                        <div class="user-avatar">C</div>
+                        <div class="user-info">
+                            <h4>Cosmic_Architect</h4>
+                            <div class="user-comments">28 комментариев</div>
+                        </div>
+                    </div>
+                    <div class="user-item">
+                        <div class="user-avatar">Q</div>
+                        <div class="user-info">
+                            <h4>Quantum_Pioneer</h4>
+                            <div class="user-comments">19 комментариев</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+class DiscussionManager {
+    constructor() {
+        this.comments = [];
+        this.replies = {};
+        this.currentPage = 1;
+        this.commentsPerPage = 10;
+        this.replyingTo = null;
+        this.editingComment = null;
+        
+        this.init();
+    }
+    
+    async init() {
+        await this.loadComments();
+        this.setupEventListeners();
+        this.updateStats();
+    }
+    
+    async loadComments() {
+        try {
+            const response = await fetch('/api/comments/');
+            const data = await response.json();
+            
+            this.comments = data.comments || [];
+            this.renderComments();
+            
+        } catch (error) {
+            console.error('Error loading comments:', error);
+            this.showError('Ошибка загрузки комментариев');
+            // Загружаем демо данные
+            this.loadDemoComments();
+        }
+    }
+    
+    loadDemoComments() {
+        this.comments = [
+            {
+                id: 1,
+                author: {
+                    nickname: 'Digital_Explorer',
+                    wallet_address: 'DgExpl...1234'
+                },
+                content: 'Как вы думаете, насколько реально реализовать оффлайн-транзакции с использованием Bluetooth в городских условиях?',
+                created_at: '2024-01-15 14:30',
+                likes: 12,
+                replies: 3
+            },
+            {
+                id: 2,
+                author: {
+                    nickname: 'Cosmic_Architect',
+                    wallet_address: 'CosArch...5678'
+                },
+                content: 'Интересный проект! Особенно впечатляет интеграция спутниковой связи с блокчейном. Какие есть ограничения по задержкам?',
+                created_at: '2024-01-14 11:20',
+                likes: 8,
+                replies: 2
+            },
+            {
+                id: 3,
+                author: {
+                    nickname: 'Quantum_Pioneer',
+                    wallet_address: 'QntPio...9012'
+                },
+                content: 'Предлагаю добавить поддержку квантовой криптографии для защиты каналов связи. Это могло бы значительно повысить безопасность.',
+                created_at: '2024-01-13 16:45',
+                likes: 15,
+                replies: 5
+            }
+        ];
+    }
+    
+    renderComments() {
+        const commentsList = document.getElementById('commentsList');
+        if (!commentsList) return;
+        
+        const paginatedComments = this.paginateComments();
+        
+        if (paginatedComments.length === 0) {
+            commentsList.innerHTML = `
+                <div class="no-comments">
+                    <i class="fas fa-comments"></i>
+                    <h3>Комментариев пока нет</h3>
+                    <p>Будьте первым, кто оставит комментарий!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        
+        paginatedComments.forEach(comment => {
+            html += this.renderComment(comment);
+        });
+        
+        commentsList.innerHTML = html;
+        
+        // Добавляем обработчики событий
+        this.addCommentEventListeners();
+        
+        // Показываем пагинацию если нужно
+        this.renderPagination();
+    }
+    
+    renderComment(comment) {
+        const authorInitial = comment.author.nickname.charAt(0).toUpperCase();
+        const formattedDate = window.Z96A.utils.formatDate(comment.created_at);
+        const formattedWallet = window.Z96A.utils.formatWalletAddress(comment.author.wallet_address);
+        
+        let repliesHtml = '';
+        if (comment.replies && comment.replies.length > 0) {
+            repliesHtml = `
+                <div class="replies">
+                    ${comment.replies.map(reply => this.renderReply(reply)).join('')}
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="comment-item" data-id="${comment.id}">
+                <div class="comment-header">
+                    <div class="comment-author">
+                        <div class="author-avatar">${authorInitial}</div>
+                        <div class="author-info">
+                            <h4>${comment.author.nickname}</h4>
+                            <div class="author-wallet">${formattedWallet}</div>
+                        </div>
+                    </div>
+                    <div class="comment-date">${formattedDate}</div>
+                </div>
+                <div class="comment-content">${this.escapeHtml(comment.content)}</div>
+                <div class="comment-actions">
+                    <button class="like-btn" data-id="${comment.id}">
+                        <i class="fas fa-heart"></i>
+                        <span class="like-count">${comment.likes || 0}</span>
+                    </button>
+                    <button class="reply-btn" data-id="${comment.id}">
+                        <i class="fas fa-reply"></i> Ответить
+                    </button>
+                </div>
+                ${repliesHtml}
+                <div class="reply-form" id="replyForm-${comment.id}" style="display: none;">
+                    <textarea class="reply-input" placeholder="Введите ваш ответ..."></textarea>
+                    <div class="reply-actions">
+                        <button class="cancel-comment-btn cancel-reply">Отмена</button>
+                        <button class="submit-comment-btn submit-reply">Отправить</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    renderReply(reply) {
+        const authorInitial = reply.author.nickname.charAt(0).toUpperCase();
+        const formattedDate = window.Z96A.utils.formatDate(reply.created_at);
+        const formattedWallet = window.Z96A.utils.formatWalletAddress(reply.author.wallet_address);
+        
+        return `
+            <div class="comment-item reply" data-id="${reply.id}">
+                <div class="comment-header">
+                    <div class="comment-author">
+                        <div class="author-avatar">${authorInitial}</div>
+                        <div class="author-info">
+                            <h4>${reply.author.nickname}</h4>
+                            <div class="author-wallet">${formattedWallet}</div>
+                        </div>
+                    </div>
+                    <div class="comment-date">${formattedDate}</div>
+                </div>
+                <div class="comment-content">${this.escapeHtml(reply.content)}</div>
+                <div class="comment-actions">
+                    <button class="like-btn" data-id="${reply.id}">
+                        <i class="fas fa-heart"></i>
+                        <span class="like-count">${reply.likes || 0}</span>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    paginateComments() {
+        const startIndex = (this.currentPage - 1) * this.commentsPerPage;
+        const endIndex = startIndex + this.commentsPerPage;
+        return this.comments.slice(startIndex, endIndex);
+    }
+    
+    renderPagination() {
+        const pagination = document.getElementById('commentPagination');
+        const pageNumbers = document.getElementById('commentPages');
+        const prevBtn = document.getElementById('prevComments');
+        const nextBtn = document.getElementById('nextComments');
+        
+        if (!pagination || !pageNumbers) return;
+        
+        const totalPages = Math.ceil(this.comments.length / this.commentsPerPage);
+        
+        if (totalPages <= 1) {
+            pagination.style.display = 'none';
+            return;
+        }
+        
+        pagination.style.display = 'flex';
+        
+        // Обновляем состояние кнопок
+        prevBtn.disabled = this.currentPage === 1;
+        nextBtn.disabled = this.currentPage === totalPages;
+        
+        // Генерируем номера страниц
+        let pagesHtml = '';
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === this.currentPage) {
+                pagesHtml += `<span class="page-number active">${i}</span>`;
+            } else if (
+                i === 1 || 
+                i === totalPages || 
+                (i >= this.currentPage - 1 && i <= this.currentPage + 1)
+            ) {
+                pagesHtml += `<button class="page-number" data-page="${i}">${i}</button>`;
+            } else if (i === this.currentPage - 2 || i === this.currentPage + 2) {
+                pagesHtml += `<span class="page-dots">...</span>`;
+            }
+        }
+        
+        pageNumbers.innerHTML = pagesHtml;
+    }
+    
+    addCommentEventListeners() {
+        // Лайки
+        document.querySelectorAll('.like-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const commentId = e.currentTarget.getAttribute('data-id');
+                this.likeComment(commentId);
+            });
+        });
+        
+        // Ответы
+        document.querySelectorAll('.reply-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const commentId = e.currentTarget.getAttribute('data-id');
+                this.showReplyForm(commentId);
+            });
+        });
+        
+        // Отправка ответов
+        document.querySelectorAll('.submit-reply').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const form = e.target.closest('.reply-form');
+                const commentId = form.id.replace('replyForm-', '');
+                const input = form.querySelector('.reply-input');
+                this.submitReply(commentId, input.value);
+            });
+        });
+        
+        // Отмена ответов
+        document.querySelectorAll('.cancel-reply').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const form = e.target.closest('.reply-form');
+                form.style.display = 'none';
+            });
+        });
+        
+        // Пагинация
+        document.getElementById('prevComments')?.addEventListener('click', () => {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+                this.renderComments();
+                this.scrollToCommentsTop();
+            }
+        });
+        
+        document.getElementById('nextComments')?.addEventListener('click', () => {
+            const totalPages = Math.ceil(this.comments.length / this.commentsPerPage);
+            if (this.currentPage < totalPages) {
+                this.currentPage++;
+                this.renderComments();
+                this.scrollToCommentsTop();
+            }
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('page-number') && e.target.hasAttribute('data-page')) {
+                const page = parseInt(e.target.getAttribute('data-page'));
+                if (page !== this.currentPage) {
+                    this.currentPage = page;
+                    this.renderComments();
+                    this.scrollToCommentsTop();
+                }
+            }
+        });
+    }
+    
+    async likeComment(commentId) {
+        if (!window.Z96A.wallet.isConnected()) {
+            window.Z96A.utils.showNotification('Подключите кошелек для оценки комментариев', 'error');
+            return;
+        }
+        
+        try {
+            // В реальном проекте здесь будет отправка транзакции
+            const btn = document.querySelector(`.like-btn[data-id="${commentId}"]`);
+            if (btn) {
+                btn.classList.toggle('liked');
+                const countEl = btn.querySelector('.like-count');
+                let count = parseInt(countEl.textContent) || 0;
+                count = btn.classList.contains('liked') ? count + 1 : count - 1;
+                countEl.textContent = count;
+                
+                window.Z96A.utils.showNotification('Оценка сохранена', 'success');
+            }
+        } catch (error) {
+            console.error('Error liking comment:', error);
+            window.Z96A.utils.showNotification('Ошибка оценки', 'error');
+        }
+    }
+    
+    showReplyForm(commentId) {
+        if (!window.Z96A.wallet.isConnected()) {
+            window.Z96A.utils.showNotification('Подключите кошелек для ответов', 'error');
+            return;
+        }
+        
+        const form = document.getElementById(`replyForm-${commentId}`);
+        if (form) {
+            // Скрываем все другие формы ответов
+            document.querySelectorAll('.reply-form').forEach(f => {
+                f.style.display = 'none';
+            });
+            
+            form.style.display = 'block';
+            form.querySelector('.reply-input').focus();
+            this.replyingTo = commentId;
+        }
+    }
+    
+    async submitReply(commentId, content) {
+        if (!content.trim()) {
+            window.Z96A.utils.showNotification('Введите текст ответа', 'error');
+            return;
+        }
+        
+        if (!window.Z96A.wallet.isConnected()) {
+            window.Z96A.utils.showNotification('Подключите кошелек для отправки', 'error');
+            return;
+        }
+        
+        try {
+            // В реальном проекте здесь будет отправка транзакции
+            const userInfo = window.Z96A.wallet.getUserInfo();
+            
+            const reply = {
+                id: Date.now(),
+                author: {
+                    nickname: userInfo.nickname,
+                    wallet_address: userInfo.walletAddress
+                },
+                content: content,
+                created_at: new Date().toISOString(),
+                likes: 0
+            };
+            
+            // Добавляем ответ к комментарию
+            const comment = this.comments.find(c => c.id == commentId);
+            if (comment) {
+                if (!comment.replies) comment.replies = [];
+                comment.replies.push(reply);
+                comment.replies = comment.replies.length;
+                
+                // Обновляем отображение
+                this.renderComments();
+                
+                window.Z96A.utils.showNotification('Ответ отправлен', 'success');
+                
+                // Скрываем форму
+                const form = document.getElementById(`replyForm-${commentId}`);
+                if (form) {
+                    form.style.display = 'none';
+                    form.querySelector('.reply-input').value = '';
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error submitting reply:', error);
+            window.Z96A.utils.showNotification('Ошибка отправки ответа', 'error');
+        }
+    }
+    
+    setupEventListeners() {
+        // Отправка нового комментария
+        const submitBtn = document.getElementById('submitCommentBtn');
+        const cancelBtn = document.getElementById('cancelCommentBtn');
+        const commentInput = document.getElementById('commentInput');
+        
+        if (submitBtn) {
+            submitBtn.addEventListener('click', () => this.submitComment());
+        }
+        
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                if (commentInput) commentInput.value = '';
+            });
+        }
+        
+        if (commentInput) {
+            commentInput.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    this.submitComment();
+                }
+            });
+        }
+    }
+    
+    async submitComment() {
+        const commentInput = document.getElementById('commentInput');
+        if (!commentInput) return;
+        
+        const content = commentInput.value.trim();
+        if (!content) {
+            window.Z96A.utils.showNotification('Введите текст комментария', 'error');
+            return;
+        }
+        
+        if (!window.Z96A.wallet.isConnected()) {
+            window.Z96A.utils.showNotification('Подключите кошелек для отправки комментариев', 'error');
+            return;
+        }
+        
+        try {
+            const userInfo = window.Z96A.wallet.getUserInfo();
+            
+            const newComment = {
+                id: Date.now(),
+                author: {
+                    nickname: userInfo.nickname,
+                    wallet_address: userInfo.walletAddress
+                },
+                content: content,
+                created_at: new Date().toISOString(),
+                likes: 0,
+                replies: 0
+            };
+            
+            // Добавляем в начало списка
+            this.comments.unshift(newComment);
+            
+            // Обновляем отображение
+            this.renderComments();
+            
+            // Очищаем поле ввода
+            commentInput.value = '';
+            
+            // Показываем уведомление
+            window.Z96A.utils.showNotification('Комментарий отправлен', 'success');
+            
+            // Обновляем статистику
+            this.updateStats();
+            
+        } catch (error) {
+            console.error('Error submitting comment:', error);
+            window.Z96A.utils.showNotification('Ошибка отправки комментария', 'error');
+        }
+    }
+    
+    updateStats() {
+        // Подсчитываем статистику
+        const totalComments = this.comments.length;
+        const totalReplies = this.comments.reduce((sum, comment) => 
+            sum + (comment.replies || 0), 0);
+        const totalLikes = this.comments.reduce((sum, comment) => 
+            sum + (comment.likes || 0), 0);
+        
+        // Уникальные пользователи
+        const users = new Set();
+        this.comments.forEach(comment => {
+            users.add(comment.author.wallet_address);
+        });
+        
+        // Обновляем DOM
+        document.getElementById('totalComments').textContent = totalComments;
+        document.getElementById('totalReplies').textContent = totalReplies;
+        document.getElementById('totalLikes').textContent = totalLikes;
+        document.getElementById('activeUsers').textContent = users.size;
+    }
+    
+    showError(message) {
+        const commentsList = document.getElementById('commentsList');
+        if (commentsList) {
+            commentsList.innerHTML = `
+                <div class="news-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>${message}</p>
+                    <button class="retry-btn" onclick="discussionManager.loadComments()">
+                        Попробовать снова
+                    </button>
+                </div>
+            `;
+        }
+    }
+    
+    scrollToCommentsTop() {
+        const commentsList = document.getElementById('commentsList');
+        if (commentsList) {
+            commentsList.scrollTop = 0;
+        }
+    }
+    
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+}
+
+// Инициализация менеджера обсуждений
+let discussionManager = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    discussionManager = new DiscussionManager();
+    window.Z96A.discussion = discussionManager;
+});
+</script>
+{% endblock %}

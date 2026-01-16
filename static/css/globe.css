@@ -1,0 +1,433 @@
+/* Стили для страницы архитектуры */
+.architecture-container {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 1rem;
+    height: calc(100vh - 140px);
+    position: relative;
+}
+
+/* Панель управления */
+.control-panel {
+    background: rgba(30, 30, 46, 0.9);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.control-section {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.control-section h3 {
+    color: var(--color-accent-light);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.control-group {
+    margin-bottom: 1rem;
+}
+
+.control-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+.btn-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.network-btn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: var(--font-main);
+}
+
+.network-btn.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+.network-btn:hover:not(.active) {
+    background: rgba(108, 99, 255, 0.2);
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: #ddd;
+    font-size: 0.9rem;
+}
+
+.checkbox-group input[type="checkbox"] {
+    accent-color: var(--color-accent);
+}
+
+.slider {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    outline: none;
+    opacity: 0.7;
+    transition: opacity .2s;
+}
+
+.slider:hover {
+    opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    cursor: pointer;
+}
+
+/* Информация об элементе */
+.element-info {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: 8px;
+    min-height: 150px;
+}
+
+.element-info img {
+    max-width: 100%;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+}
+
+/* Кнопка предложения */
+.propose-btn {
+    width: 100%;
+    background: linear-gradient(90deg, var(--color-cyber-green), #00cc7a);
+    color: var(--color-dark);
+    border: none;
+    padding: 0.8rem;
+    border-radius: 8px;
+    font-family: var(--font-main);
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    transition: transform 0.3s ease;
+}
+
+.propose-btn:hover {
+    transform: translateY(-2px);
+}
+
+.proposals-list {
+    margin-top: 1rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.proposal-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.8rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid var(--color-accent);
+}
+
+.proposal-item .wallet-address {
+    font-size: 0.8rem;
+    color: #aaa;
+    font-family: monospace;
+}
+
+/* Контейнер глобуса */
+.globe-container {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    background: #000;
+}
+
+#globeCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* HUD */
+.hud {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    display: flex;
+    gap: 1.5rem;
+}
+
+.hud-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hud-label {
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+.hud-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--color-accent-light);
+}
+
+/* Панель новостей */
+.news-panel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 300px;
+    background: rgba(30, 30, 46, 0.95);
+    border-right: 1px solid rgba(108, 99, 255, 0.3);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 100;
+}
+
+.news-panel.open {
+    transform: translateX(0);
+}
+
+.news-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(108, 99, 255, 0.3);
+}
+
+.news-header h3 {
+    color: var(--color-accent-light);
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.panel-toggle {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.3rem;
+}
+
+.news-content {
+    padding: 1rem;
+    overflow-y: auto;
+    height: calc(100% - 60px);
+}
+
+.news-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border-left: 3px solid var(--color-accent);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.news-item:hover {
+    background: rgba(108, 99, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.news-source {
+    font-size: 0.8rem;
+    color: var(--color-cyber-green);
+    margin-bottom: 0.5rem;
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    background: rgba(0, 255, 157, 0.1);
+    border-radius: 4px;
+}
+
+.news-title {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: white;
+}
+
+.news-preview {
+    font-size: 0.9rem;
+    color: #aaa;
+    line-height: 1.4;
+}
+
+/* Модальное окно */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: linear-gradient(135deg, var(--color-darker) 0%, var(--color-space-blue) 100%);
+    margin: 5% auto;
+    padding: 2rem;
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    position: relative;
+    box-shadow: 0 0 30px rgba(108, 99, 255, 0.2);
+}
+
+.close {
+    position: absolute;
+    right: 1.5rem;
+    top: 1rem;
+    font-size: 1.5rem;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close:hover {
+    color: white;
+}
+
+.modal h2 {
+    color: var(--color-accent-light);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #ddd;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.8rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    border-radius: 6px;
+    color: white;
+    font-family: var(--font-main);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.submit-btn {
+    flex: 1;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-nebula-purple));
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: var(--font-main);
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+}
+
+.cancel-btn {
+    flex: 1;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: var(--font-main);
+    cursor: pointer;
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .architecture-container {
+        grid-template-columns: 250px 1fr;
+    }
+}
+
+@media (max-width: 992px) {
+    .architecture-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+    
+    .control-panel {
+        max-height: 300px;
+    }
+}
