@@ -1,19 +1,117 @@
-# Z96A - Network Architecture Project
-
-## ĞĞ¿Ğ¸ÑĞ°Ğ½Ğ¸Ğµ
-Ğ”Ğ¸Ğ¿Ğ»Ğ¾Ğ¼Ğ½Ñ‹Ğ¹ Ğ¿Ñ€Ğ¾ĞµĞºÑ‚ "ĞÑ€Ñ…Ğ¸Ñ‚ĞµĞºÑ‚ÑƒÑ€Ğ° ÑĞ¸ÑÑ‚ĞµĞ¼Ñ‹ Ğ¾Ğ±Ñ€Ğ°Ğ±Ğ¾Ñ‚ĞºĞ¸ Ñ‚Ñ€Ğ°Ğ½Ğ·Ğ°ĞºÑ†Ğ¸Ğ¹ Ğ´Ğ»Ñ Ğ¸Ğ½Ñ„Ğ¾ĞºĞ¾Ğ¼Ğ¼ÑƒĞ½Ğ¸ĞºĞ°Ñ†Ğ¸Ğ¾Ğ½Ğ½Ñ‹Ñ… ÑĞ¸ÑÑ‚ĞµĞ¼ Ğ² ÑƒÑĞ»Ğ¾Ğ²Ğ¸ÑÑ… Ñ‡Ğ°ÑÑ‚Ğ¸Ñ‡Ğ½Ğ¾Ğ³Ğ¾ Ğ¾Ñ‚ÑÑƒÑ‚ÑÑ‚Ğ²Ğ¸Ñ ÑĞµÑ‚ĞµĞ²Ğ¾Ğ³Ğ¾ ÑĞ¾ĞµĞ´Ğ¸Ğ½ĞµĞ½Ğ¸Ñ".
-
-## Ğ¢ĞµÑ…Ğ½Ğ¾Ğ»Ğ¾Ğ³Ğ¸Ğ¸
-- Django 4.2
-- Python 3.11+
-- Three.js Ğ´Ğ»Ñ 3D Ğ²Ğ¸Ğ·ÑƒĞ°Ğ»Ğ¸Ğ·Ğ°Ñ†Ğ¸Ğ¸
-- Solana Web3 Ğ´Ğ»Ñ Ğ¸Ğ½Ñ‚ĞµĞ³Ñ€Ğ°Ñ†Ğ¸Ğ¸ Ñ Ğ±Ğ»Ğ¾ĞºÑ‡ĞµĞ¹Ğ½Ğ¾Ğ¼
-- SQLite (Ğ´Ğ»Ñ Ñ€Ğ°Ğ·Ñ€Ğ°Ğ±Ğ¾Ñ‚ĞºĞ¸)
-- HTML5/CSS3/JavaScript
-
-## Ğ£ÑÑ‚Ğ°Ğ½Ğ¾Ğ²ĞºĞ°
-
-### 1. ĞšĞ»Ğ¾Ğ½Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ¸Ğµ Ñ€ĞµĞ¿Ğ¾Ğ·Ğ¸Ñ‚Ğ¾Ñ€Ğ¸Ñ
-```bash
-git clone <repository-url>
-cd Diplom3
+# €àå¨â¥ªâãà  ¯à®¥ªâ  „¨¯«®¬3 
+ 
+## ‘âàãªâãà  ¯à®¥ªâ  
+ 
+``` 
+‘âàãªâãà  ¯ ¯®ª â®¬  HDD
+‘¥à¨©­ë© ­®¬¥à â®¬ : 7836-DDB7
+D:.
+³   .env
+³   db.sqlite3
+³   Deep3.txt
+³   git
+³   manage.py
+³   README.md
+³   requirements.txt
+³   update_templates.py
+³   
+ÃÄÄÄcore
+³   ³   admin.py
+³   ³   api.py
+³   ³   apps.py
+³   ³   context_processors.py
+³   ³   models.py
+³   ³   signals.py
+³   ³   views.py
+³   ³   __init__.py
+³   ³   
+³   ÃÄÄÄmanagement
+³   ³   ÀÄÄÄcommands
+³   ³           init_network_data.py
+³   ³           
+³   ÃÄÄÄmigrations
+³   ³   ³   0001_initial.py
+³   ³   ³   0002_comment_parent_comment.py
+³   ³   ³   __init__.py
+³   ³   ³   
+³   ³   ÀÄÄÄ__pycache__
+³   ³           0001_initial.cpython-314.pyc
+³   ³           0002_comment_parent_comment.cpython-314.pyc
+³   ³           __init__.cpython-314.pyc
+³   ³           
+³   ÃÄÄÄservices
+³   ³   ³   news_parser.py
+³   ³   ³   solana_client.py
+³   ³   ³   
+³   ³   ÀÄÄÄ__pycache__
+³   ³           news_parser.cpython-314.pyc
+³   ³           solana_client.cpython-314.pyc
+³   ³           
+³   ÃÄÄÄstatic
+³   ÃÄÄÄtemplates
+³   ³   ÀÄÄÄcore
+³   ³           about.html
+³   ³           discussion.html
+³   ³           home.html
+³   ³           network_architecture.html
+³   ³           news.html
+³   ³           
+³   ÀÄÄÄ__pycache__
+³           admin.cpython-314.pyc
+³           api.cpython-314.pyc
+³           apps.cpython-314.pyc
+³           models.cpython-314.pyc
+³           signals.cpython-314.pyc
+³           views.cpython-314.pyc
+³           __init__.cpython-314.pyc
+³           
+ÃÄÄÄlocale
+ÃÄÄÄmedia
+³   ÀÄÄÄequipment_images
+ÃÄÄÄstatic
+³   ÃÄÄÄcss
+³   ³       style.css
+³   ³       
+³   ÃÄÄÄdata
+³   ³       network_data.json
+³   ³       
+³   ÃÄÄÄfonts
+³   ³       font.css
+³   ³       
+³   ÃÄÄÄimages
+³   ³   ³   earth_bump.jpg
+³   ³   ³   earth_lights.jpg
+³   ³   ³   earth_texture.jpg
+³   ³   ³   favicon.ico
+³   ³   ³   logo.svg
+³   ³   ³   
+³   ³   ÃÄÄÄequipment
+³   ³   ÀÄÄÄicons
+³   ³           logo-placeholder.png
+³   ³           logo-placeholder.txt
+³   ³           
+³   ÀÄÄÄjs
+³           globe3d.js
+³           globe3d_full.js
+³           main.js
+³           
+ÃÄÄÄtemplates
+³   ³   base.html
+³   ³   
+³   ÀÄÄÄcore
+³           network_architecture.html
+³           roadmap.html
+³           
+ÀÄÄÄz96a
+    ³   settings.py
+    ³   urls.py
+    ³   wsgi.py
+    ³   __init__.py
+    ³   
+    ÀÄÄÄ__pycache__
+            settings.cpython-314.pyc
+            urls.cpython-314.pyc
+            wsgi.cpython-314.pyc
+            __init__.cpython-314.pyc
+            
+``` 
