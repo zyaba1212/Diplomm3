@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "News" %} - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .news-filters {
+            background: rgba(30, 30, 46, 0.8);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .filter-options {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #444;
+            color: #aaa;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn:hover {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+        }
+        
+        .filter-btn.active {
+            background: rgba(0, 212, 255, 0.3);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+        
+        .news-list {
+            margin: 2rem 0;
+        }
+        
+        .news-article {
+            background: rgba(30, 30, 46, 0.8);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .news-article:hover {
+            border-color: #9d4edd;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .article-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .article-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        
+        .article-title:hover {
+            color: #9d4edd;
+        }
+        
+        .article-source {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(157, 78, 221, 0.2);
+            color: #9d4edd;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: bold;
+        }
+        
+        .article-content {
+            color: #ccc;
+            line-height: 1.6;
+            margin: 1rem 0;
+        }
+        
+        .article-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #444;
+            color: #888;
+            font-size: 0.875rem;
+        }
+        
+        .article-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .article-tag {
+            background: rgba(0, 212, 255, 0.1);
+            color: #00d4ff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .page-link {
+            padding: 0.5rem 1rem;
+            background: rgba(30, 30, 46, 0.8);
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #aaa;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .page-link:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+        
+        .page-link.active {
+            background: rgba(0, 212, 255, 0.3);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+        
+        .update-news-btn {
+            display: block;
+            margin: 2rem auto;
+        }
+        
+        @media (max-width: 768px) {
+            .article-header {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .article-footer {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h1>📰 {% trans "Infocommunication News" %}</h1>
+    
+    <p class="subtitle">
+        {% trans "Latest news about network infrastructure, telecommunications, blockchain technology, and satellite communications from various sources." %}
+    </p>
+    
+    <!-- News Filters -->
+    <div class="news-filters">
+        <h3>{% trans "Filter by Source" %}</h3>
+        <div class="filter-options">
+            <button class="filter-btn active" data-source="all">
+                {% trans "All Sources" %}
+            </button>
+            {% for source_code, source_name in sources %}
+                <button class="filter-btn" data-source="{{ source_code }}">
+                    {% if source_code == 'twitter' %}🐦
+                    {% elif source_code == 'reddit' %}🤖
+                    {% elif source_code == 'habr' %}📚
+                    {% else %}📰{% endif %}
+                    {{ source_name }}
+                </button>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Manual Update Button -->
+    {% if user.is_staff %}
+        <button id="update-news-btn" class="btn update-news-btn">
+            🔄 {% trans "Update News Now" %}
+        </button>
+    {% endif %}
+    
+    <!-- News List -->
+    <div class="news-list">
+        {% for article in page_obj %}
+            <article class="news-article">
+                <div class="article-header">
+                    <a href="{{ article.source_url }}" target="_blank" class="article-title">
+                        {{ article.title }}
+                    </a>
+                    <span class="article-source">
+                        {{ article.get_source_display }}
+                    </span>
+                </div>
+                
+                <div class="article-content">
+                    {{ article.excerpt|safe }}
+                </div>
+                
+                <div class="article-footer">
+                    <div class="article-meta">
+                        <span class="article-author">👤 {{ article.author|default:"Unknown" }}</span> • 
+                        <span class="article-date">{{ article.published_date|date:"d.m.Y H:i" }}</span>
+                    </div>
+                    
+                    {% if article.tags %}
+                        <div class="article-tags">
+                            {% for tag in article.tags|slice:":3" %}
+                                <span class="article-tag">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </article>
+        {% empty %}
+            <div class="no-news card">
+                <h3>{% trans "No news available" %}</h3>
+                <p>{% trans "Check back later or try updating the news feed." %}</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="page-link">
+                    ← {% trans "Previous" %}
+                </a>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="page-link active">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="page-link">
+                    {% trans "Next" %} →
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // Filter news by source
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const source = this.dataset.source;
+                
+                // Update active button
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Filter articles
+                document.querySelectorAll('.news-article').forEach(article => {
+                    if (source === 'all') {
+                        article.style.display = 'block';
+                    } else {
+                        const articleSource = article.querySelector('.article-source').textContent.toLowerCase();
+                        article.style.display = articleSource.includes(source) ? 'block' : 'none';
+                    }
+                });
+            });
+        });
+        
+        // Update news manually
+        document.getElementById('update-news-btn')?.addEventListener('click', async function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '🔄 {% trans "Updating..." %}';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/update-news', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.app.showNotification(
+                        `{% trans "News updated successfully!" %} ${result.new_articles} {% trans "new articles added" %}`,
+                        'success'
+                    );
+                    
+                    // Reload page after a delay
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                window.app.showNotification(
+                    `{% trans "Failed to update news:" %} ${error.message}`,
+                    'error'
+                );
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+        
+        // Utility function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Auto-refresh news every 10 minutes
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                fetch('/api/update-news', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.new_articles > 0) {
+                            window.app.showNotification(
+                                `${data.new_articles} {% trans "new articles added" %}`,
+                                'info'
+                            );
+                        }
+                    })
+                    .catch(() => {});
+            }
+        }, 10 * 60 * 1000); // 10 minutes
+    </script>
+{% endblock %}

@@ -1,351 +1,210 @@
-// Система комментариев Z96A
+// D:\Diplom\static\js\discussion.js - ПОЛНЫЙ КОД
 
-class DiscussionManager {
-    constructor() {
-        this.comments = [];
-        this.currentFilter = 'recent';
-        this.replyingTo = null;
-        
-        this.init();
-    }
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Discussion JS loaded');
     
-    async init() {
-        await this.loadComments();
-        this.renderComments();
-        this.setupEventListeners();
-    }
+    // Элементы
+    const messageList = document.getElementById('message-list');
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+    const usernameInput = document.getElementById('username-input');
+    const connectBtn = document.getElementById('connect-btn');
     
-    async loadComments() {
-        try {
-            const response = await fetch('/api/comments/');
-            const data = await response.json();
-            this.comments = data.comments || [];
-            console.log('Загружено комментариев:', this.comments.length);
-        } catch (error) {
-            console.error('Ошибка загрузки комментариев:', error);
-            this.loadDemoComments();
-        }
-    }
+    // WebSocket
+    let socket = null;
+    let username = localStorage.getItem('discussion_username') || `User${Math.floor(Math.random() * 1000)}`;
     
-    loadDemoComments() {
-        this.comments = [
-            {
-                id: 1,
-                user: { nickname: 'TechExplorer_2024' },
-                content: 'Отличный проект! Визуализация глобальной сети выглядит впечатляюще. Особенно интересна идея с оффлайн-транзакциями.',
-                created_at: new Date(Date.now() - 3600000).toISOString(),
-                likes: 15,
-                dislikes: 0,
-                replies: []
-            },
-            {
-                id: 2,
-                user: { nickname: 'NetworkEngineer' },
-                content: 'Было бы здорово добавить больше информации о типах используемого оборудования на разных уровнях сети.',
-                created_at: new Date(Date.now() - 7200000).toISOString(),
-                likes: 8,
-                dislikes: 1,
-                replies: [
-                    {
-                        id: 3,
-                        user: { nickname: 'Gr3g' },
-                        content: 'Согласен! Планируется добавить подробные спецификации для каждого элемента.',
-                        created_at: new Date(Date.now() - 3600000).toISOString(),
-                        likes: 5,
-                        dislikes: 0
-                    }
-                ]
-            }
-        ];
-    }
-    
-    renderComments() {
-        const container = document.getElementById('commentsContainer');
-        if (!container) return;
-        
-        const sortedComments = this.sortComments(this.comments);
-        const topLevelComments = sortedComments.filter(c => !c.parent);
-        
-        if (topLevelComments.length === 0) {
-            container.innerHTML = `
-                
-                    
-                    Пока нет комментариев. Будьте первым!
-                
-            `;
-            return;
-        }
-        
-        let html = '';
-        topLevelComments.forEach(comment => {
-            html += this.renderComment(comment);
+    // Установка имени пользователя
+    if (usernameInput) {
+        usernameInput.value = username;
+        usernameInput.addEventListener('change', function() {
+            username = this.value.trim() || username;
+            localStorage.setItem('discussion_username', username);
         });
-        
-        container.innerHTML = html;
-        this.attachCommentEventListeners();
     }
     
-    renderComment(comment, isReply = false) {
-        const timeAgo = this.getTimeAgo(comment.created_at);
-        const replyClass = isReply ? 'comment-reply' : '';
+    // Функция подключения WebSocket
+    function connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/discussion/`;
         
-        let html = `
+        socket = new WebSocket(wsUrl);
+        
+        socket.onopen = function() {
+            console.log('WebSocket connected');
+            if (connectBtn) connectBtn.disabled = true;
+            addSystemMessage('Подключено к чату');
             
-                
-                    
-                        
-                        ${comment.user.nickname}
-                    
-                    ${timeAgo}
-                
-                ${this.escapeHtml(comment.content)}
-                
-                    
-                         ${comment.likes || 0}
-                    
-                    
-                         ${comment.dislikes || 0}
-                    
-                    
-                         Ответить
-                    
-                
-        `;
+            // Отправляем информацию о пользователе
+            socket.send(JSON.stringify({
+                type: 'join',
+                username: username
+            }));
+        };
         
-        // Рендерим ответы
-        if (comment.replies && comment.replies.length > 0) {
-            html += '';
-            comment.replies.forEach(reply => {
-                html += this.renderComment(reply, true);
-            });
-            html += '';
-        }
+        socket.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            } catch (error) {
+                console.error('Error parsing message:', error);
+            }
+        };
         
-        html += '';
-        return html;
+        socket.onclose = function() {
+            console.log('WebSocket disconnected');
+            if (connectBtn) connectBtn.disabled = false;
+            addSystemMessage('Отключено от чата');
+            
+            // Переподключение через 3 секунды
+            setTimeout(connectWebSocket, 3000);
+        };
+        
+        socket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
     }
     
-    sortComments(comments) {
-        switch(this.currentFilter) {
-            case 'recent':
-                return comments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            case 'popular':
-                return comments.sort((a, b) => (b.likes - b.dislikes) - (a.likes - a.dislikes));
-            case 'oldest':
-                return comments.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-            default:
-                return comments;
-        }
-    }
-    
-    setupEventListeners() {
-        // Форма нового комментария
-        const commentForm = document.getElementById('commentForm');
-        if (commentForm) {
-            commentForm.addEventListener('submit', (e) => this.handleSubmit(e));
-        }
-        
-        // Фильтры
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const filter = e.target.dataset.filter;
-                if (filter) {
-                    this.currentFilter = filter;
-                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
-                    this.renderComments();
+    // Обработка сообщений WebSocket
+    function handleWebSocketMessage(data) {
+        switch(data.type) {
+            case 'message':
+                addMessage(data.username, data.message, data.timestamp);
+                break;
+            case 'user_join':
+                addSystemMessage(`${data.username} присоединился к чату`);
+                break;
+            case 'user_leave':
+                addSystemMessage(`${data.username} покинул чат`);
+                break;
+            case 'history':
+                if (Array.isArray(data.messages)) {
+                    data.messages.forEach(msg => {
+                        addMessage(msg.username, msg.message, msg.timestamp, true);
+                    });
                 }
-            });
-        });
-    }
-    
-    attachCommentEventListeners() {
-        // Лайки
-        document.querySelectorAll('.like-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const commentId = parseInt(e.currentTarget.dataset.id);
-                this.likeComment(commentId);
-            });
-        });
-        
-        // Дизлайки
-        document.querySelectorAll('.dislike-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const commentId = parseInt(e.currentTarget.dataset.id);
-                this.dislikeComment(commentId);
-            });
-        });
-        
-        // Ответы
-        document.querySelectorAll('.reply-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const commentId = parseInt(e.currentTarget.dataset.id);
-                this.startReply(commentId);
-            });
-        });
-    }
-    
-    async handleSubmit(e) {
-        e.preventDefault();
-        
-        if (!window.Z96A.wallet || !window.Z96A.wallet.isConnected()) {
-            window.Z96A.utils.showNotification('Подключите кошелек для отправки комментариев', 'error');
-            return;
-        }
-        
-        const textarea = document.getElementById('commentText');
-        const content = textarea.value.trim();
-        
-        if (!content) {
-            window.Z96A.utils.showNotification('Комментарий не может быть пустым', 'error');
-            return;
-        }
-        
-        try {
-            const response = await fetch('/api/comments/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    wallet_address: window.Z96A.wallet.getPublicKey(),
-                    content: content,
-                    parent_id: this.replyingTo
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                window.Z96A.utils.showNotification('Комментарий успешно добавлен!', 'success');
-                textarea.value = '';
-                this.replyingTo = null;
-                this.cancelReply();
-                await this.loadComments();
-                this.renderComments();
-            } else {
-                throw new Error(data.error || 'Failed to post comment');
-            }
-        } catch (error) {
-            console.error('Error posting comment:', error);
-            window.Z96A.utils.showNotification('Ошибка отправки комментария', 'error');
+                break;
+            case 'error':
+                addSystemMessage(`Ошибка: ${data.message}`);
+                break;
         }
     }
     
-    async likeComment(commentId) {
-        if (!window.Z96A.wallet || !window.Z96A.wallet.isConnected()) {
-            window.Z96A.utils.showNotification('Подключите кошелек', 'error');
-            return;
-        }
+    // Добавление сообщения пользователя
+    function addMessage(user, text, timestamp, isHistory = false) {
+        if (!messageList) return;
         
-        try {
-            const response = await fetch(`/api/comments/${commentId}/like/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    wallet_address: window.Z96A.wallet.getPublicKey()
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                await this.loadComments();
-                this.renderComments();
-            }
-        } catch (error) {
-            console.error('Error liking comment:', error);
-        }
-    }
-    
-    async dislikeComment(commentId) {
-        if (!window.Z96A.wallet || !window.Z96A.wallet.isConnected()) {
-            window.Z96A.utils.showNotification('Подключите кошелек', 'error');
-            return;
-        }
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${user === username ? 'own-message' : ''}`;
         
-        try {
-            const response = await fetch(`/api/comments/${commentId}/dislike/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    wallet_address: window.Z96A.wallet.getPublicKey()
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                await this.loadComments();
-                this.renderComments();
-            }
-        } catch (error) {
-            console.error('Error disliking comment:', error);
-        }
-    }
-    
-    startReply(commentId) {
-        this.replyingTo = commentId;
-        const comment = this.findCommentById(commentId);
+        const time = timestamp ? new Date(timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
         
-        const replyInfo = document.createElement('div');
-        replyInfo.className = 'reply-info';
-        replyInfo.innerHTML = `
-            Ответ на комментарий ${comment.user.nickname}
-            
-                
-            
+        messageDiv.innerHTML = `
+            <div class="message-header">
+                <strong class="username">${user}</strong>
+                <span class="message-time">${time}</span>
+            </div>
+            <div class="message-text">${escapeHtml(text)}</div>
         `;
         
-        const form = document.getElementById('commentForm');
-        const existing = form.querySelector('.reply-info');
-        if (existing) existing.remove();
-        
-        form.insertBefore(replyInfo, form.firstChild);
-        document.getElementById('commentText').focus();
-    }
-    
-    cancelReply() {
-        this.replyingTo = null;
-        const replyInfo = document.querySelector('.reply-info');
-        if (replyInfo) replyInfo.remove();
-    }
-    
-    findCommentById(id) {
-        for (let comment of this.comments) {
-            if (comment.id === id) return comment;
-            if (comment.replies) {
-                const found = comment.replies.find(r => r.id === id);
-                if (found) return found;
-            }
+        if (isHistory) {
+            messageList.insertBefore(messageDiv, messageList.firstChild);
+        } else {
+            messageList.appendChild(messageDiv);
+            messageList.scrollTop = messageList.scrollHeight;
         }
-        return null;
     }
     
-    getTimeAgo(dateString) {
-        const date = new Date(dateString);
-        const now = new Date();
-        const seconds = Math.floor((now - date) / 1000);
+    // Добавление системного сообщения
+    function addSystemMessage(text) {
+        if (!messageList) return;
         
-        if (seconds < 60) return 'только что';
-        if (seconds < 3600) return `${Math.floor(seconds / 60)} мин. назад`;
-        if (seconds < 86400) return `${Math.floor(seconds / 3600)} ч. назад`;
-        if (seconds < 604800) return `${Math.floor(seconds / 86400)} дн. назад`;
-        
-        return date.toLocaleDateString('ru-RU');
+        const systemDiv = document.createElement('div');
+        systemDiv.className = 'system-message';
+        systemDiv.textContent = text;
+        messageList.appendChild(systemDiv);
+        messageList.scrollTop = messageList.scrollHeight;
     }
     
-    escapeHtml(text) {
+    // Отправка сообщения
+    function sendMessage(text) {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            addSystemMessage('Нет подключения к чату');
+            return;
+        }
+        
+        if (!text.trim()) return;
+        
+        const messageData = {
+            type: 'message',
+            username: username,
+            message: text,
+            timestamp: new Date().toISOString()
+        };
+        
+        socket.send(JSON.stringify(messageData));
+        
+        // Очищаем поле ввода
+        if (messageInput) {
+            messageInput.value = '';
+        }
+    }
+    
+    // Экранирование HTML
+    function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
-}
-
-// Инициализация
-let discussionManager = null;
-
-document.addEventListener('DOMContentLoaded', function() {
-    if (document.getElementById('commentsContainer')) {
-        discussionManager = new DiscussionManager();
-        window.Z96A.discussion = discussionManager;
+    
+    // Обработка формы
+    if (messageForm) {
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (messageInput && messageInput.value.trim()) {
+                sendMessage(messageInput.value.trim());
+            }
+        });
     }
+    
+    // Обработка кнопки подключения
+    if (connectBtn) {
+        connectBtn.addEventListener('click', function() {
+            if (!socket || socket.readyState !== WebSocket.OPEN) {
+                connectWebSocket();
+            }
+        });
+    }
+    
+    // Горячие клавиши
+    if (messageInput) {
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (this.value.trim()) {
+                    sendMessage(this.value.trim());
+                }
+            }
+        });
+    }
+    
+    // Автоподключение при загрузке
+    connectWebSocket();
+    
+    // Загрузка истории сообщений
+    function loadMessageHistory() {
+        fetch('/api/discussion/history/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.messages && Array.isArray(data.messages)) {
+                    data.messages.forEach(msg => {
+                        addMessage(msg.username, msg.message, msg.timestamp, true);
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading history:', error));
+    }
+    
+    // Загружаем историю через 1 секунду после подключения
+    setTimeout(loadMessageHistory, 1000);
 });

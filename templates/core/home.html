@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Home" %} - Z96A{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>{% trans "Z96A Network Architecture" %}</h1>
+        <p class="hero-subtitle">
+            {% trans "A revolutionary approach to transaction processing in infocommunication systems under partial network absence conditions." %}
+        </p>
+        
+        <div class="cta-buttons">
+            <a href="{% url 'network_architecture' %}" class="btn btn-primary">
+                🌍 {% trans "Explore Network" %}
+            </a>
+            <a href="{% url 'discussion' %}" class="btn btn-secondary">
+                💬 {% trans "Join Discussion" %}
+            </a>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <h2>{% trans "Network Statistics" %}</h2>
+        <div class="stats-grid">
+            <div class="stat-card card">
+                <div class="stat-number">0</div>
+                <div class="stat-label">{% trans "Network Nodes" %}</div>
+            </div>
+            <div class="stat-card card">
+                <div class="stat-number">0</div>
+                <div class="stat-label">{% trans "Equipment Types" %}</div>
+            </div>
+            <div class="stat-card card">
+                <div class="stat-number">0</div>
+                <div class="stat-label">{% trans "Connections" %}</div>
+            </div>
+            <div class="stat-card card">
+                <div class="stat-number">0</div>
+                <div class="stat-label">{% trans "User Proposals" %}</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Overview -->
+    <section class="tech-overview card">
+        <h2>🔬 {% trans "Technology Stack" %}</h2>
+        <div class="tech-grid">
+            <div class="tech-item">
+                <div class="tech-icon">🌐</div>
+                <h4>{% trans "Existing Network" %}</h4>
+                <p>{% trans "Global fiber optic infrastructure, submarine cables, internet exchange points." %}</p>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">🛰️</div>
+                <h4>{% trans "Satellite Connectivity" %}</h4>
+                <p>{% trans "Starlink-like LEO satellite constellations for remote area coverage." %}</p>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">⚡</div>
+                <h4>{% trans "Offline Transactions" %}</h4>
+                <p>{% trans "SUI blockchain technology enabling transaction processing without constant network connection." %}</p>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">🔗</div>
+                <h4>{% trans "Hybrid Architecture" %}</h4>
+                <p>{% trans "Seamless integration of terrestrial and satellite networks with blockchain verification." %}</p>
+            </div>
+        </div>
+    </section>
+{% endblock %}

@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "About Us" %} - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .about-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #9d4edd;
+        }
+        
+        .profile-card {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            background: rgba(30, 30, 46, 0.8);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            transition: all 0.3s ease;
+        }
+        
+        .profile-card:hover {
+            border-color: #00d4ff;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .profile-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #9d4edd, #00d4ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .profile-info {
+            flex: 1;
+        }
+        
+        .profile-name {
+            font-size: 1.5rem;
+            color: #00d4ff;
+            margin-bottom: 0.5rem;
+        }
+        
+        .profile-title {
+            color: #9d4edd;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        .academy-info {
+            background: rgba(30, 30, 46, 0.8);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .project-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .detail-card {
+            background: rgba(30, 30, 46, 0.8);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .detail-card:hover {
+            border-color: #9d4edd;
+            transform: translateY(-3px);
+        }
+        
+        .detail-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .detail-title {
+            color: #00d4ff;
+            margin-bottom: 1rem;
+        }
+        
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .tech-item {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+        
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(30, 30, 46, 0.6);
+            border-radius: 8px;
+        }
+        
+        .contact-icon {
+            font-size: 1.5rem;
+            color: #9d4edd;
+        }
+        
+        @media (max-width: 768px) {
+            .profile-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .profile-image {
+                width: 120px;
+                height: 120px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="about-header">
+        <h1>👤 {% trans "About Z96A Project" %}</h1>
+        <p class="subtitle">
+            {% trans "Diploma project on architecture of transaction processing system for infocommunication systems in conditions of partial network absence" %}
+        </p>
+    </div>
+    
+    <!-- Author Profile -->
+    <div class="profile-card">
+        <div class="profile-image">
+            DZ
+        </div>
+        <div class="profile-info">
+            <h2 class="profile-name">{% trans "Dmitry Zyblienko" %}</h2>
+            <div class="profile-title">
+                {% trans "Student, Belarusian State Academy of Communications" %}
+            </div>
+            <p>
+                {% trans "Developer and researcher specializing in network architecture, blockchain technology, and distributed systems. This project represents the culmination of my studies at the Academy of Communications, combining theoretical knowledge with practical implementation." %}
+            </p>
+        </div>
+    </div>
+    
+    <!-- Academy Information -->
+    <div class="academy-info">
+        <h2>🏛️ {% trans "Belarusian State Academy of Communications" %}</h2>
+        <p>
+            {% trans "The leading educational institution in Belarus for telecommunications and infocommunication systems. Specializing in training highly qualified specialists in the field of communication networks, information technologies, and telecommunications systems." %}
+        </p>
+        
+        <div class="academy-details">
+            <p><strong>{% trans "Specialization:" %}</strong> {% trans "Software Support" %}</p>
+            <p><strong>{% trans "Faculty:" %}</strong> {% trans "Infocommunication Technologies" %}</p>
+            <p><strong>{% trans "Degree:" %}</strong> {% trans "Higher Education Diploma" %}</p>
+        </div>
+    </div>
+    
+    <!-- Project Details -->
+    <h2>🎓 {% trans "Project Details" %}</h2>
+    <div class="project-details">
+        <div class="detail-card">
+            <div class="detail-icon">🎯</div>
+            <h3 class="detail-title">{% trans "Project Goal" %}</h3>
+            <p>
+                {% trans "Design and implement a resilient network architecture capable of processing transactions in conditions of partial or complete network absence, using hybrid terrestrial-satellite infrastructure and blockchain technology." %}
+            </p>
+        </div>
+        
+        <div class="detail-card">
+            <div class="detail-icon">🔬</div>
+            <h3 class="detail-title">{% trans "Research Focus" %}</h3>
+            <p>
+                {% trans "Analysis of SUI blockchain offline transactions, Starlink satellite network architecture, and their integration into existing global network infrastructure for enhanced reliability and coverage." %}
+            </p>
+        </div>
+        
+        <div class="detail-card">
+            <div class="detail-icon">💡</div>
+            <h3 class="detail-title">{% trans "Innovation" %}</h3>
+            <p>
+                {% trans "Combination of existing terrestrial networks with LEO satellite constellations and blockchain verification mechanisms to create a fault-tolerant global transaction processing system." %}
+            </p>
+        </div>
+    </div>
+    
+    <!-- Technology Stack -->
+    <h2>🛠️ {% trans "Technology Stack" %}</h2>
+    <div class="tech-stack">
+        <span class="tech-item">Django</span>
+        <span class="tech-item">Python</span>
+        <span class="tech-item">Three.js</span>
+        <span class="tech-item">WebGL</span>
+        <span class="tech-item">Solana</span>
+        <span class="tech-item">Web3</span>
+        <span class="tech-item">SQLite</span>
+        <span class="tech-item">REST API</span>
+        <span class="tech-item">HTML5/CSS3</span>
+        <span class="tech-item">JavaScript</span>
+        <span class="tech-item">WebSockets</span>
+        <span class="tech-item">Git</span>
+    </div>
+    
+    <!-- Features -->
+    <h2>✨ {% trans "Key Features" %}</h2>
+    <div class="project-details">
+        <div class="detail-card">
+            <div class="detail-icon">🌍</div>
+            <h3>{% trans "3D Network Visualization" %}</h3>
+            <p>{% trans "Interactive 3D globe showing global network infrastructure with real-time data." %}</p>
+        </div>
+        
+        <div class="detail-card">
+            <div class="detail-icon">🔗</div>
+            <h3>{% trans "Blockchain Integration" %}</h3>
+            <p>{% trans "Solana wallet authentication and transaction-based proposal system." %}</p>
+        </div>
+        
+        <div class="detail-card">
+            <div class="detail-icon">🛰️</div>
+            <h3>{% trans "Hybrid Network Simulation" %}</h3>
+            <p>{% trans "Simulation of terrestrial and satellite network interactions." %}</p>
+        </div>
+        
+        <div class="detail-card">
+            <div class="detail-icon">💬</div>
+            <h3>{% trans "Community Platform" %}</h3>
+            <p>{% trans "Discussion forum and proposal system for community-driven development." %}</p>
+        </div>
+        
+        <div class="detail-card">
+            <div class="detail-icon">📰</div>
+            <h3>{% trans "News Aggregator" %}</h3>
+            <p>{% trans "Automatic news parsing from multiple sources on relevant topics." %}</p>
+        </div>
+        
+        <div class="detail-card">
+            <div class="detail-icon">📊</div>
+            <h3>{% trans "Analytics Dashboard" %}</h3>
+            <p>{% trans "Real-time statistics and network performance metrics." %}</p>
+        </div>
+    </div>
+    
+    <!-- Contact Information -->
+    <h2>📞 {% trans "Contact Information" %}</h2>
+    <div class="contact-info">
+        <div class="contact-item">
+            <div class="contact-icon">📧</div>
+            <div>
+                <strong>{% trans "Email" %}</strong>
+                <p>zyaba1212@example.com</p>
+            </div>
+        </div>
+        
+        <div class="contact-item">
+            <div class="contact-icon">🎓</div>
+            <div>
+                <strong>{% trans "Academic Institution" %}</strong>
+                <p>{% trans "Belarusian State Academy of Communications" %}</p>
+            </div>
+        </div>
+        
+        <div class="contact-item">
+            <div class="contact-icon">📍</div>
+            <div>
+                <strong>{% trans "Location" %}</strong>
+                <p>{% trans "Minsk, Belarus" %}</p>
+            </div>
+        </div>
+        
+        <div class="contact-item">
+            <div class="contact-icon">🔗</div>
+            <div>
+                <strong>{% trans "Project Repository" %}</strong>
+                <p><a href="https://github.com/zyaba1212/Z96A" target="_blank">GitHub</a></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Acknowledgments -->
+    <div class="acknowledgments card">
+        <h2>🙏 {% trans "Acknowledgments" %}</h2>
+        <p>
+            {% trans "Special thanks to the academic staff of the Belarusian State Academy of Communications for their guidance and support throughout the development of this project." %}
+        </p>
+        <p>
+            {% trans "Thanks to the open-source community and the developers of Django, Three.js, Solana, and other technologies used in this project." %}
+        </p>
+    </div>
+{% endblock %}

@@ -1,105 +1,400 @@
-{% load static %}
-{% load i18n %}
-
 <!DOCTYPE html>
-<html lang="{{ current_language }}">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Z96A - Архитектура сети будущего{% endblock %}</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>∑</text></svg>">
+    <title>{% block title %}Z96A Network - Global Cable Infrastructure{% endblock %}</title>
     
-    {% load static %}
-    {% load i18n %}
-
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <!-- Favicon -->
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="/static/images/favicon.ico">
     
-    <!-- Three.js для 3D глобуса -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.min.js"></script>
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/globe.css">
+    <link rel="stylesheet" href="/static/css/responsive.css">
     
-    <!-- Solana Web3 -->
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Meta tags -->
+    <meta name="description" content="Z96A Network: Interactive visualization of global submarine cable infrastructure with blockchain integration.">
+    <meta name="keywords" content="submarine cables, internet infrastructure, blockchain, 3D visualization, network">
+    <meta name="author" content="Z96A Team">
+    <meta property="og:title" content="Z96A Network">
+    <meta property="og:description" content="Interactive 3D visualization of global submarine cable infrastructure">
+    <meta property="og:image" content="/static/images/og-image.jpg">
+    <meta property="og:url" content="https://z96a.network">
+    <meta name="twitter:card" content="summary_large_image">
     
-    {% block extra_head %}{% endblock %}
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Scripts in head for critical functionality -->
+    <script>
+        // Theme detection
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            // CSRF token for AJAX requests
+            window.csrfToken = "{{ csrf_token }}";
+            
+            // App configuration
+            window.appConfig = {
+                debug: {% if debug %}true{% else %}false{% endif %},
+                apiBase: '/api',
+                staticBase: '/static',
+                wsUrl: '{% if debug %}ws://{% else %}wss://{% endif %}{{ request.get_host }}',
+                userAuthenticated: {% if user.is_authenticated %}true{% else %}false{% endif %},
+                userId: {% if user.is_authenticated %}'{{ user.id }}'{% else %}null{% endif %},
+                username: {% if user.is_authenticated %}'{{ user.username }}'{% else %}null{% endif %},
+            };
+        })();
+    </script>
 </head>
 <body>
-    <!-- Header -->
-    <header class="main-header">
-        <div class="logo-container">
-            <div class="logo-icon">∑</div>
-            <h1 class="logo-text">Z96A</h1>
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading Z96A Network...</p>
         </div>
-        
-        <nav class="main-nav">
-            <a href="{% url 'index' %}" class="nav-link">{% trans "Главная" %}</a>
-            <a href="{% url 'architecture' %}" class="nav-link">{% trans "Архитектура сети" %}</a>
-            <a href="{% url 'news' %}" class="nav-link">{% trans "Новости" %}</a>
-            <a href="{% url 'discussion' %}" class="nav-link">{% trans "Обсуждение" %}</a>
-            <a href="{% url 'about' %}" class="nav-link">{% trans "О проекте" %}</a>
-            <a href="{% url 'roadmap' %}" class="nav-link">{% trans "Дорожная карта" %}</a>
-        </nav>
-        
-        <div class="header-controls">
-            <!-- Языковой переключатель -->
-            <div class="language-switcher">
-                <form action="{% url 'set_language' %}" method="post" class="language-form">
-                    {% csrf_token %}
-                    <input name="next" type="hidden" value="{{ request.path }}">
-                    <select name="language" onchange="this.form.submit()" class="language-select">
-                        <option value="ru" {% if current_language == 'ru' %}selected{% endif %}>РУ</option>
-                        <option value="en" {% if current_language == 'en' %}selected{% endif %}>EN</option>
-                    </select>
-                </form>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <!-- Logo/Brand -->
+            <div class="nav-brand">
+                <a href="{% url 'core:index' %}" class="brand-link">
+                    <div class="brand-logo">
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                            <circle cx="16" cy="16" r="14" stroke="var(--primary-color)" stroke-width="2"/>
+                            <path d="M8 16 L24 16 M16 8 L16 24" stroke="var(--primary-color)" stroke-width="2"/>
+                            <circle cx="16" cy="16" r="4" fill="var(--primary-color)"/>
+                        </svg>
+                    </div>
+                    <span class="brand-text">Z96A NETWORK</span>
+                </a>
             </div>
-            
-            <!-- Кнопка подключения кошелька -->
-            <button id="connectWalletBtn" class="wallet-btn">
-                <i class="fas fa-wallet"></i>
-                <span>{% trans "Подключить кошелек" %}</span>
+
+            <!-- Mobile menu toggle -->
+            <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
             </button>
-            
-            <!-- Информация о пользователе -->
-            <div id="userInfo" class="user-info" style="display: none;">
-                <span id="userNickname"></span>
-                <button id="disconnectWalletBtn" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
+
+            <!-- Main menu -->
+            <div class="nav-menu">
+                <a href="{% url 'core:index' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                    <span class="nav-icon">🌐</span>
+                    <span class="nav-text">Globe</span>
+                </a>
+                
+                <a href="{% url 'core:cable_list' %}" class="nav-link {% if 'cables' in request.path %}active{% endif %}">
+                    <span class="nav-icon">🔌</span>
+                    <span class="nav-text">Cables</span>
+                </a>
+                
+                <a href="{% url 'core:news_list' %}" class="nav-link {% if 'news' in request.path %}active{% endif %}">
+                    <span class="nav-icon">📰</span>
+                    <span class="nav-text">News</span>
+                </a>
+                
+                <a href="{% url 'core:discussion_list' %}" class="nav-link {% if 'discussion' in request.path %}active{% endif %}">
+                    <span class="nav-icon">💬</span>
+                    <span class="nav-text">Discussion</span>
+                </a>
+                
+                <div class="nav-dropdown">
+                    <button class="nav-link dropdown-toggle">
+                        <span class="nav-icon">📚</span>
+                        <span class="nav-text">About</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="{% url 'core:architecture' %}" class="dropdown-item">Architecture</a>
+                        <a href="{% url 'core:roadmap' %}" class="dropdown-item">Roadmap</a>
+                        <a href="{% url 'core:about' %}" class="dropdown-item">About Project</a>
+                    </div>
+                </div>
+                
+                {% if user.is_staff %}
+                <a href="/admin/" class="nav-link admin-link" target="_blank">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">Admin</span>
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Right section (Wallet & User) -->
+            <div class="nav-right">
+                <!-- Wallet section -->
+                <div class="wallet-section">
+                    <div class="wallet-display">
+                        <span class="wallet-label">Balance:</span>
+                        <span id="walletBalance" class="wallet-amount">0 ZETA</span>
+                    </div>
+                    <button id="refreshWallet" class="btn-wallet" title="Refresh balance">
+                        <span>🔄</span>
+                    </button>
+                    <a href="{% url 'core:wallet' %}" class="btn-wallet" title="Wallet details">
+                        <span>💰</span>
+                    </a>
+                </div>
+
+                <!-- User section -->
+                <div class="user-section">
+                    {% if user.is_authenticated %}
+                    <div class="user-dropdown">
+                        <button class="user-avatar">
+                            {% if user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" class="avatar-img">
+                            {% else %}
+                            <div class="avatar-placeholder">{{ user.username|first|upper }}</div>
+                            {% endif %}
+                            <span class="username">{{ user.username }}</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="{% url 'core:user_dashboard' %}" class="dropdown-item">
+                                <span>📊</span> Dashboard
+                            </a>
+                            <a href="{% url 'core:wallet' %}" class="dropdown-item">
+                                <span>💰</span> Wallet
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'core:password_change' %}" class="dropdown-item">
+                                <span>🔒</span> Change Password
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'core:logout' %}" class="dropdown-item">
+                                <span>🚪</span> Logout
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="auth-buttons">
+                        <a href="{% url 'core:login' %}?next={{ request.path }}" class="btn-auth btn-login">Login</a>
+                        <a href="{% url 'core:signup' %}" class="btn-auth btn-signup">Sign Up</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Theme toggle -->
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                    <span class="theme-icon light-icon">☀️</span>
+                    <span class="theme-icon dark-icon">🌙</span>
                 </button>
             </div>
         </div>
-    </header>
+    </nav>
 
-    <!-- Основной контент -->
+    <!-- Mobile menu overlay -->
+    <div class="mobile-menu-overlay"></div>
+
+    <!-- Main content -->
     <main class="main-content">
-        {% block content %}{% endblock %}
+        <!-- Page header -->
+        {% block page_header %}
+        <header class="page-header">
+            <div class="container">
+                <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+                {% block page_subtitle %}{% endblock %}
+                {% block breadcrumbs %}{% endblock %}
+            </div>
+        </header>
+        {% endblock %}
+
+        <!-- Messages/notifications -->
+        {% if messages %}
+        <div class="messages-container">
+            <div class="container">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                    <button class="alert-close">&times;</button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Content -->
+        <div class="content-wrapper">
+            {% block content %}
+            <!-- Main content goes here -->
+            {% endblock %}
+        </div>
     </main>
 
-    <!-- Футер -->
-    <footer class="main-footer">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3>Z96A</h3>
-                <p>{% trans "Архитектура сети будущего" %}</p>
-                <p>© 2024-2026 Дипломный проект</p>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h3 class="footer-title">Z96A Network</h3>
+                    <p class="footer-description">
+                        Interactive visualization of global submarine cable infrastructure 
+                        with blockchain integration.
+                    </p>
+                    <div class="footer-social">
+                        <a href="#" class="social-link" aria-label="GitHub">
+                            <span>🐙</span>
+                        </a>
+                        <a href="#" class="social-link" aria-label="Twitter">
+                            <span>🐦</span>
+                        </a>
+                        <a href="#" class="social-link" aria-label="Discord">
+                            <span>🎮</span>
+                        </a>
+                        <a href="#" class="social-link" aria-label="Telegram">
+                            <span>✈️</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h4 class="footer-heading">Explore</h4>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'core:index' %}">3D Globe</a></li>
+                        <li><a href="{% url 'core:cable_list' %}">Cable Directory</a></li>
+                        <li><a href="{% url 'core:news_list' %}">News & Updates</a></li>
+                        <li><a href="{% url 'core:discussion_list' %}">Community</a></li>
+                        <li><a href="{% url 'core:wallet' %}">Wallet</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4 class="footer-heading">About</h4>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'core:architecture' %}">Architecture</a></li>
+                        <li><a href="{% url 'core:roadmap' %}">Roadmap</a></li>
+                        <li><a href="{% url 'core:about' %}">About Project</a></li>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">API Reference</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4 class="footer-heading">Legal</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                        <li><a href="#">Data Usage</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
             </div>
-            <div class="footer-section">
-                <h4>{% trans "Контакты" %}</h4>
-                <p>{% trans "Белорусская Государственная Академия Связи" %}</p>
-            </div>
-            <div class="footer-section">
-                <h4>{% trans "Технологии" %}</h4>
-                <p>Django • Three.js • Solana • Web3</p>
+
+            <div class="footer-bottom">
+                <div class="footer-copyright">
+                    &copy; 2024 Z96A Network. All rights reserved.
+                    <span class="footer-version">v{% now "Y.m.d" %}</span>
+                </div>
+                <div class="footer-stats">
+                    <span class="stat-item">
+                        <strong id="cableCount">0</strong> cables
+                    </span>
+                    <span class="stat-item">
+                        <strong id="userCount">0</strong> users
+                    </span>
+                    <span class="stat-item">
+                        <strong id="transactionCount">0</strong> transactions
+                    </span>
+                </div>
             </div>
         </div>
     </footer>
 
-    <!-- Скрипты -->
-    <script src="{% static 'js/main.js' %}"></script>
-    <script src="{% static 'js/wallet.js' %}"></script>
-    {% block extra_scripts %}{% endblock %}
+    <!-- Notification container -->
+    <div id="notificationContainer" class="notification-container"></div>
+
+    <!-- Modal container -->
+    <div id="modalContainer" class="modal-container"></div>
+
+    <!-- JavaScript -->
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/theme.js"></script>
+    <script src="/static/js/notifications.js"></script>
+    
+    <!-- Page-specific scripts -->
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Initialize page -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide loading overlay
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                setTimeout(() => {
+                    loadingOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingOverlay.style.display = 'none';
+                    }, 300);
+                }, 500);
+            }
+            
+            // Initialize components
+            if (typeof initPage === 'function') {
+                initPage();
+            }
+            
+            // Load footer stats
+            loadFooterStats();
+            
+            // Initialize mobile menu
+            initMobileMenu();
+        });
+        
+        function loadFooterStats() {
+            fetch('/api/stats/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('cableCount').textContent = data.cables || 0;
+                        document.getElementById('userCount').textContent = data.users || 0;
+                        document.getElementById('transactionCount').textContent = data.transactions || 0;
+                    }
+                })
+                .catch(error => console.error('Error loading stats:', error));
+        }
+        
+        function initMobileMenu() {
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            const overlay = document.querySelector('.mobile-menu-overlay');
+            const navMenu = document.querySelector('.nav-menu');
+            
+            if (toggle && overlay && navMenu) {
+                toggle.addEventListener('click', () => {
+                    toggle.classList.toggle('active');
+                    overlay.classList.toggle('active');
+                    navMenu.classList.toggle('active');
+                    document.body.classList.toggle('menu-open');
+                });
+                
+                overlay.addEventListener('click', () => {
+                    toggle.classList.remove('active');
+                    overlay.classList.remove('active');
+                    navMenu.classList.remove('active');
+                    document.body.classList.remove('menu-open');
+                });
+            }
+        }
+    </script>
+    
+    <!-- Analytics (optional) -->
+    {% if not debug %}
+    <script>
+        // Add analytics script here
+    </script>
+    {% endif %}
 </body>
 </html>

@@ -1,143 +1,593 @@
-{% extends 'base.html' %}
-{% load static %}
-{% load i18n %}
+{% extends "base.html" %}
 
-{% block title %}{% trans "Z96A - Главная" %}{% endblock %}
+{% block title %}3D Globe - Z96A Network{% endblock %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/main.css' %}">
+{% block extra_css %}
+<style>
+    /* Globe container specific styles */
+    .globe-container {
+        position: relative;
+        width: 100%;
+        height: calc(100vh - 200px);
+        min-height: 600px;
+        background: linear-gradient(135deg, #0a0e17 0%, #1a1f2e 100%);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        margin-bottom: 2rem;
+    }
+    
+    .globe-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        padding: 1.5rem;
+        background: linear-gradient(to bottom, rgba(10, 14, 23, 0.9) 0%, transparent 100%);
+    }
+    
+    .globe-controls {
+        position: absolute;
+        bottom: 1.5rem;
+        left: 1.5rem;
+        right: 1.5rem;
+        z-index: 10;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        background: rgba(26, 31, 46, 0.85);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .globe-stats {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        z-index: 10;
+        background: rgba(26, 31, 46, 0.85);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        padding: 1rem 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        min-width: 200px;
+    }
+    
+    .globe-canvas {
+        width: 100%;
+        height: 100%;
+        outline: none;
+    }
+    
+    .cable-info-panel {
+        position: absolute;
+        top: 1.5rem;
+        left: 1.5rem;
+        z-index: 10;
+        background: rgba(26, 31, 46, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        max-width: 400px;
+        display: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    
+    .cable-info-panel.active {
+        display: block;
+        animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    /* Dashboard grid */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .dashboard-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Featured cables */
+    .featured-cables {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .globe-container {
+            height: 400px;
+            min-height: 400px;
+        }
+        
+        .globe-controls {
+            flex-direction: column;
+        }
+        
+        .globe-stats,
+        .cable-info-panel {
+            position: relative;
+            top: auto;
+            left: auto;
+            right: auto;
+            margin: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}
+<div class="hero-header">
+    <h1>Global Cable Infrastructure</h1>
+    <p class="hero-subtitle">Interactive 3D visualization of submarine cables connecting the world</p>
+</div>
 {% endblock %}
 
 {% block content %}
-<div class="hero-section">
-    <div class="hero-content">
-        <h1 class="hero-title">{% trans "Архитектура системы обработки транзакций" %}</h1>
-        <h2 class="hero-subtitle">{% trans "для инфокоммуникационных систем в условиях частичного отсутствия сетевого соединения" %}</h2>
-        
-        <div class="hero-description">
-            <p>{% trans "Инновационный проект, объединяющий технологии распределенных реестров, спутниковой связи и адаптивных сетевых архитектур для создания устойчивых инфокоммуникационных систем нового поколения." %}</p>
+<div class="container">
+    <!-- Globe Section -->
+    <section class="globe-section">
+        <div class="globe-container" id="globeContainer">
+            <div class="globe-header">
+                <h2 class="globe-title">
+                    <span class="title-icon">🌐</span>
+                    Earth Network Visualization
+                </h2>
+                <p class="globe-subtitle">
+                    Real-time visualization of {{ cable_stats.total }} submarine cables
+                </p>
+            </div>
             
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🌐</div>
-                    <h3>{% trans "Гибридная архитектура" %}</h3>
-                    <p>{% trans "Комбинация наземных и спутниковых сетей" %}</p>
+            <!-- Cable Info Panel -->
+            <div class="cable-info-panel" id="cableInfoPanel">
+                <div class="panel-header">
+                    <h3 id="cableName">Select a cable</h3>
+                    <button class="panel-close" id="closeCableInfo">&times;</button>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🛰️</div>
-                    <h3>{% trans "Оффлайн-транзакции" %}</h3>
-                    <p>{% trans "Работа в условиях отсутствия соединения" %}</p>
+                <div class="panel-content">
+                    <div class="cable-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Length</span>
+                            <span class="stat-value" id="cableLength">- km</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Capacity</span>
+                            <span class="stat-value" id="cableCapacity">- Tbps</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Status</span>
+                            <span class="stat-value" id="cableStatus">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Owners</span>
+                            <span class="stat-value" id="cableOwners">-</span>
+                        </div>
+                    </div>
+                    <div class="panel-actions">
+                        <button class="btn btn-primary" id="viewCableDetails">
+                            View Details
+                        </button>
+                        <button class="btn btn-secondary" id="discussCable">
+                            Discuss
+                        </button>
+                    </div>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔗</div>
-                    <h3>{% trans "Блокчейн интеграция" %}</h3>
-                    <p>{% trans "Децентрализованное управление сетью" %}</p>
+            </div>
+            
+            <!-- Globe Stats -->
+            <div class="globe-stats">
+                <h4>Network Stats</h4>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-number">{{ cable_stats.total }}</div>
+                        <div class="stat-label">Total Cables</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">{{ cable_stats.active }}</div>
+                        <div class="stat-label">Active</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">{{ cable_stats.total_length|floatformat:0 }}</div>
+                        <div class="stat-label">km Total</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">{{ cable_stats.total_capacity|floatformat:1 }}</div>
+                        <div class="stat-label">Tbps Capacity</div>
+                    </div>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">💎</div>
-                    <h3>{% trans "Сообщество" %}</h3>
-                    <p>{% trans "Коллективное развитие архитектуры" %}</p>
+            </div>
+            
+            <!-- Globe Controls -->
+            <div class="globe-controls">
+                <div class="control-group">
+                    <button class="btn-control" id="resetView" title="Reset View">
+                        <span>🔄</span> Reset
+                    </button>
+                    <button class="btn-control" id="toggleRotation" title="Toggle Auto-Rotation">
+                        <span>⚙️</span> Auto-rotate
+                    </button>
+                    <button class="btn-control" id="toggleCables" title="Toggle Cables">
+                        <span>🔌</span> Cables
+                    </button>
+                    <button class="btn-control" id="togglePoints" title="Toggle Landing Points">
+                        <span>📍</span> Points
+                    </button>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-slider">
+                        <label for="cableWidth">Cable Width</label>
+                        <input type="range" id="cableWidth" min="1" max="10" value="3">
+                    </div>
+                    <div class="control-slider">
+                        <label for="globeBrightness">Brightness</label>
+                        <input type="range" id="globeBrightness" min="50" max="150" value="100">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="search-box">
+                        <input type="text" id="cableSearch" placeholder="Search cables...">
+                        <button class="search-btn" id="searchCable">
+                            <span>🔍</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Canvas for Three.js -->
+            <canvas class="globe-canvas" id="globeCanvas"></canvas>
+        </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section class="dashboard-section">
+        <div class="dashboard-grid">
+            <!-- Featured Cables -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>
+                        <span class="card-icon">⭐</span>
+                        Featured Cables
+                    </h3>
+                    <a href="{% url 'core:cable_list' %}" class="card-link">View All →</a>
+                </div>
+                <div class="card-content">
+                    <div class="featured-cables">
+                        {% for cable in featured_cables %}
+                        <div class="cable-card" data-cable-id="{{ cable.cable_id }}">
+                            <div class="cable-card-header">
+                                <span class="cable-status-indicator" 
+                                      style="background-color: {{ cable.get_status_color }}"></span>
+                                <h4 class="cable-name">{{ cable.name }}</h4>
+                            </div>
+                            <div class="cable-card-stats">
+                                <div class="stat">
+                                    <span class="stat-label">Length</span>
+                                    <span class="stat-value">{{ cable.length|floatformat:0 }} km</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Capacity</span>
+                                    <span class="stat-value">{{ cable.capacity|floatformat:1 }} Tbps</span>
+                                </div>
+                            </div>
+                            <div class="cable-card-actions">
+                                <button class="btn-card" onclick="viewCable('{{ cable.cable_id }}')">
+                                    View
+                                </button>
+                                <button class="btn-card" onclick="flyToCable('{{ cable.cable_id }}')">
+                                    Fly to
+                                </button>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="empty-state">No featured cables available.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent News -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>
+                        <span class="card-icon">📰</span>
+                        Recent News
+                    </h3>
+                    <a href="{% url 'core:news_list' %}" class="card-link">View All →</a>
+                </div>
+                <div class="card-content">
+                    <div class="news-list">
+                        {% for news in recent_news %}
+                        <article class="news-item">
+                            <div class="news-date">
+                                {{ news.published_date|date:"M d" }}
+                            </div>
+                            <div class="news-content">
+                                <h4 class="news-title">
+                                    <a href="{% url 'core:news_detail' news.slug %}">
+                                        {{ news.title }}
+                                    </a>
+                                </h4>
+                                <p class="news-excerpt">{{ news.excerpt|truncatechars:100 }}</p>
+                            </div>
+                        </article>
+                        {% empty %}
+                        <p class="empty-state">No recent news.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>
+                        <span class="card-icon">⚡</span>
+                        Quick Actions
+                    </h3>
+                </div>
+                <div class="card-content">
+                    <div class="action-grid">
+                        <a href="{% url 'core:wallet' %}" class="action-card">
+                            <div class="action-icon">💰</div>
+                            <div class="action-content">
+                                <h4>Wallet</h4>
+                                <p>Check balance & transactions</p>
+                            </div>
+                        </a>
+                        
+                        <a href="{% url 'core:discussion_list' %}" class="action-card">
+                            <div class="action-icon">💬</div>
+                            <div class="action-content">
+                                <h4>Discussion</h4>
+                                <p>Join community conversations</p>
+                            </div>
+                        </a>
+                        
+                        <a href="{% url 'core:cable_list' %}" class="action-card">
+                            <div class="action-icon">🔍</div>
+                            <div class="action-content">
+                                <h4>Search Cables</h4>
+                                <p>Browse cable database</p>
+                            </div>
+                        </a>
+                        
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'core:user_dashboard' %}" class="action-card">
+                            <div class="action-icon">📊</div>
+                            <div class="action-content">
+                                <h4>Dashboard</h4>
+                                <p>Your activity & stats</p>
+                            </div>
+                        </a>
+                        {% else %}
+                        <a href="{% url 'core:login' %}" class="action-card">
+                            <div class="action-icon">🔐</div>
+                            <div class="action-content">
+                                <h4>Login</h4>
+                                <p>Access your account</p>
+                            </div>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Blockchain Stats -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>
+                        <span class="card-icon">⛓️</span>
+                        Blockchain Network
+                    </h3>
+                    <button class="card-link" id="refreshBlockchain">Refresh</button>
+                </div>
+                <div class="card-content">
+                    <div class="blockchain-stats" id="blockchainStats">
+                        <div class="loading-indicator">
+                            <div class="spinner-small"></div>
+                            <p>Loading blockchain data...</p>
+                        </div>
+                    </div>
+                    <div class="blockchain-actions">
+                        <button class="btn btn-sm" id="viewBlockchain">
+                            View Blockchain
+                        </button>
+                        <button class="btn btn-sm" id="createTransaction">
+                            New Transaction
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="hero-cta">
-            <a href="{% url 'architecture' %}" class="cta-btn">
-                {% trans "Исследовать архитектуру" %} <i class="fas fa-arrow-right"></i>
-            </a>
-            <a href="{% url 'about' %}" class="cta-btn secondary">
-                {% trans "Узнать больше" %}
-            </a>
-        </div>
-    </div>
-    
-    <!-- Мини-глобус для главной страницы -->
-    <div class="mini-globe-container">
-        <canvas id="miniGlobe"></canvas>
-    </div>
-</div>
+    </section>
 
-<div class="project-details">
-    <div class="details-container">
-        <div class="detail-section">
-            <h2><i class="fas fa-bolt"></i> {% trans "Вдохновение" %}</h2>
-            <p>{% trans "Проект вдохновлен экспериментами SUI с оффлайн-транзакциями и технологией Starlink для обеспечения связи в удаленных регионах. Мы создаем архитектуру, которая работает даже в условиях частичного отсутствия сетевого соединения." %}</p>
+    <!-- Network Overview -->
+    <section class="network-section">
+        <div class="section-header">
+            <h2>Global Network Overview</h2>
+            <p>Real-time statistics and insights about the submarine cable network</p>
         </div>
         
-        <div class="detail-section">
-            <h2><i class="fas fa-cogs"></i> {% trans "Технологический стек" %}</h2>
-            <ul class="tech-stack">
-                <li><strong>Django</strong> - {% trans "бэкенд фреймворк" %}</li>
-                <li><strong>Three.js</strong> - {% trans "3D визуализация" %}</li>
-                <li><strong>Solana Web3.js</strong> - {% trans "блокчейн интеграция" %}</li>
-                <li><strong>SQLite3</strong> - {% trans "база данных" %}</li>
-                <li><strong>WebGL</strong> - {% trans "графический рендеринг" %}</li>
-            </ul>
+        <div class="stats-grid-large">
+            <div class="stat-card large">
+                <div class="stat-icon">🌍</div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ cable_stats.total }}</div>
+                    <div class="stat-label">Total Submarine Cables</div>
+                    <div class="stat-trend">
+                        <span class="trend-up">+5%</span> from last year
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card large">
+                <div class="stat-icon">📡</div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ cable_stats.active }}</div>
+                    <div class="stat-label">Active Cables</div>
+                    <div class="stat-trend">
+                        <span class="trend-up">98%</span> operational
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card large">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ cable_stats.total_length|floatformat:0 }}</div>
+                    <div class="stat-label">Total Length (km)</div>
+                    <div class="stat-trend">
+                        Enough to circle Earth {{ cable_stats.total_length|divisibleby:40075 }} times
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card large">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ cable_stats.total_capacity|floatformat:1 }}</div>
+                    <div class="stat-label">Total Capacity (Tbps)</div>
+                    <div class="stat-trend">
+                        <span class="trend-up">+15%</span> annual growth
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div class="detail-section">
-            <h2><i class="fas fa-rocket"></i> {% trans "Цели проекта" %}</h2>
-            <ol class="goals-list">
-                <li>{% trans "Создание интерактивной 3D визуализации сетевой архитектуры" %}</li>
-                <li>{% trans "Интеграция с блокчейном для децентрализованного управления" %}</li>
-                <li>{% trans "Разработка системы предложений улучшений от сообщества" %}</li>
-                <li>{% trans "Создание образовательного ресурса по инфокоммуникационным системам" %}</li>
-            </ol>
-        </div>
-    </div>
+    </section>
 </div>
 {% endblock %}
 
-{% block extra_scripts %}
-<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}
+<script src="/static/js/globe.js"></script>
 <script>
-    // Инициализация мини-глобуса для главной страницы
-    document.addEventListener('DOMContentLoaded', function() {
-        initMiniGlobe();
-    });
-    
-    function initMiniGlobe() {
-        const canvas = document.getElementById('miniGlobe');
-        if (!canvas) return;
+    // Initialize page-specific functionality
+    function initPage() {
+        console.log('Initializing index page...');
         
-        // Простая реализация мини-глобуса
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-        renderer.setSize(300, 300);
-        
-        // Создание сферы (Земли)
-        const geometry = new THREE.SphereGeometry(5, 32, 32);
-        const textureLoader = new THREE.TextureLoader();
-        const texture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg');
-        const material = new THREE.MeshBasicMaterial({ map: texture });
-        const earth = new THREE.Mesh(geometry, material);
-        scene.add(earth);
-        
-        // Добавление спутников
-        const satelliteGeometry = new THREE.SphereGeometry(0.3, 16, 16);
-        const satelliteMaterial = new THREE.MeshBasicMaterial({ color: 0x888888 });
-        
-        for (let i = 0; i < 5; i++) {
-            const satellite = new THREE.Mesh(satelliteGeometry, satelliteMaterial);
-            const angle = (i / 5) * Math.PI * 2;
-            satellite.position.set(
-                Math.cos(angle) * 7,
-                Math.sin(angle) * 0.5,
-                Math.sin(angle) * 7
-            );
-            scene.add(satellite);
+        // Initialize globe
+        if (typeof initGlobe === 'function') {
+            initGlobe();
         }
         
-        camera.position.z = 15;
+        // Load blockchain stats
+        loadBlockchainStats();
         
-        // Анимация
-        function animate() {
-            requestAnimationFrame(animate);
-            earth.rotation.y += 0.005;
-            renderer.render(scene, camera);
-        }
-        animate();
+        // Setup event listeners
+        setupEventListeners();
     }
+    
+    function loadBlockchainStats() {
+        fetch('/api/blockchain/')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('blockchainStats');
+                if (data.success) {
+                    container.innerHTML = `
+                        <div class="blockchain-stat">
+                            <div class="blockchain-label">Chain Length</div>
+                            <div class="blockchain-value">${data.chain_length} blocks</div>
+                        </div>
+                        <div class="blockchain-stat">
+                            <div class="blockchain-label">Pending Transactions</div>
+                            <div class="blockchain-value">${data.pending_transactions}</div>
+                        </div>
+                        <div class="blockchain-stat">
+                            <div class="blockchain-label">Status</div>
+                            <div class="blockchain-value ${data.is_valid ? 'status-valid' : 'status-invalid'}">
+                                ${data.is_valid ? 'Valid' : 'Invalid'}
+                            </div>
+                        </div>
+                        <div class="blockchain-stat">
+                            <div class="blockchain-label">Mining Reward</div>
+                            <div class="blockchain-value">${data.mining_reward} ZETA</div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<p class="error">Unable to load blockchain data</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading blockchain stats:', error);
+                document.getElementById('blockchainStats').innerHTML = 
+                    '<p class="error">Connection error</p>';
+            });
+    }
+    
+    function setupEventListeners() {
+        // Refresh blockchain stats
+        document.getElementById('refreshBlockchain')?.addEventListener('click', loadBlockchainStats);
+        
+        // View blockchain
+        document.getElementById('viewBlockchain')?.addEventListener('click', () => {
+            window.location.href = '/blockchain/';
+        });
+        
+        // Create transaction
+        document.getElementById('createTransaction')?.addEventListener('click', () => {
+            if (window.appConfig.userAuthenticated) {
+                window.location.href = '/wallet/#send';
+            } else {
+                showNotification('Please login to create transactions', 'warning');
+                window.location.href = '/accounts/login/';
+            }
+        });
+        
+        // Cable actions
+        document.querySelectorAll('.cable-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (!e.target.closest('.btn-card')) {
+                    const cableId = card.dataset.cableId;
+                    viewCable(cableId);
+                }
+            });
+        });
+    }
+    
+    function viewCable(cableId) {
+        window.location.href = `/cables/${cableId}/`;
+    }
+    
+    function flyToCable(cableId) {
+        if (typeof flyToCableOnGlobe === 'function') {
+            flyToCableOnGlobe(cableId);
+        } else {
+            viewCable(cableId);
+        }
+    }
+    
+    // Global functions for use in templates
+    window.viewCable = viewCable;
+    window.flyToCable = flyToCable;
 </script>
 {% endblock %}

@@ -1,667 +1,647 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load i18n %}
 
-{% block title %}{% trans "Z96A - Дорожная карта" %}{% endblock %}
+{% block title %}Дорожная карта - {{ SITE_NAME }}{% endblock %}
+{% block description %}План развития проекта Z96A, этапы реализации и будущие обновления{% endblock %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/main.css' %}">
+{% block extra_css %}
 <style>
-.roadmap-page {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-.roadmap-header {
-    text-align: center;
-    margin-bottom: 3rem;
-}
-
-.roadmap-header h1 {
-    font-size: 2.8rem;
-    background: linear-gradient(90deg, #6c63ff, #00ff9d);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    margin-bottom: 1rem;
-}
-
-.roadmap-header p {
-    color: #aaa;
-    font-size: 1.2rem;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.timeline {
-    position: relative;
-    max-width: 1000px;
-    margin: 0 auto;
-}
-
-.timeline::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 4px;
-    height: 100%;
-    background: linear-gradient(to bottom, #6c63ff, #00ff9d);
-    border-radius: 2px;
-}
-
-@media (max-width: 768px) {
+    .roadmap-page {
+        min-height: 100vh;
+        background: #1b1523;
+        padding: 4rem 2rem;
+    }
+    
+    .roadmap-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .roadmap-header {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+    
+    .roadmap-title {
+        font-size: 4rem;
+        color: #6ee7ff;
+        margin-bottom: 1.5rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-shadow: 0 0 30px rgba(110, 231, 255, 0.3);
+    }
+    
+    .roadmap-subtitle {
+        color: #94a3b8;
+        font-size: 1.5rem;
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+    
+    .timeline {
+        position: relative;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
     .timeline::before {
-        left: 20px;
+        content: '';
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, #6ee7ff, #3b82f6, #8b5cf6);
+        border-radius: 2px;
     }
-}
-
-.timeline-item {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 4rem;
-    position: relative;
-}
-
-.timeline-item:nth-child(odd) {
-    flex-direction: row;
-}
-
-.timeline-item:nth-child(even) {
-    flex-direction: row-reverse;
-}
-
-@media (max-width: 768px) {
+    
     .timeline-item {
-        flex-direction: column !important;
-        align-items: flex-start;
-        margin-left: 60px;
-        margin-bottom: 3rem;
+        position: relative;
+        margin-bottom: 4rem;
+        display: flex;
+        align-items: center;
     }
-}
-
-.timeline-content {
-    flex: 1;
-    padding: 2rem;
-    background: rgba(30, 30, 46, 0.8);
-    border-radius: 16px;
-    border: 1px solid rgba(108, 99, 255, 0.3);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-}
-
-.timeline-item:nth-child(odd) .timeline-content {
-    margin-right: 2rem;
-}
-
-.timeline-item:nth-child(even) .timeline-content {
-    margin-left: 2rem;
-}
-
-@media (max-width: 768px) {
+    
+    .timeline-item:nth-child(odd) {
+        flex-direction: row;
+    }
+    
+    .timeline-item:nth-child(even) {
+        flex-direction: row-reverse;
+    }
+    
     .timeline-content {
-        margin: 0 !important;
-        width: 100%;
+        flex: 1;
+        padding: 2.5rem;
+        background: rgba(46, 45, 46, 0.8);
+        border-radius: 20px;
+        border: 1px solid rgba(110, 231, 255, 0.1);
+        position: relative;
+        transition: all 0.3s ease;
     }
-}
-
-.timeline-content:hover {
-    border-color: #00ff9d;
-    transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(0, 255, 157, 0.2);
-}
-
-.timeline-period {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(90deg, #6c63ff, #4a235a);
-    color: white;
-    padding: 0.8rem 1.5rem;
-    border-radius: 25px;
-    font-weight: bold;
-    z-index: 2;
-    white-space: nowrap;
-}
-
-.timeline-item:nth-child(odd) .timeline-period {
-    margin-right: -150px;
-}
-
-.timeline-item:nth-child(even) .timeline-period {
-    margin-left: -150px;
-}
-
-@media (max-width: 768px) {
-    .timeline-period {
-        position: static;
-        transform: none;
-        margin: 0 0 1rem 0 !important;
-        align-self: flex-start;
+    
+    .timeline-content:hover {
+        border-color: #6ee7ff;
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(110, 231, 255, 0.2);
     }
-}
-
-.timeline-marker {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 20px;
-    height: 20px;
-    background: #6c63ff;
-    border: 4px solid #1b1523;
-    border-radius: 50%;
-    z-index: 2;
-}
-
-.timeline-marker.completed {
-    background: #00ff9d;
-    box-shadow: 0 0 20px rgba(0, 255, 157, 0.5);
-}
-
-.timeline-marker.in-progress {
-    background: #ffa500;
-    animation: pulse 2s infinite;
-    box-shadow: 0 0 20px rgba(255, 165, 0, 0.5);
-}
-
-.timeline-marker.planned {
-    background: #6c63ff;
-}
-
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(255, 165, 0, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 165, 0, 0); }
-}
-
-@media (max-width: 768px) {
+    
+    .timeline-item:nth-child(odd) .timeline-content {
+        margin-right: 3rem;
+    }
+    
+    .timeline-item:nth-child(even) .timeline-content {
+        margin-left: 3rem;
+    }
+    
     .timeline-marker {
         position: absolute;
-        left: 20px;
+        left: 50%;
         transform: translateX(-50%);
-    }
-}
-
-.timeline-content h3 {
-    color: #6c63ff;
-    margin-bottom: 1rem;
-    font-size: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-}
-
-.timeline-content.completed h3 {
-    color: #00ff9d;
-}
-
-.timeline-content.in-progress h3 {
-    color: #ffa500;
-}
-
-.timeline-features {
-    list-style: none;
-    padding-left: 0;
-    margin: 1rem 0;
-}
-
-.timeline-features li {
-    padding: 0.5rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    color: #ddd;
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-}
-
-.timeline-features li:before {
-    content: "✓";
-    color: #00ff9d;
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-
-.timeline-status {
-    display: inline-block;
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    margin-top: 1rem;
-}
-
-.status-completed {
-    background: rgba(0, 255, 157, 0.2);
-    color: #00ff9d;
-    border: 1px solid rgba(0, 255, 157, 0.3);
-}
-
-.status-in-progress {
-    background: rgba(255, 165, 0, 0.2);
-    color: #ffa500;
-    border: 1px solid rgba(255, 165, 0, 0.3);
-}
-
-.status-planned {
-    background: rgba(108, 99, 255, 0.2);
-    color: #6c63ff;
-    border: 1px solid rgba(108, 99, 255, 0.3);
-}
-
-.tokenomics {
-    background: rgba(30, 30, 46, 0.8);
-    border-radius: 16px;
-    padding: 3rem;
-    margin-top: 4rem;
-    border: 1px solid rgba(108, 99, 255, 0.3);
-}
-
-.tokenomics h2 {
-    color: #6c63ff;
-    text-align: center;
-    margin-bottom: 2rem;
-    font-size: 2rem;
-}
-
-.token-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-    margin-bottom: 3rem;
-}
-
-.token-card {
-    background: rgba(0, 0, 0, 0.3);
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 1px solid rgba(108, 99, 255, 0.2);
-    text-align: center;
-}
-
-.token-card h3 {
-    color: #00ff9d;
-    margin-bottom: 1rem;
-    font-size: 1.3rem;
-}
-
-.token-value {
-    font-size: 2rem;
-    font-weight: bold;
-    color: white;
-    margin-bottom: 0.5rem;
-}
-
-.token-label {
-    color: #aaa;
-    font-size: 0.9rem;
-}
-
-.token-distribution {
-    margin-top: 2rem;
-}
-
-.distribution-chart {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.chart-legend {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.legend-color {
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-}
-
-.current-progress {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 16px;
-    padding: 3rem;
-    margin-top: 3rem;
-    border: 1px solid rgba(108, 99, 255, 0.3);
-}
-
-.current-progress h2 {
-    color: #00ff9d;
-    text-align: center;
-    margin-bottom: 2rem;
-    font-size: 2rem;
-}
-
-.progress-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.progress-stat {
-    text-align: center;
-    padding: 1.5rem;
-    background: rgba(108, 99, 255, 0.1);
-    border-radius: 12px;
-    border: 1px solid rgba(108, 99, 255, 0.2);
-}
-
-.progress-stat h3 {
-    color: white;
-    margin-bottom: 0.5rem;
-    font-size: 1.2rem;
-}
-
-.progress-stat p {
-    color: #aaa;
-    font-size: 0.9rem;
-}
-
-.progress-bar-container {
-    margin-top: 1rem;
-}
-
-.progress-bar {
-    height: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 5px;
-    overflow: hidden;
-}
-
-.progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #6c63ff, #00ff9d);
-    border-radius: 5px;
-    transition: width 1s ease;
-}
-
-.progress-label {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 0.5rem;
-    color: #aaa;
-    font-size: 0.9rem;
-}
-
-@media (max-width: 768px) {
-    .roadmap-page {
-        padding: 1rem;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #1b1523;
+        border: 4px solid;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        font-weight: 600;
     }
     
-    .timeline-item {
+    .marker-in_progress { border-color: #6ee7ff; color: #6ee7ff; }
+    .marker-completed { border-color: #22c55e; color: #22c55e; }
+    .marker-pending { border-color: #f59e0b; color: #f59e0b; }
+    .marker-planned { border-color: #8b5cf6; color: #8b5cf6; }
+    
+    .timeline-period {
+        position: absolute;
+        top: -2rem;
+        color: #6ee7ff;
+        font-size: 1.2rem;
+        font-weight: 700;
+        padding: 0.5rem 1.5rem;
+        background: rgba(27, 21, 35, 0.9);
+        border-radius: 20px;
+        border: 1px solid rgba(110, 231, 255, 0.2);
+    }
+    
+    .timeline-item:nth-child(odd) .timeline-period {
+        right: -1rem;
+    }
+    
+    .timeline-item:nth-child(even) .timeline-period {
+        left: -1rem;
+    }
+    
+    .timeline-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(110, 231, 255, 0.1);
+    }
+    
+    .timeline-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #6ee7ff 0%, #3b82f6 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #0f172a;
+    }
+    
+    .timeline-item-title {
+        color: #6ee7ff;
+        font-size: 1.8rem;
+        margin: 0;
+        flex: 1;
+        font-weight: 700;
+    }
+    
+    .timeline-status {
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-in_progress { background: rgba(110, 231, 255, 0.2); color: #6ee7ff; }
+    .status-completed { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+    .status-pending { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .status-planned { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
+    
+    .timeline-tasks {
+        margin: 1.5rem 0;
+    }
+    
+    .task-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .task-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: rgba(51, 49, 53, 0.5);
+        border-radius: 8px;
+        border-left: 3px solid;
+        transition: all 0.3s ease;
+    }
+    
+    .task-item:hover {
+        background: rgba(110, 231, 255, 0.05);
+    }
+    
+    .task-item.completed { border-color: #22c55e; }
+    .task-item.in_progress { border-color: #6ee7ff; }
+    .task-item.pending { border-color: #f59e0b; }
+    
+    .task-checkbox {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        border: 2px solid rgba(110, 231, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 0.1rem;
+    }
+    
+    .task-item.completed .task-checkbox {
+        background: #22c55e;
+        border-color: #22c55e;
+        color: white;
+    }
+    
+    .task-item.completed .task-checkbox::after {
+        content: '✓';
+    }
+    
+    .task-text {
+        color: #cbd5e1;
+        flex: 1;
+        line-height: 1.6;
+    }
+    
+    .task-item.completed .task-text {
+        text-decoration: line-through;
+        opacity: 0.7;
+    }
+    
+    .timeline-progress {
+        margin-top: 1.5rem;
+    }
+    
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .progress-label {
+        color: #94a3b8;
+        font-size: 0.9rem;
+    }
+    
+    .progress-percentage {
+        color: #6ee7ff;
+        font-weight: 600;
+    }
+    
+    .progress-bar {
+        height: 8px;
+        background: rgba(51, 49, 53, 0.8);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #6ee7ff, #3b82f6);
+        border-radius: 4px;
+        transition: width 1s ease;
+    }
+    
+    .token-section {
+        margin-top: 6rem;
+        padding: 4rem;
+        background: linear-gradient(135deg, 
+            rgba(27, 21, 35, 0.95) 0%, 
+            rgba(46, 45, 46, 0.9) 100%),
+            url('{% static "images/token-bg.jpg" %}') center/cover;
+        border-radius: 30px;
+        border: 1px solid rgba(110, 231, 255, 0.2);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .token-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at center, 
+            rgba(110, 231, 255, 0.1) 0%, 
+            transparent 70%);
+    }
+    
+    .token-title {
+        font-size: 3rem;
+        color: #6ee7ff;
+        margin-bottom: 1.5rem;
+        font-weight: 700;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .token-subtitle {
+        color: #94a3b8;
+        font-size: 1.2rem;
+        max-width: 600px;
+        margin: 0 auto 3rem;
+        line-height: 1.6;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .token-features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
         margin-bottom: 3rem;
+        position: relative;
+        z-index: 2;
     }
     
-    .tokenomics,
-    .current-progress {
-        padding: 2rem 1rem;
+    .token-feature {
+        padding: 2rem;
+        background: rgba(27, 21, 35, 0.8);
+        border-radius: 16px;
+        border: 1px solid rgba(110, 231, 255, 0.1);
+        transition: all 0.3s ease;
     }
-}
+    
+    .token-feature:hover {
+        border-color: #6ee7ff;
+        transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #6ee7ff;
+    }
+    
+    .feature-title {
+        color: #ffffff;
+        font-size: 1.3rem;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .feature-description {
+        color: #94a3b8;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+    
+    .token-launch {
+        background: rgba(110, 231, 255, 0.1);
+        border: 1px solid #6ee7ff;
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 500px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .launch-title {
+        color: #6ee7ff;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .launch-date {
+        color: #ffffff;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        font-family: 'CGXYZ PC', monospace;
+    }
+    
+    .launch-description {
+        color: #94a3b8;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    
+    @media (max-width: 768px) {
+        .roadmap-page {
+            padding: 2rem 1rem;
+        }
+        
+        .roadmap-title {
+            font-size: 2.5rem;
+        }
+        
+        .roadmap-subtitle {
+            font-size: 1.2rem;
+        }
+        
+        .timeline::before {
+            left: 30px;
+        }
+        
+        .timeline-item {
+            flex-direction: column !important;
+            align-items: flex-start;
+            margin-left: 60px;
+        }
+        
+        .timeline-content {
+            width: 100%;
+            margin: 0 !important;
+            margin-top: 1rem !important;
+        }
+        
+        .timeline-marker {
+            left: 30px;
+            transform: translateX(-50%);
+        }
+        
+        .timeline-period {
+            position: relative;
+            top: 0;
+            left: 0 !important;
+            right: auto !important;
+            margin-bottom: 1rem;
+        }
+        
+        .token-section {
+            padding: 2rem 1rem;
+        }
+        
+        .token-title {
+            font-size: 2rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .timeline-item {
+            margin-left: 40px;
+        }
+        
+        .timeline-marker {
+            width: 30px;
+            height: 30px;
+            font-size: 1rem;
+        }
+        
+        .timeline-content {
+            padding: 1.5rem;
+        }
+        
+        .timeline-item-title {
+            font-size: 1.5rem;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="roadmap-page">
-    <div class="roadmap-header">
-        <h1>{% trans "Дорожная карта проекта" %}</h1>
-        <p>{% trans "План развития проекта Z96A на 2024-2026 годы" %}</p>
-    </div>
-    
-    <div class="timeline">
-        <!-- Этап 1: 1 квартал 2026 -->
-        <div class="timeline-item">
-            <div class="timeline-content completed">
-                <h3><i class="fas fa-code"></i> {% trans "Этап 1: Разработка WEB-проекта" %}</h3>
-                <div class="timeline-period">{% trans "1 квартал 2026" %}</div>
-                <div class="timeline-marker completed"></div>
-                <ul class="timeline-features">
-                    <li>{% trans "Создание базовой структуры проекта" %}</li>
-                    <li>{% trans "Разработка пользовательского интерфейса" %}</li>
-                    <li>{% trans "Интеграция Django бэкенда" %}</li>
-                    <li>{% trans "Настройка базы данных SQLite3" %}</li>
-                </ul>
-                <span class="timeline-status status-completed">{% trans "Завершено" %}</span>
-            </div>
+    <div class="roadmap-container">
+        <!-- Заголовок -->
+        <div class="roadmap-header">
+            <h1 class="roadmap-title">Дорожная карта</h1>
+            <p class="roadmap-subtitle">
+                План развития проекта Z96A, этапы реализации и будущие обновления.
+                Следите за прогрессом и предлагайте свои идеи!
+            </p>
         </div>
         
-        <!-- Этап 2: 1 квартал 2026 -->
-        <div class="timeline-item">
-            <div class="timeline-content in-progress">
-                <h3><i class="fas fa-globe-americas"></i> {% trans "Этап 2: 3D визуализация архитектуры" %}</h3>
-                <div class="timeline-period">{% trans "1 квартал 2026" %}</div>
-                <div class="timeline-marker in-progress"></div>
-                <ul class="timeline-features">
-                    <li>{% trans "Создание интерактивного 3D глобуса" %}</li>
-                    <li>{% trans "Визуализация сетевых элементов" %}</li>
-                    <li>{% trans "Реализация зума и навигации" %}</li>
-                    <li>{% trans "Отображение соединений и маршрутов" %}</li>
-                </ul>
-                <span class="timeline-status status-in-progress">{% trans "В процессе" %}</span>
-            </div>
-        </div>
-        
-        <!-- Этап 3: 1 квартал 2026 -->
-        <div class="timeline-item">
-            <div class="timeline-content planned">
-                <h3><i class="fas fa-wallet"></i> {% trans "Этап 3: Интеграция с Web3" %}</h3>
-                <div class="timeline-period">{% trans "1 квартал 2026" %}</div>
-                <div class="timeline-marker planned"></div>
-                <ul class="timeline-features">
-                    <li>{% trans "Подключение Solana кошелька" %}</li>
-                    <li>{% trans "Реализация блокчейн-транзакций" %}</li>
-                    <li>{% trans "Система предложений улучшений" %}</li>
-                    <li>{% trans "Верификация пользователей" %}</li>
-                </ul>
-                <span class="timeline-status status-planned">{% trans "Запланировано" %}</span>
-            </div>
-        </div>
-        
-        <!-- Этап 4: 1 квартал 2026 -->
-        <div class="timeline-item">
-            <div class="timeline-content planned">
-                <h3><i class="fas fa-comments"></i> {% trans "Этап 4: Система обсуждений" %}</h3>
-                <div class="timeline-period">{% trans "1 квартал 2026" %}</div>
-                <div class="timeline-marker planned"></div>
-                <ul class="timeline-features">
-                    <li>{% trans "Реализация комментариев" %}</li>
-                    <li>{% trans "Лайки и ответы" %}</li>
-                    <li>{% trans "Модерация контента" %}</li>
-                    <li>{% trans "Рейтинги пользователей" %}</li>
-                </ul>
-                <span class="timeline-status status-planned">{% trans "Запланировано" %}</span>
-            </div>
-        </div>
-        
-        <!-- Этап 5: 1 квартал 2026 -->
-        <div class="timeline-item">
-            <div class="timeline-content planned">
-                <h3><i class="fas fa-newspaper"></i> {% trans "Этап 5: Парсер новостей" %}</h3>
-                <div class="timeline-period">{% trans "1 квартал 2026" %}</div>
-                <div class="timeline-marker planned"></div>
-                <ul class="timeline-features">
-                    <li>{% trans "Агрегация новостей из Twitter/X" %}</li>
-                    <li>{% trans "Парсинг Reddit" %}</li>
-                    <li>{% trans "Сбор статей с Habr" %}</li>
-                    <li>{% trans "Фильтрация и поиск" %}</li>
-                </ul>
-                <span class="timeline-status status-planned">{% trans "Запланировано" %}</span>
-            </div>
-        </div>
-        
-        <!-- Этап 6: 2 квартал 2026 -->
-        <div class="timeline-item">
-            <div class="timeline-content planned">
-                <h3><i class="fas fa-coins"></i> {% trans "Этап 6: Запуск токена Z96A" %}</h3>
-                <div class="timeline-period">{% trans "2 квартал 2026" %}</div>
-                <div class="timeline-marker planned"></div>
-                <ul class="timeline-features">
-                    <li>{% trans "Создание токена на Solana" %}</li>
-                    <li>{% trans "Запуск на pump.fun" %}</li>
-                    <li>{% trans "Распределение токенов" %}</li>
-                    <li>{% trans "Интеграция с проектом" %}</li>
-                </ul>
-                <span class="timeline-status status-planned">{% trans "Запланировано" %}</span>
-            </div>
-        </div>
-    </div>
-    
-    <div class="current-progress">
-        <h2><i class="fas fa-chart-line"></i> {% trans "Текущий прогресс" %}</h2>
-        <div class="progress-stats">
-            <div class="progress-stat">
-                <h3 id="completedStages">1</h3>
-                <p>{% trans "Завершенные этапы" %}</p>
-            </div>
-            <div class="progress-stat">
-                <h3 id="inProgressStages">1</h3>
-                <p>{% trans "Этапы в процессе" %}</p>
-            </div>
-            <div class="progress-stat">
-                <h3 id="plannedStages">4</h3>
-                <p>{% trans "Запланированные этапы" %}</p>
-            </div>
-            <div class="progress-stat">
-                <h3 id="totalStages">6</h3>
-                <p>{% trans "Всего этапов" %}</p>
-            </div>
-        </div>
-        <div class="progress-bar-container">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill" style="width: 17%"></div>
-            </div>
-            <div class="progress-label">
-                <span>{% trans "Начало" %}</span>
-                <span id="progressPercentage">17%</span>
-                <span>{% trans "Завершение" %}</span>
-            </div>
-        </div>
-    </div>
-    
-    <div class="tokenomics">
-        <h2><i class="fas fa-chart-pie"></i> {% trans "Токеномика Z96A" %}</h2>
-        <div class="token-details">
-            <div class="token-card">
-                <h3>{% trans "Название токена" %}</h3>
-                <div class="token-value">Z96A</div>
-                <div class="token-label">{% trans "Тикер" %}</div>
-            </div>
-            <div class="token-card">
-                <h3>{% trans "Общее предложение" %}</h3>
-                <div class="token-value">1,000,000,000</div>
-                <div class="token-label">{% trans "Токенов" %}</div>
-            </div>
-            <div class="token-card">
-                <h3>{% trans "Блокчейн" %}</h3>
-                <div class="token-value">Solana</div>
-                <div class="token-label">{% trans "Сеть" %}</div>
-            </div>
-            <div class="token-card">
-                <h3>{% trans "Запуск" %}</h3>
-                <div class="token-value">Q2 2026</div>
-                <div class="token-label">{% trans "Планируемая дата" %}</div>
-            </div>
-        </div>
-        
-        <div class="token-distribution">
-            <h3 style="text-align: center; margin-bottom: 2rem; color: white;">{% trans "Распределение токенов" %}</h3>
-            <div class="distribution-chart">
-                <!-- Простая круговая диаграмма -->
-                <div style="display: flex; justify-content: center; margin-bottom: 2rem;">
-                    <div style="width: 200px; height: 200px; border-radius: 50%; 
-                                background: conic-gradient(
-                                    #6c63ff 0% 30%,
-                                    #00ff9d 30% 50%,
-                                    #ffa500 50% 70%,
-                                    #ff6384 70% 85%,
-                                    #4a235a 85% 100%
-                                );"></div>
+        <!-- Основная временная шкала -->
+        <div class="timeline">
+            {% for stage in roadmap %}
+            <div class="timeline-item">
+                <div class="timeline-marker marker-{{ stage.status }}">{{ forloop.counter }}</div>
+                <div class="timeline-period">{{ stage.quarter }}</div>
+                
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <div class="timeline-icon">
+                            {% if forloop.counter == 1 %}🌐{% elif forloop.counter == 2 %}🛰️
+                            {% elif forloop.counter == 3 %}🔗{% elif forloop.counter == 4 %}💬
+                            {% elif forloop.counter == 5 %}📰{% else %}🚀{% endif %}
+                        </div>
+                        <h2 class="timeline-item-title">{{ stage.title }}</h2>
+                        <span class="timeline-status status-{{ stage.status }}">
+                            {% if stage.status == 'in_progress' %}В процессе
+                            {% elif stage.status == 'completed' %}Завершено
+                            {% elif stage.status == 'pending' %}Ожидает
+                            {% else %}Запланировано{% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="timeline-tasks">
+                        <ul class="task-list">
+                            {% for task in stage.tasks %}
+                            <li class="task-item 
+                                {% if stage.status == 'completed' %}completed
+                                {% elif stage.status == 'in_progress' and forloop.counter <= 1 %}in_progress
+                                {% else %}pending{% endif %}">
+                                <div class="task-checkbox"></div>
+                                <span class="task-text">{{ task }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    
+                    {% if stage.status != 'completed' %}
+                    <div class="timeline-progress">
+                        <div class="progress-header">
+                            <span class="progress-label">Прогресс выполнения</span>
+                            <span class="progress-percentage">
+                                {% if stage.status == 'in_progress' %}40%
+                                {% elif stage.status == 'pending' %}10%
+                                {% else %}0%{% endif %}
+                            </span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 
+                                {% if stage.status == 'in_progress' %}40%
+                                {% elif stage.status == 'pending' %}10%
+                                {% else %}0%{% endif %}">
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
-                <div class="chart-legend">
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #6c63ff;"></div>
-                        <span>30% - {% trans "Сообщество" %}</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #00ff9d;"></div>
-                        <span>20% - {% trans "Развитие" %}</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #ffa500;"></div>
-                        <span>20% - {% trans "Команда" %}</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #ff6384;"></div>
-                        <span>15% - {% trans "Маркетинг" %}</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #4a235a;"></div>
-                        <span>15% - {% trans "Резерв" %}</span>
-                    </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Секция токена -->
+        <div class="token-section">
+            <h2 class="token-title">Токен Z96A</h2>
+            <p class="token-subtitle">
+                В рамках развития экосистемы проекта планируется выпуск собственного токена 
+                на блокчейне Solana для финансирования разработки и поощрения активных участников.
+            </p>
+            
+            <div class="token-features">
+                <div class="token-feature">
+                    <div class="feature-icon">💰</div>
+                    <h3 class="feature-title">Финансирование</h3>
+                    <p class="feature-description">
+                        Средства от продажи токенов будут направлены на развитие платформы, 
+                        оплату серверов и привлечение экспертов.
+                    </p>
                 </div>
+                
+                <div class="token-feature">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="feature-title">Управление</h3>
+                    <p class="feature-description">
+                        Держатели токенов смогут участвовать в голосованиях по ключевым 
+                        решениям развития платформы через DAO механизм.
+                    </p>
+                </div>
+                
+                <div class="token-feature">
+                    <div class="feature-icon">🏆</div>
+                    <h3 class="feature-title">Вознаграждения</h3>
+                    <p class="feature-description">
+                        Активные участники сообщества, авторы предложений и контента 
+                        будут получать токены в качестве награды.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="token-launch">
+                <h3 class="launch-title">Планируемый запуск</h3>
+                <div class="launch-date">2 квартал 2026 года</div>
+                <p class="launch-description">
+                    Токен будет выпущен на платформе pump.fun с последующим листингом 
+                    на децентрализованных биржах. Подробности будут объявлены позже.
+                </p>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
-{% block extra_scripts %}
+{% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Анимация прогресс-бара
-    const progressFill = document.getElementById('progressFill');
-    const progressPercentage = document.getElementById('progressPercentage');
-    
-    // Рассчитываем процент выполнения
-    const completed = 1; // Этап 1 завершен
-    const inProgress = 1; // Этап 2 в процессе (считаем как 50%)
-    const total = 6;
-    
-    const percentage = Math.round(((completed + (inProgress * 0.5)) / total) * 100);
-    
-    // Анимируем заполнение
-    setTimeout(() => {
-        progressFill.style.width = `${percentage}%`;
-        progressPercentage.textContent = `${percentage}%`;
-    }, 500);
-    
-    // Обновляем статистику
-    document.getElementById('completedStages').textContent = completed;
-    document.getElementById('inProgressStages').textContent = inProgress;
-    document.getElementById('plannedStages').textContent = total - completed - inProgress;
-    document.getElementById('totalStages').textContent = total;
-    
-    // Анимация маркеров таймлайна
-    const markers = document.querySelectorAll('.timeline-marker');
-    markers.forEach((marker, index) => {
+    document.addEventListener('DOMContentLoaded', function() {
+        // Анимация прогресс-баров
+        const progressBars = document.querySelectorAll('.progress-fill');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const bar = entry.target;
+                    const width = bar.style.width;
+                    bar.style.width = '0';
+                    
+                    setTimeout(() => {
+                        bar.style.transition = 'width 1.5s ease';
+                        bar.style.width = width;
+                    }, 300);
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        progressBars.forEach(bar => observer.observe(bar));
+        
+        // Анимация появления элементов временной шкалы
+        const timelineItems = document.querySelectorAll('.timeline-item');
+        
+        const timelineObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        timelineItems.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(30px)';
+            item.style.transition = `opacity 0.6s ease ${index * 0.2}s, transform 0.6s ease ${index * 0.2}s`;
+            timelineObserver.observe(item);
+        });
+        
+        // Анимация токен-секции
+        const tokenSection = document.querySelector('.token-section');
+        tokenSection.style.opacity = '0';
+        tokenSection.style.transform = 'translateY(50px)';
+        tokenSection.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+        
         setTimeout(() => {
-            marker.style.opacity = '1';
-            marker.style.transform = marker.style.transform + ' scale(1.2)';
-            
-            setTimeout(() => {
-                marker.style.transform = marker.style.transform.replace(' scale(1.2)', '');
-            }, 300);
-        }, index * 200);
+            tokenSection.style.opacity = '1';
+            tokenSection.style.transform = 'translateY(0)';
+        }, 1000);
     });
-    
-    // Плавное появление элементов таймлайна
-    const timelineItems = document.querySelectorAll('.timeline-content');
-    timelineItems.forEach((item, index) => {
-        setTimeout(() => {
-            item.style.opacity = '1';
-            item.style.transform = 'translateY(0)';
-        }, index * 300);
-    });
-});
 </script>
 {% endblock %}

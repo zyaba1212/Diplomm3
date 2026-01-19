@@ -1,327 +1,693 @@
-// Основные функции сайта Z96A
+/**
+ * Z96A - Основной JavaScript файл проекта
+ * Версия: 1.0.0
+ * Автор: Зыблиенко Дмитрий
+ */
 
-// Инициализация при загрузке страницы
+// ===== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ =====
+window.walletConnected = false;
+window.walletAddress = null;
+window.userProfile = null;
+window.solana = null;
+
+// ===== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ =====
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Z96A Platform initialized');
+    
+    // Инициализация основных функций
+    initSidebars();
     initLanguageSwitcher();
+    initWalletConnection();
+    initNotifications();
+    initScrollAnimations();
     initMobileMenu();
-    initSmoothScrolling();
-    checkWalletConnection();
+    
+    // Проверка обновлений
+    checkForUpdates();
 });
 
-// Инициализация переключателя языка
-function initLanguageSwitcher() {
-    const languageForms = document.querySelectorAll('.language-form');
-    languageForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            localStorage.setItem('preferred_language', this.language.value);
+// ===== УПРАВЛЕНИЕ БОКОВЫМИ ПАНЕЛЯМИ =====
+function initSidebars() {
+    // Восстановление состояния из localStorage
+    const leftSidebarState = localStorage.getItem('sidebar-left-state');
+    const rightSidebarState = localStorage.getItem('sidebar-right-state');
+    
+    if (leftSidebarState === 'collapsed') {
+        collapseSidebar('news-sidebar');
+    }
+    
+    if (rightSidebarState === 'collapsed') {
+        collapseSidebar('comments-sidebar');
+    }
+    
+    // Обработчики для кнопок
+    document.querySelectorAll('.sidebar-toggle').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const sidebarId = this.closest('.sidebar-left, .sidebar-right').id;
+            toggleSidebar(sidebarId);
+        });
+    });
+    
+    document.querySelectorAll('.sidebar-close').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const sidebarId = this.closest('.sidebar-left, .sidebar-right').id;
+            closeSidebar(sidebarId);
         });
     });
 }
 
-// Инициализация мобильного меню
-function initMobileMenu() {
-    const menuToggle = document.getElementById('mobileMenuToggle');
-    const mainNav = document.querySelector('.main-nav');
+function toggleSidebar(sidebarId) {
+    const sidebar = document.getElementById(sidebarId);
+    if (!sidebar) return;
     
-    if (menuToggle && mainNav) {
-        menuToggle.addEventListener('click', function() {
-            mainNav.classList.toggle('mobile-active');
-            this.classList.toggle('active');
-        });
-    }
-}
-
-// Плавная прокрутка
-function initSmoothScrolling() {
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            const href = this.getAttribute('href');
-            if (href === '#') return;
-            
-            if (href.startsWith('#')) {
-                e.preventDefault();
-                const target = document.querySelector(href);
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
+    sidebar.classList.toggle('collapsed');
+    
+    // Сохранение состояния
+    const state = sidebar.classList.contains('collapsed') ? 'collapsed' : 'expanded';
+    localStorage.setItem(`${sidebarId}-state`, state);
+    
+    // Обновление иконки
+    const toggleIcon = sidebar.querySelector('.toggle-icon');
+    if (toggleIcon) {
+        if (sidebar.classList.contains('collapsed')) {
+            if (sidebarId === 'news-sidebar') {
+                toggleIcon.textContent = '→';
+            } else {
+                toggleIcon.textContent = '←';
             }
+        } else {
+            if (sidebarId === 'news-sidebar') {
+                toggleIcon.textContent = '←';
+            } else {
+                toggleIcon.textContent = '→';
+            }
+        }
+    }
+    
+    // Уведомление о изменении
+    showNotification('Настройки панели сохранены', 'info');
+}
+
+function collapseSidebar(sidebarId) {
+    const sidebar = document.getElementById(sidebarId);
+    if (sidebar) {
+        sidebar.classList.add('collapsed');
+        const toggleIcon = sidebar.querySelector('.toggle-icon');
+        if (toggleIcon) {
+            if (sidebarId === 'news-sidebar') {
+                toggleIcon.textContent = '→';
+            } else {
+                toggleIcon.textContent = '←';
+            }
+        }
+    }
+}
+
+function closeSidebar(sidebarId) {
+    const sidebar = document.getElementById(sidebarId);
+    if (sidebar) {
+        sidebar.style.display = 'none';
+        localStorage.setItem(`${sidebarId}-state`, 'hidden');
+        showNotification('Панель скрыта', 'info');
+    }
+}
+
+// ===== ПЕРЕКЛЮЧЕНИЕ ЯЗЫКА =====
+function initLanguageSwitcher() {
+    const langButtons = document.querySelectorAll('.lang-btn');
+    const currentLang = localStorage.getItem('z96a-language') || 'ru';
+    
+    // Установка активного языка
+    langButtons.forEach(btn => {
+        if (btn.dataset.lang === currentLang) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+        
+        btn.addEventListener('click', function() {
+            const lang = this.dataset.lang;
+            switchLanguage(lang);
         });
     });
+    
+    // Загрузка переводов
+    loadTranslations(currentLang);
 }
 
-// Проверка подключения кошелька
-function checkWalletConnection() {
-    const connectedWallet = localStorage.getItem('z96a_wallet_address');
-    const userNickname = localStorage.getItem('z96a_user_nickname');
+function switchLanguage(lang) {
+    if (lang === localStorage.getItem('z96a-language')) {
+        return;
+    }
     
-    if (connectedWallet && userNickname) {
-        showUserInfo(connectedWallet, userNickname);
+    // Обновление кнопок
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.lang === lang) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Сохранение в localStorage
+    localStorage.setItem('z96a-language', lang);
+    
+    // Загрузка переводов
+    loadTranslations(lang);
+    
+    // Обновление страницы
+    applyTranslations(lang);
+    
+    showNotification(`Язык изменен на ${lang === 'ru' ? 'Русский' : 'English'}`, 'success');
+}
+
+function loadTranslations(lang) {
+    // В реальном проекте здесь будет загрузка JSON файла с переводами
+    const translations = {
+        ru: {
+            // Общие фразы
+            'connect_wallet': 'Подключить кошелек',
+            'disconnect': 'Отключить',
+            'loading': 'Загрузка...',
+            'error': 'Ошибка',
+            'success': 'Успешно',
+            'warning': 'Предупреждение',
+            'info': 'Информация',
+            
+            // Навигация
+            'home': 'Главная',
+            'architecture': 'Архитектура',
+            'news': 'Новости',
+            'discussion': 'Обсуждение',
+            'about': 'О проекте',
+            'roadmap': 'Дорожная карта',
+            
+            // Боковая панель новостей
+            'latest_news': 'Последние новости',
+            'all_news': 'Все новости',
+            'no_news': 'Новости загружаются...',
+            
+            // Подвал
+            'copyright': 'Все права защищены',
+            'privacy': 'Политика конфиденциальности',
+            'terms': 'Условия использования',
+        },
+        en: {
+            // Common phrases
+            'connect_wallet': 'Connect Wallet',
+            'disconnect': 'Disconnect',
+            'loading': 'Loading...',
+            'error': 'Error',
+            'success': 'Success',
+            'warning': 'Warning',
+            'info': 'Information',
+            
+            // Navigation
+            'home': 'Home',
+            'architecture': 'Architecture',
+            'news': 'News',
+            'discussion': 'Discussion',
+            'about': 'About',
+            'roadmap': 'Roadmap',
+            
+            // News sidebar
+            'latest_news': 'Latest News',
+            'all_news': 'All News',
+            'no_news': 'Loading news...',
+            
+            // Footer
+            'copyright': 'All rights reserved',
+            'privacy': 'Privacy Policy',
+            'terms': 'Terms of Service',
+        }
+    };
+    
+    window.appTranslations = translations[lang] || translations.ru;
+}
+
+function applyTranslations(lang) {
+    // Применение переводов к элементам страницы
+    const elements = document.querySelectorAll('[data-translate]');
+    
+    elements.forEach(element => {
+        const key = element.dataset.translate;
+        if (window.appTranslations && window.appTranslations[key]) {
+            if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                element.placeholder = window.appTranslations[key];
+            } else {
+                element.textContent = window.appTranslations[key];
+            }
+        }
+    });
+    
+    // Обновление meta тегов
+    document.documentElement.lang = lang;
+}
+
+// ===== ПОДКЛЮЧЕНИЕ КОШЕЛЬКА =====
+function initWalletConnection() {
+    // Проверка сохраненного кошелька
+    const savedWallet = localStorage.getItem('z96a-wallet-address');
+    const savedNickname = localStorage.getItem('z96a-user-nickname');
+    const savedReputation = localStorage.getItem('z96a-user-reputation');
+    
+    if (savedWallet) {
+        window.walletAddress = savedWallet;
+        window.walletConnected = true;
+        window.userProfile = {
+            nickname: savedNickname || 'User',
+            reputation: savedReputation ? parseInt(savedReputation) : 0
+        };
+        updateWalletUI();
+    }
+    
+    // Проверка поддержки Solana
+    if (typeof window.solana !== 'undefined') {
+        window.solana = window.solana;
+        console.log('Solana wallet detected');
     }
 }
 
-// Показать информацию о пользователе
-function showUserInfo(walletAddress, nickname) {
-    const walletBtn = document.getElementById('connectWalletBtn');
-    const userInfo = document.getElementById('userInfo');
-    const userNickname = document.getElementById('userNickname');
-    
-    if (walletBtn && userInfo && userNickname) {
-        walletBtn.style.display = 'none';
-        userInfo.style.display = 'flex';
-        userNickname.textContent = nickname;
+async function connectWallet() {
+    try {
+        showNotification('Подключение кошелька...', 'info');
+        
+        // Проверка поддержки Solana
+        if (typeof window.solana === 'undefined') {
+            throw new Error('Пожалуйста, установите кошелек Phantom или другой Solana кошелек');
+        }
+        
+        // Запрос подключения
+        const response = await window.solana.connect();
+        const walletAddress = response.publicKey.toString();
+        
+        // Сохранение данных
+        window.walletAddress = walletAddress;
+        window.walletConnected = true;
+        
+        // Получение информации о пользователе
+        const userInfo = await getUserInfo(walletAddress);
+        window.userProfile = userInfo;
+        
+        // Сохранение в localStorage
+        localStorage.setItem('z96a-wallet-address', walletAddress);
+        localStorage.setItem('z96a-user-nickname', userInfo.nickname);
+        localStorage.setItem('z96a-user-reputation', userInfo.reputation);
+        
+        // Обновление интерфейса
+        updateWalletUI();
+        
+        // Отправка на сервер
+        await registerWalletConnection(walletAddress, userInfo);
+        
+        showNotification('Кошелек успешно подключен!', 'success');
+        
+    } catch (error) {
+        console.error('Wallet connection error:', error);
+        showNotification(`Ошибка подключения: ${error.message}`, 'error');
     }
 }
 
-// Скрыть информацию о пользователе
-function hideUserInfo() {
-    const walletBtn = document.getElementById('connectWalletBtn');
-    const userInfo = document.getElementById('userInfo');
-    
-    if (walletBtn && userInfo) {
-        walletBtn.style.display = 'flex';
-        userInfo.style.display = 'none';
+async function disconnectWallet() {
+    try {
+        if (window.solana && window.solana.disconnect) {
+            await window.solana.disconnect();
+        }
+        
+        // Очистка данных
+        window.walletConnected = false;
+        window.walletAddress = null;
+        window.userProfile = null;
+        
+        // Очистка localStorage
+        localStorage.removeItem('z96a-wallet-address');
+        localStorage.removeItem('z96a-user-nickname');
+        localStorage.removeItem('z96a-user-reputation');
+        
+        // Обновление интерфейса
+        updateWalletUI();
+        
+        showNotification('Кошелек отключен', 'info');
+        
+    } catch (error) {
+        console.error('Wallet disconnection error:', error);
+        showNotification('Ошибка отключения кошелька', 'error');
     }
 }
 
-// Отображение уведомлений
+function updateWalletUI() {
+    const connectBtn = document.getElementById('connect-wallet-btn');
+    const walletConnected = document.getElementById('wallet-connected');
+    const walletAddressElem = document.getElementById('wallet-address');
+    const walletNicknameElem = document.getElementById('wallet-nickname');
+    const walletReputationElem = document.getElementById('wallet-reputation');
+    
+    if (window.walletConnected && walletAddressElem && walletNicknameElem && walletReputationElem) {
+        // Показать информацию о кошельке
+        connectBtn.style.display = 'none';
+        walletConnected.style.display = 'flex';
+        
+        // Обновить данные
+        walletAddressElem.textContent = `${window.walletAddress.slice(0, 8)}...${window.walletAddress.slice(-6)}`;
+        walletNicknameElem.textContent = window.userProfile?.nickname || 'User';
+        walletReputationElem.textContent = `${window.userProfile?.reputation || 0} очков`;
+        
+    } else {
+        // Показать кнопку подключения
+        connectBtn.style.display = 'flex';
+        if (walletConnected) {
+            walletConnected.style.display = 'none';
+        }
+    }
+}
+
+async function getUserInfo(walletAddress) {
+    try {
+        // Запрос к API для получения информации о пользователе
+        const response = await fetch(`${window.APP_CONFIG.apiBaseUrl}wallet-info/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ wallet_address: walletAddress })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+        
+        // Если пользователь новый, создать профиль
+        return {
+            nickname: generateNickname(),
+            reputation: 0,
+            is_new: true
+        };
+        
+    } catch (error) {
+        console.error('Error getting user info:', error);
+        return {
+            nickname: generateNickname(),
+            reputation: 0,
+            is_new: true
+        };
+    }
+}
+
+async function registerWalletConnection(walletAddress, userInfo) {
+    try {
+        const response = await fetch(`${window.APP_CONFIG.apiBaseUrl}wallet-connect/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                wallet_address: walletAddress,
+                nickname: userInfo.nickname,
+                reputation: userInfo.reputation,
+                timestamp: new Date().toISOString()
+            })
+        });
+        
+        return response.ok;
+        
+    } catch (error) {
+        console.error('Error registering wallet:', error);
+        return false;
+    }
+}
+
+function generateNickname() {
+    const adjectives = ['Cosmic', 'Stellar', 'Quantum', 'Digital', 'Neural', 'Cyber'];
+    const nouns = ['Explorer', 'Pioneer', 'Voyager', 'Traveler', 'Nomad', 'Seeker'];
+    const numbers = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    
+    const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    
+    return `${adjective}${noun}${numbers}`;
+}
+
+// ===== УВЕДОМЛЕНИЯ =====
+function initNotifications() {
+    // Создание контейнера если его нет
+    if (!document.getElementById('notifications')) {
+        const container = document.createElement('div');
+        container.id = 'notifications';
+        document.body.appendChild(container);
+    }
+}
+
 function showNotification(message, type = 'info') {
+    const notifications = document.getElementById('notifications');
+    if (!notifications) return;
+    
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
+    
+    const icons = {
+        success: '✓',
+        error: '✗',
+        warning: '⚠',
+        info: '💡'
+    };
+    
     notification.innerHTML = `
         <div class="notification-content">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span class="notification-icon">${icons[type] || '💡'}</span>
             <span>${message}</span>
         </div>
-        <button class="notification-close">&times;</button>
     `;
     
-    document.body.appendChild(notification);
+    notifications.appendChild(notification);
     
-    // Анимация появления
+    // Автоматическое удаление
     setTimeout(() => {
-        notification.classList.add('show');
-    }, 10);
-    
-    // Закрытие по клику
-    notification.querySelector('.notification-close').addEventListener('click', () => {
-        notification.classList.remove('show');
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
         setTimeout(() => {
-            notification.remove();
+            if (notification.parentNode === notifications) {
+                notifications.removeChild(notification);
+            }
         }, 300);
-    });
-    
-    // Автоматическое закрытие
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.classList.remove('show');
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
-            }, 300);
-        }
     }, 5000);
 }
 
-// Форматирование адреса кошелька
-function formatWalletAddress(address) {
-    if (!address) return '';
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+// ===== АНИМАЦИИ ПРИ ПРОКРУТКЕ =====
+function initScrollAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+            }
+        });
+    }, observerOptions);
+    
+    // Наблюдение за элементами с анимацией
+    document.querySelectorAll('.animate-on-scroll').forEach(element => {
+        observer.observe(element);
+    });
 }
 
-// Загрузка данных с API
-async function fetchData(url, options = {}) {
-    try {
-        const response = await fetch(url, {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
-            ...options
+// ===== МОБИЛЬНОЕ МЕНЮ =====
+function initMobileMenu() {
+    const mobileMenuBtn = document.createElement('button');
+    mobileMenuBtn.className = 'mobile-menu-btn';
+    mobileMenuBtn.innerHTML = '☰';
+    mobileMenuBtn.setAttribute('aria-label', 'Меню');
+    
+    const headerRight = document.querySelector('.header-right');
+    if (headerRight) {
+        headerRight.insertBefore(mobileMenuBtn, headerRight.firstChild);
+        
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    }
+    
+    // Создание мобильного меню
+    const mobileMenu = document.createElement('div');
+    mobileMenu.className = 'mobile-menu';
+    mobileMenu.innerHTML = `
+        <div class="mobile-menu-header">
+            <button class="mobile-menu-close">×</button>
+        </div>
+        <div class="mobile-menu-content"></div>
+    `;
+    
+    document.body.appendChild(mobileMenu);
+    
+    // Закрытие по клику вне меню
+    document.addEventListener('click', function(event) {
+        if (!mobileMenu.contains(event.target) && event.target !== mobileMenuBtn) {
+            mobileMenu.classList.remove('active');
+        }
+    });
+    
+    // Кнопка закрытия
+    mobileMenu.querySelector('.mobile-menu-close').addEventListener('click', () => {
+        mobileMenu.classList.remove('active');
+    });
+}
+
+function toggleMobileMenu() {
+    const mobileMenu = document.querySelector('.mobile-menu');
+    if (!mobileMenu) return;
+    
+    // Заполнение контентом
+    const content = mobileMenu.querySelector('.mobile-menu-content');
+    if (content.innerHTML === '') {
+        const nav = document.querySelector('.nav-list');
+        if (nav) {
+            content.innerHTML = nav.innerHTML;
+        }
+        
+        // Добавление дополнительных элементов
+        const extraContent = `
+            <div class="mobile-menu-extra">
+                <div class="language-switcher">
+                    <button class="lang-btn active" data-lang="ru">RU</button>
+                    <span class="lang-separator">/</span>
+                    <button class="lang-btn" data-lang="en">EN</button>
+                </div>
+                <button class="wallet-connect-btn" onclick="connectWallet()">
+                    👛 Подключить кошелек
+                </button>
+            </div>
+        `;
+        content.innerHTML += extraContent;
+        
+        // Обновление обработчиков
+        content.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                switchLanguage(this.dataset.lang);
+            });
         });
         
+        content.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+            });
+        });
+    }
+    
+    mobileMenu.classList.toggle('active');
+}
+
+// ===== ПРОВЕРКА ОБНОВЛЕНИЙ =====
+async function checkForUpdates() {
+    try {
+        const lastCheck = localStorage.getItem('z96a-last-update-check');
+        const now = Date.now();
+        
+        // Проверять не чаще чем раз в час
+        if (lastCheck && (now - parseInt(lastCheck)) < 3600000) {
+            return;
+        }
+        
+        const response = await fetch(`${window.APP_CONFIG.apiBaseUrl}check-updates/`);
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('z96a-last-update-check', now.toString());
+            
+            if (data.update_available) {
+                showUpdateNotification(data);
+            }
+        }
+    } catch (error) {
+        console.error('Update check failed:', error);
+    }
+}
+
+function showUpdateNotification(updateData) {
+    const notification = document.createElement('div');
+    notification.className = 'notification notification-info update-notification';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-icon">🔄</span>
+            <span>Доступно обновление ${updateData.version}</span>
+            <button class="update-dismiss">×</button>
+        </div>
+        <div class="update-details">
+            <p>${updateData.description}</p>
+            ${updateData.urgent ? '<p class="update-urgent">❗ Срочное обновление</p>' : ''}
+            <div class="update-actions">
+                <button class="btn btn-sm" onclick="location.reload()">Обновить сейчас</button>
+                <button class="btn btn-sm btn-outline" onclick="dismissUpdate()">Напомнить позже</button>
+            </div>
+        </div>
+    `;
+    
+    const notifications = document.getElementById('notifications');
+    if (notifications) {
+        notifications.appendChild(notification);
+    }
+    
+    // Кнопка закрытия
+    notification.querySelector('.update-dismiss').addEventListener('click', () => {
+        notification.remove();
+        localStorage.setItem('z96a-update-dismissed', Date.now().toString());
+    });
+}
+
+function dismissUpdate() {
+    const notification = document.querySelector('.update-notification');
+    if (notification) {
+        notification.remove();
+    }
+    localStorage.setItem('z96a-update-dismissed', Date.now().toString());
+}
+
+// ===== API ВЗАИМОДЕЙСТВИЕ =====
+async function apiRequest(endpoint, method = 'GET', data = null) {
+    try {
+        const url = `${window.APP_CONFIG.apiBaseUrl}${endpoint}`;
+        const options = {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Wallet-Address': window.walletAddress || ''
+            },
+            credentials: 'same-origin'
+        };
+        
+        if (data) {
+            options.body = JSON.stringify(data);
+        }
+        
+        const response = await fetch(url, options);
+        
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`API Error: ${response.status}`);
         }
         
         return await response.json();
+        
     } catch (error) {
-        console.error('Fetch error:', error);
-        showNotification('Ошибка загрузки данных', 'error');
+        console.error(`API request failed (${endpoint}):`, error);
         throw error;
     }
 }
 
-// Стили для уведомлений (динамически добавляем в head)
-const notificationStyles = `
-.notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    background: rgba(30, 30, 46, 0.95);
-    border: 1px solid rgba(108, 99, 255, 0.3);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-width: 300px;
-    max-width: 400px;
-    transform: translateX(120%);
-    transition: transform 0.3s ease;
-    z-index: 9999;
-    backdrop-filter: blur(10px);
-}
-
-.notification.show {
-    transform: translateX(0);
-}
-
-.notification-success {
-    border-left: 4px solid #00ff9d;
-}
-
-.notification-error {
-    border-left: 4px solid #ff4757;
-}
-
-.notification-info {
-    border-left: 4px solid #6c63ff;
-}
-
-.notification-content {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    flex: 1;
-}
-
-.notification-close {
-    background: none;
-    border: none;
-    color: #aaa;
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 0;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background-color 0.3s ease;
-}
-
-.notification-close:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-`;
-
-// Добавляем стили уведомлений в head
-if (!document.querySelector('#notification-styles')) {
-    const styleEl = document.createElement('style');
-    styleEl.id = 'notification-styles';
-    styleEl.textContent = notificationStyles;
-    document.head.appendChild(styleEl);
-}
-
-// Утилита для работы с датами
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-        day: '2-digit',
-        month: '2-digit',
+// ===== УТИЛИТЫ =====
+function formatDate(date) {
+    return new Date(date).toLocaleDateString('ru-RU', {
         year: 'numeric',
+        month: 'long',
+        day: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
     });
 }
 
-// Обработка ошибок формы
-function handleFormError(formElement, error) {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'form-error';
-    errorDiv.innerHTML = `
-        <i class="fas fa-exclamation-circle"></i>
-        <span>${error}</span>
-    `;
-    
-    formElement.insertBefore(errorDiv, formElement.firstChild);
-    
-    // Автоматическое удаление через 5 секунд
-    setTimeout(() => {
-        if (errorDiv.parentNode === formElement) {
-            errorDiv.remove();
-        }
-    }, 5000);
+function formatNumber(number) {
+    return new Intl.NumberFormat('ru-RU').format(number);
 }
 
-// Тема оформления (темная/светлая)
-function initThemeToggle() {
-    const themeToggle = document.getElementById('themeToggle');
-    if (!themeToggle) return;
-    
-    const currentTheme = localStorage.getItem('z96a_theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', currentTheme);
-    
-    themeToggle.addEventListener('click', () => {
-        const current = document.documentElement.getAttribute('data-theme');
-        const newTheme = current === 'dark' ? 'light' : 'dark';
-        
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('z96a_theme', newTheme);
-        
-        showNotification(`Тема изменена на ${newTheme === 'dark' ? 'тёмную' : 'светлую'}`);
-    });
-}
-
-// Инициализация счетчиков
-function initCounters() {
-    const counters = document.querySelectorAll('.counter');
-    counters.forEach(counter => {
-        const target = parseInt(counter.getAttribute('data-target'));
-        const increment = target / 100;
-        let current = 0;
-        
-        const updateCounter = () => {
-            if (current < target) {
-                current += increment;
-                counter.textContent = Math.ceil(current);
-                setTimeout(updateCounter, 20);
-            } else {
-                counter.textContent = target;
-            }
-        };
-        
-        // Запускаем при появлении в viewport
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    updateCounter();
-                    observer.unobserve(entry.target);
-                }
-            });
-        });
-        
-        observer.observe(counter);
-    });
-}
-
-// Копирование в буфер обмена
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        showNotification('Скопировано в буфер обмена', 'success');
-    }).catch(err => {
-        console.error('Copy failed:', err);
-        showNotification('Ошибка копирования', 'error');
-    });
-}
-
-// Дебаунс для оптимизации
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -334,30 +700,30 @@ function debounce(func, wait) {
     };
 }
 
-// Проверка поддержки WebGL
-function checkWebGLSupport() {
-    try {
-        const canvas = document.createElement('canvas');
-        return !!(window.WebGLRenderingContext && 
-            (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
-    } catch (e) {
-        return false;
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+// ===== ЭКСПОРТ ФУНКЦИЙ =====
+window.connectWallet = connectWallet;
+window.disconnectWallet = disconnectWallet;
+window.switchLanguage = switchLanguage;
+window.showNotification = showNotification;
+window.toggleSidebar = toggleSidebar;
+window.closeSidebar = closeSidebar;
+
+// Проверка подключения кошелька при загрузке
+window.addEventListener('load', () => {
+    if (window.walletConnected) {
+        updateWalletUI();
     }
-}
-
-// Если WebGL не поддерживается
-if (!checkWebGLSupport()) {
-    document.addEventListener('DOMContentLoaded', function() {
-        showNotification('Ваш браузер не поддерживает WebGL. 3D визуализация может не работать.', 'error');
-    });
-}
-
-// Экспорт функций для использования в других файлах
-window.Z96A = window.Z96A || {};
-window.Z96A.utils = {
-    showNotification,
-    formatWalletAddress,
-    formatDate,
-    copyToClipboard,
-    debounce
-};
+});

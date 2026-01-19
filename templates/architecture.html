@@ -1,166 +1,1545 @@
-{% extends 'base.html' %}
-{% load static %}
-{% load i18n %}
+{% extends "base.html" %}
 
-{% block title %}{% trans "Z96A - Архитектура сети" %}{% endblock %}
+{% block title %}System Architecture - Z96A Network{% endblock %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/globe.css' %}">
+{% block page_title %}
+<div class="hero-header">
+    <h1>System Architecture</h1>
+    <p class="hero-subtitle">Scalable, secure, and modern infrastructure design</p>
+</div>
 {% endblock %}
 
 {% block content %}
-<div class="architecture-container">
-    <!-- Панель управления -->
-    <div class="control-panel">
-        <div class="control-section">
-            <h3><i class="fas fa-sliders-h"></i> {% trans "Управление" %}</h3>
-            
-            <div class="control-group">
-                <label class="control-label">{% trans "Тип сети:" %}</label>
-                <div class="btn-group">
-                    <button id="btnExisting" class="network-btn active">{% trans "Существующая" %}</button>
-                    <button id="btnProposed" class="network-btn">{% trans "Предложенная" %}</button>
-                    <button id="btnBoth" class="network-btn">{% trans "Обе" %}</button>
-                </div>
-            </div>
-            
-            <div class="control-group">
-                <label class="control-label">{% trans "Вращение:" %}</label>
-                <div class="btn-group rotation-controls">
-                    <button id="btnRotate" class="rotation-btn active">{% trans "Вкл" %}</button>
-                    <button id="btnStop" class="rotation-btn">{% trans "Выкл" %}</button>
-                </div>
-            </div>
-            
-            <div class="control-group">
-                <label class="control-label">{% trans "Элементы:" %}</label>
-                <div class="checkbox-group">
-                    <label><input type="checkbox" id="chkSatellites" checked> {% trans "Спутники" %}</label>
-                    <label><input type="checkbox" id="chkStations" checked> {% trans "Станции" %}</label>
-                    <label><input type="checkbox" id="chkRouters" checked> {% trans "Маршрутизаторы" %}</label>
-                    <label><input type="checkbox" id="chkCables" checked> {% trans "Кабели" %}</label>
-		    <label><input type="checkbox" id="chkProposed" checked> {% trans "Предложенные" %}</label>
-                </div>
-            </div>
-            
-            <div class="control-group">
-                <label class="control-label">{% trans "Слои:" %}</label>
-                <div class="checkbox-group">
-                    <label><input type="checkbox" id="chkStratosphere" checked> {% trans "Стратосфера" %}</label>
-                    <label><input type="checkbox" id="chkTroposphere"> {% trans "Тропосфера" %}</label>
-                    <label><input type="checkbox" id="chkGround" checked> {% trans "Наземный" %}</label>
-                </div>
-            </div>
-            
-            <div class="control-group">
-                <label class="control-label">{% trans "Зум:" %}</label>
-                <input type="range" id="zoomSlider" min="1" max="100" value="50" class="slider">
-            </div>
+<div class="container">
+    <!-- Architecture Overview -->
+    <section class="architecture-section overview-section">
+        <div class="section-header">
+            <h2>High-Level Architecture</h2>
+            <p>Modular design for scalability and maintainability</p>
         </div>
         
-        <div class="control-section">
-            <h3><i class="fas fa-info-circle"></i> {% trans "Информация" %}</h3>
-            <div id="elementInfo" class="element-info">
-                <p>{% trans "Выберите элемент сети для получения информации" %}</p>
+        <div class="architecture-diagram">
+            <div class="diagram-container">
+                <!-- Client Layer -->
+                <div class="diagram-layer client-layer">
+                    <div class="layer-header">
+                        <div class="layer-icon">💻</div>
+                        <h3>Client Layer</h3>
+                    </div>
+                    <div class="layer-components">
+                        <div class="component" data-component="web-client">
+                            <div class="component-icon">🌐</div>
+                            <div class="component-name">Web Browser</div>
+                            <div class="component-description">HTML/CSS/JavaScript</div>
+                        </div>
+                        <div class="component" data-component="mobile-client">
+                            <div class="component-icon">📱</div>
+                            <div class="component-name">Mobile Devices</div>
+                            <div class="component-description">Responsive PWA</div>
+                        </div>
+                        <div class="component" data-component="api-client">
+                            <div class="component-icon">🔌</div>
+                            <div class="component-name">API Clients</div>
+                            <div class="component-description">REST/WebSocket</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Connection Arrows -->
+                <div class="connection-arrows">
+                    <div class="arrow-down"></div>
+                    <div class="arrow-down"></div>
+                    <div class="arrow-down"></div>
+                </div>
+                
+                <!-- Presentation Layer -->
+                <div class="diagram-layer presentation-layer">
+                    <div class="layer-header">
+                        <div class="layer-icon">🎨</div>
+                        <h3>Presentation Layer</h3>
+                    </div>
+                    <div class="layer-components">
+                        <div class="component" data-component="threejs">
+                            <div class="component-icon">✨</div>
+                            <div class="component-name">Three.js Engine</div>
+                            <div class="component-description">3D Visualization</div>
+                        </div>
+                        <div class="component" data-component="templates">
+                            <div class="component-icon">📄</div>
+                            <div class="component-name">Django Templates</div>
+                            <div class="component-description">Server-side rendering</div>
+                        </div>
+                        <div class="component" data-component="websocket">
+                            <div class="component-icon">🔗</div>
+                            <div class="component-name">WebSocket Server</div>
+                            <div class="component-description">Real-time updates</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Connection Arrows -->
+                <div class="connection-arrows">
+                    <div class="arrow-down"></div>
+                    <div class="arrow-down"></div>
+                    <div class="arrow-down"></div>
+                </div>
+                
+                <!-- Application Layer -->
+                <div class="diagram-layer application-layer">
+                    <div class="layer-header">
+                        <div class="layer-icon">⚙️</div>
+                        <h3>Application Layer</h3>
+                    </div>
+                    <div class="layer-components">
+                        <div class="component" data-component="django">
+                            <div class="component-icon">🐍</div>
+                            <div class="component-name">Django Framework</div>
+                            <div class="component-description">Python web framework</div>
+                        </div>
+                        <div class="component" data-component="services">
+                            <div class="component-icon">🛠️</div>
+                            <div class="component-name">Business Services</div>
+                            <div class="component-description">Core logic & APIs</div>
+                        </div>
+                        <div class="component" data-component="auth">
+                            <div class="component-icon">🔐</div>
+                            <div class="component-name">Authentication</div>
+                            <div class="component-description">User management</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Connection Arrows -->
+                <div class="connection-arrows">
+                    <div class="arrow-down"></div>
+                    <div class="arrow-down"></div>
+                    <div class="arrow-down"></div>
+                </div>
+                
+                <!-- Data Layer -->
+                <div class="diagram-layer data-layer">
+                    <div class="layer-header">
+                        <div class="layer-icon">💾</div>
+                        <h3>Data Layer</h3>
+                    </div>
+                    <div class="layer-components">
+                        <div class="component" data-component="postgresql">
+                            <div class="component-icon">🐘</div>
+                            <div class="component-name">PostgreSQL</div>
+                            <div class="component-description">Primary database</div>
+                        </div>
+                        <div class="component" data-component="redis">
+                            <div class="component-icon">🔴</div>
+                            <div class="component-name">Redis</div>
+                            <div class="component-description">Cache & sessions</div>
+                        </div>
+                        <div class="component" data-component="storage">
+                            <div class="component-icon">📦</div>
+                            <div class="component-name">Object Storage</div>
+                            <div class="component-description">Media files</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Connection Arrows -->
+                <div class="connection-arrows">
+                    <div class="arrow-down"></div>
+                    <div class="arrow-down"></div>
+                    <div class="arrow-down"></div>
+                </div>
+                
+                <!-- Blockchain Layer -->
+                <div class="diagram-layer blockchain-layer">
+                    <div class="layer-header">
+                        <div class="layer-icon">⛓️</div>
+                        <h3>Blockchain Layer</h3>
+                    </div>
+                    <div class="layer-components">
+                        <div class="component" data-component="blockchain-core">
+                            <div class="component-icon">🔗</div>
+                            <div class="component-name">Blockchain Core</div>
+                            <div class="component-description">Custom implementation</div>
+                        </div>
+                        <div class="component" data-component="smart-contracts">
+                            <div class="component-icon">📜</div>
+                            <div class="component-name">Smart Contracts</div>
+                            <div class="component-description">Business rules</div>
+                        </div>
+                        <div class="component" data-component="wallet">
+                            <div class="component-icon">💰</div>
+                            <div class="component-name">Wallet System</div>
+                            <div class="component-description">Transaction management</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="diagram-legend">
+                <div class="legend-item">
+                    <div class="legend-color client"></div>
+                    <span>Client-facing components</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color presentation"></div>
+                    <span>Presentation logic</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color application"></div>
+                    <span>Business logic</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color data"></div>
+                    <span>Data storage</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color blockchain"></div>
+                    <span>Blockchain components</span>
+                </div>
             </div>
         </div>
-        
-        <div class="control-section">
-            <h3><i class="fas fa-lightbulb"></i> {% trans "Предложения" %}</h3>
-            <button id="btnPropose" class="propose-btn">
-                <i class="fas fa-plus"></i> {% trans "Предложить улучшение" %}
-            </button>
-            <div id="proposalsList" class="proposals-list"></div>
-        </div>
-    </div>
-    
-    <!-- 3D контейнер для глобуса -->
-    <div class="globe-container">
-        <canvas id="globeCanvas"></canvas>
-        <div class="hud">
-            <div class="hud-item">
-                <span class="hud-label">{% trans "Элементов:" %}</span>
-                <span id="elementCount" class="hud-value">0</span>
-            </div>
-            <div class="hud-item">
-                <span class="hud-label">{% trans "Соединений:" %}</span>
-                <span id="connectionCount" class="hud-value">0</span>
-            </div>
-            <div class="hud-item">
-                <span class="hud-label">{% trans "Режим:" %}</span>
-                <span id="networkMode" class="hud-value">{% trans "Существующая" %}</span>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Панель новостей (слева) -->
-    <div class="news-panel" id="newsPanel">
-        <div class="news-header">
-            <h3><i class="fas fa-newspaper"></i> {% trans "Последние новости" %}</h3>
-            <button class="panel-toggle" onclick="toggleNewsPanel()">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-        </div>
-        <div class="news-content" id="newsContent">
-            <!-- Новости будут загружены через JavaScript -->
-        </div>
-    </div>
-</div>
+    </section>
 
-<!-- Модальное окно для предложений -->
-<div id="proposalModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>{% trans "Предложить улучшение сети" %}</h2>
+    <!-- Component Details -->
+    <section class="architecture-section components-section">
+        <div class="section-header">
+            <h2>Component Details</h2>
+            <p>In-depth look at each architectural component</p>
+        </div>
         
-        <form id="proposalForm">
-            <div class="form-group">
-                <label for="proposalType">{% trans "Тип предложения:" %}</label>
-                <select id="proposalType" class="form-control">
-                    <option value="equipment">{% trans "Новое оборудование" %}</option>
-                    <option value="connection">{% trans "Новое соединение" %}</option>
-                    <option value="optimization">{% trans "Оптимизация" %}</option>
-                    <option value="other">{% trans "Другое" %}</option>
-                </select>
+        <div class="components-grid">
+            <!-- Django Component -->
+            <div class="component-detail" id="detail-django">
+                <div class="detail-header">
+                    <div class="detail-icon">🐍</div>
+                    <h3>Django Framework</h3>
+                </div>
+                <div class="detail-content">
+                    <p class="detail-description">
+                        Python-based web framework following the MVT (Model-View-Template) pattern.
+                        Provides robust security, ORM, and admin interface out of the box.
+                    </p>
+                    <div class="detail-features">
+                        <h4>Key Features:</h4>
+                        <ul>
+                            <li>Built-in admin interface</li>
+                            <li>Object-relational mapping (ORM)</li>
+                            <li>Authentication system</li>
+                            <li>URL routing</li>
+                            <li>Form handling</li>
+                            <li>Internationalization</li>
+                        </ul>
+                    </div>
+                    <div class="detail-specs">
+                        <div class="spec">
+                            <span class="spec-label">Version:</span>
+                            <span class="spec-value">5.0+</span>
+                        </div>
+                        <div class="spec">
+                            <span class="spec-label">Database:</span>
+                            <span class="spec-value">PostgreSQL 14+</span>
+                        </div>
+                        <div class="spec">
+                            <span class="spec-label">Cache:</span>
+                            <span class="spec-value">Redis 6+</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <div class="form-group">
-                <label for="proposalTitle">{% trans "Название:" %}</label>
-                <input type="text" id="proposalTitle" class="form-control" required>
+            <!-- Three.js Component -->
+            <div class="component-detail" id="detail-threejs">
+                <div class="detail-header">
+                    <div class="detail-icon">✨</div>
+                    <h3>Three.js Visualization</h3>
+                </div>
+                <div class="detail-content">
+                    <p class="detail-description">
+                        JavaScript 3D library for creating interactive globe visualizations.
+                        Handles WebGL rendering, camera controls, and geometry management.
+                    </p>
+                    <div class="detail-features">
+                        <h4>Key Features:</h4>
+                        <ul>
+                            <li>WebGL-based rendering</li>
+                            <li>Interactive camera controls</li>
+                            <li>Geographic projections</li>
+                            <li>Real-time updates</li>
+                            <li>Performance optimization</li>
+                            <li>Cross-browser support</li>
+                        </ul>
+                    </div>
+                    <div class="detail-specs">
+                        <div class="spec">
+                            <span class="spec-label">Version:</span>
+                            <span class="spec-value">r160+</span>
+                        </div>
+                        <div class="spec">
+                            <span class="spec-label">FPS Target:</span>
+                            <span class="spec-value">60 FPS</span>
+                        </div>
+                        <div class="spec">
+                            <span class="spec-label">Browser Support:</span>
+                            <span class="spec-value">Chrome 90+, Firefox 88+, Safari 14+</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <div class="form-group">
-                <label for="proposalDescription">{% trans "Описание:" %}</label>
-                <textarea id="proposalDescription" class="form-control" rows="4" required></textarea>
+            <!-- Blockchain Component -->
+            <div class="component-detail" id="detail-blockchain">
+                <div class="detail-header">
+                    <div class="detail-icon">⛓️</div>
+                    <h3>Blockchain System</h3>
+                </div>
+                <div class="detail-content">
+                    <p class="detail-description">
+                        Custom blockchain implementation for tracking transactions and user interactions.
+                        Uses Proof-of-Work consensus and RSA encryption for security.
+                    </p>
+                    <div class="detail-features">
+                        <h4>Key Features:</h4>
+                        <ul>
+                            <li>Custom Proof-of-Work algorithm</li>
+                            <li>RSA encryption for transactions</li>
+                            <li>ZETA token economy</li>
+                            <li>Smart contract support</li>
+                            <li>Transaction history</li>
+                            <li>Wallet management</li>
+                        </ul>
+                    </div>
+                    <div class="detail-specs">
+                        <div class="spec">
+                            <span class="spec-label">Block Time:</span>
+                            <span class="spec-value">10 seconds</span>
+                        </div>
+                        <div class="spec">
+                            <span class="spec-label">Difficulty:</span>
+                            <span class="spec-value">Adjustable (4-6 leading zeros)</span>
+                        </div>
+                        <div class="spec">
+                            <span class="spec-label">Mining Reward:</span>
+                            <span class="spec-value">10 ZETA</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <div class="form-group">
-                <label for="proposalLocation">{% trans "Местоположение (широта, долгота):" %}</label>
-                <input type="text" id="proposalLocation" class="form-control" placeholder="55.7558, 37.6173">
+            <!-- Database Component -->
+            <div class="component-detail" id="detail-database">
+                <div class="detail-header">
+                    <div class="detail-icon">💾</div>
+                    <h3>Database Architecture</h3>
+                </div>
+                <div class="detail-content">
+                    <p class="detail-description">
+                        Hybrid database architecture using PostgreSQL for structured data
+                        and Redis for caching and real-time features.
+                    </p>
+                    <div class="detail-features">
+                        <h4>Key Features:</h4>
+                        <ul>
+                            <li>PostgreSQL for ACID compliance</li>
+                            <li>Redis for caching and sessions</li>
+                            <li>Database replication</li>
+                            <li>Automatic backups</li>
+                            <li>Query optimization</li>
+                            <li>Connection pooling</li>
+                        </ul>
+                    </div>
+                    <div class="detail-specs">
+                        <div class="spec">
+                            <span class="spec-label">PostgreSQL:</span>
+                            <span class="spec-value">v14+ with PostGIS</span>
+                        </div>
+                        <div class="spec">
+                            <span class="spec-label">Redis:</span>
+                            <span class="spec-value">v6+ with clustering</span>
+                        </div>
+                        <div class="spec">
+                            <span class="spec-label">Cache TTL:</span>
+                            <span class="spec-value">5-300 seconds</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Flow -->
+    <section class="architecture-section dataflow-section">
+        <div class="section-header">
+            <h2>Data Flow & APIs</h2>
+            <p>How data moves through the system</p>
+        </div>
+        
+        <div class="dataflow-diagram">
+            <div class="flow-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Client Request</h3>
+                    <p>User interacts with the 3D globe or makes an API request</p>
+                    <div class="step-details">
+                        <code>GET /api/cables/</code>
+                        <code>POST /api/transaction/</code>
+                        <code>WebSocket: cable_updates</code>
+                    </div>
+                </div>
             </div>
             
-            <div class="form-group">
-                <label for="proposalSpecs">{% trans "Характеристики (JSON):" %}</label>
-                <textarea id="proposalSpecs" class="form-control" rows="3" placeholder='{"bandwidth": "10 Gbps", "latency": "5ms"}'></textarea>
+            <div class="flow-arrow">↓</div>
+            
+            <div class="flow-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Load Balancer</h3>
+                    <p>Request distributed across multiple application servers</p>
+                    <div class="step-details">
+                        <span class="detail-tag">Nginx</span>
+                        <span class="detail-tag">Round-robin</span>
+                        <span class="detail-tag">Health checks</span>
+                    </div>
+                </div>
             </div>
             
-            <div class="form-actions">
-                <button type="submit" class="submit-btn">{% trans "Отправить через блокчейн" %}</button>
-                <button type="button" class="cancel-btn">{% trans "Отмена" %}</button>
+            <div class="flow-arrow">↓</div>
+            
+            <div class="flow-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Application Server</h3>
+                    <p>Django processes request, applies business logic</p>
+                    <div class="step-details">
+                        <span class="detail-tag">Gunicorn</span>
+                        <span class="detail-tag">4+ workers</span>
+                        <span class="detail-tag">Request middleware</span>
+                    </div>
+                </div>
             </div>
-        </form>
-    </div>
+            
+            <div class="flow-arrow">↓</div>
+            
+            <div class="flow-step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>Data Access</h3>
+                    <p>Database queries, cache checks, blockchain interactions</p>
+                    <div class="step-details">
+                        <span class="detail-tag">Django ORM</span>
+                        <span class="detail-tag">Redis cache</span>
+                        <span class="detail-tag">Blockchain RPC</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flow-arrow">↓</div>
+            
+            <div class="flow-step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h3>Response</h3>
+                    <p>Formatted response sent back to client</p>
+                    <div class="step-details">
+                        <code>JSON Response</code>
+                        <code>HTML Template</code>
+                        <code>WebSocket Broadcast</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="api-reference">
+            <h3>API Endpoints</h3>
+            <div class="api-table">
+                <div class="api-row header">
+                    <div class="api-method">Method</div>
+                    <div class="api-endpoint">Endpoint</div>
+                    <div class="api-description">Description</div>
+                    <div class="api-auth">Auth</div>
+                </div>
+                <div class="api-row">
+                    <div class="api-method get">GET</div>
+                    <div class="api-endpoint">/api/cables/</div>
+                    <div class="api-description">List all submarine cables</div>
+                    <div class="api-auth">Optional</div>
+                </div>
+                <div class="api-row">
+                    <div class="api-method get">GET</div>
+                    <div class="api-endpoint">/api/cables/{id}/</div>
+                    <div class="api-description">Get cable details</div>
+                    <div class="api-auth">No</div>
+                </div>
+                <div class="api-row">
+                    <div class="api-method post">POST</div>
+                    <div class="api-endpoint">/api/transaction/</div>
+                    <div class="api-description">Create blockchain transaction</div>
+                    <div class="api-auth">Required</div>
+                </div>
+                <div class="api-row">
+                    <div class="api-method get">GET</div>
+                    <div class="api-endpoint">/api/wallet/balance/</div>
+                    <div class="api-description">Get wallet balance</div>
+                    <div class="api-auth">Required</div>
+                </div>
+                <div class="api-row">
+                    <div class="api-method get">GET</div>
+                    <div class="api-endpoint">/api/blockchain/</div>
+                    <div class="api-description">Get blockchain info</div>
+                    <div class="api-auth">No</div>
+                </div>
+                <div class="api-row">
+                    <div class="api-method websocket">WS</div>
+                    <div class="api-endpoint">/ws/cable-updates/</div>
+                    <div class="api-description">Real-time cable updates</div>
+                    <div class="api-auth">Optional</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Security Architecture -->
+    <section class="architecture-section security-section">
+        <div class="section-header">
+            <h2>Security Architecture</h2>
+            <p>Multi-layered security approach</p>
+        </div>
+        
+        <div class="security-layers">
+            <div class="security-layer">
+                <div class="layer-number">1</div>
+                <div class="layer-content">
+                    <h3>Network Security</h3>
+                    <ul>
+                        <li>DDoS protection with Cloudflare</li>
+                        <li>Firewall rules and IP whitelisting</li>
+                        <li>VPN for admin access</li>
+                        <li>Rate limiting and bot detection</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="security-layer">
+                <div class="layer-number">2</div>
+                <div class="layer-content">
+                    <h3>Application Security</h3>
+                    <ul>
+                        <li>CSRF protection on all forms</li>
+                        <li>XSS prevention with Content Security Policy</li>
+                        <li>SQL injection protection via Django ORM</li>
+                        <li>Input validation and sanitization</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="security-layer">
+                <div class="layer-number">3</div>
+                <div class="layer-content">
+                    <h3>Authentication & Authorization</h3>
+                    <ul>
+                        <li>JWT tokens for API authentication</li>
+                        <li>Two-factor authentication support</li>
+                        <li>Role-based access control (RBAC)</li>
+                        <li>Session management with secure cookies</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="security-layer">
+                <div class="layer-number">4</div>
+                <div class="layer-content">
+                    <h3>Data Security</h3>
+                    <ul>
+                        <li>Encryption at rest (AES-256)</li>
+                        <li>SSL/TLS for data in transit</li>
+                        <li>Database encryption</li>
+                        <li>Regular security audits</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="security-layer">
+                <div class="layer-number">5</div>
+                <div class="layer-content">
+                    <h3>Blockchain Security</h3>
+                    <ul>
+                        <li>RSA encryption for transactions</li>
+                        <li>Proof-of-Work consensus</li>
+                        <li>Digital signatures</li>
+                        <li>Immutable transaction history</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Deployment Architecture -->
+    <section class="architecture-section deployment-section">
+        <div class="section-header">
+            <h2>Deployment Architecture</h2>
+            <p>Scalable cloud infrastructure</p>
+        </div>
+        
+        <div class="deployment-diagram">
+            <div class="deployment-cloud">
+                <div class="cloud-region">
+                    <h4>Europe (Frankfurt)</h4>
+                    <div class="cloud-services">
+                        <div class="service load-balancer">Load Balancer</div>
+                        <div class="service-group">
+                            <div class="service app">App Server 1</div>
+                            <div class="service app">App Server 2</div>
+                            <div class="service app">App Server 3</div>
+                        </div>
+                        <div class="service database">PostgreSQL (Primary)</div>
+                        <div class="service cache">Redis Cluster</div>
+                        <div class="service storage">S3 Storage</div>
+                    </div>
+                </div>
+                
+                <div class="cloud-region">
+                    <h4>North America (Virginia)</h4>
+                    <div class="cloud-services">
+                        <div class="service load-balancer">Load Balancer</div>
+                        <div class="service-group">
+                            <div class="service app">App Server 1</div>
+                            <div class="service app">App Server 2</div>
+                        </div>
+                        <div class="service database">PostgreSQL (Replica)</div>
+                        <div class="service cache">Redis Replica</div>
+                        <div class="service cdn">CDN Edge</div>
+                    </div>
+                </div>
+                
+                <div class="cloud-region">
+                    <h4>Asia Pacific (Singapore)</h4>
+                    <div class="cloud-services">
+                        <div class="service cdn">CDN Edge</div>
+                        <div class="service cache">Redis Replica</div>
+                        <div class="service monitoring">Monitoring</div>
+                        <div class="service backup">Backup Storage</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="deployment-specs">
+                <div class="spec-category">
+                    <h4>Infrastructure</h4>
+                    <div class="spec-item">
+                        <span class="spec-label">Provider:</span>
+                        <span class="spec-value">AWS / DigitalOcean</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Containerization:</span>
+                        <span class="spec-value">Docker + Kubernetes</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">CI/CD:</span>
+                        <span class="spec-value">GitHub Actions</span>
+                    </div>
+                </div>
+                
+                <div class="spec-category">
+                    <h4>Monitoring</h4>
+                    <div class="spec-item">
+                        <span class="spec-label">APM:</span>
+                        <span class="spec-value">New Relic / Sentry</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Logging:</span>
+                        <span class="spec-value">ELK Stack</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Alerting:</span>
+                        <span class="spec-value">PagerDuty</span>
+                    </div>
+                </div>
+                
+                <div class="spec-category">
+                    <h4>Scaling</h4>
+                    <div class="spec-item">
+                        <span class="spec-label">Auto-scaling:</span>
+                        <span class="spec-value">Based on CPU/RAM</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Load balancing:</span>
+                        <span class="spec-value">Round-robin + Health checks</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Database:</span>
+                        <span class="spec-value">Read replicas + Sharding</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Performance Metrics -->
+    <section class="architecture-section performance-section">
+        <div class="section-header">
+            <h2>Performance Metrics</h2>
+            <p>System performance targets and benchmarks</p>
+        </div>
+        
+        <div class="performance-metrics">
+            <div class="metric-card">
+                <div class="metric-value">99.9%</div>
+                <div class="metric-label">Uptime SLA</div>
+                <div class="metric-description">Target availability</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-value">&lt;200ms</div>
+                <div class="metric-label">API Response</div>
+                <div class="metric-description">P95 latency</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-value">1000+</div>
+                <div class="metric-label">Requests/sec</div>
+                <div class="metric-description">Peak capacity</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-value">60 FPS</div>
+                <div class="metric-label">3D Rendering</div>
+                <div class="metric-description">Globe performance</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-value">&lt;1s</div>
+                <div class="metric-label">Page Load</div>
+                <div class="metric-description">Full page render</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-value">10k+</div>
+                <div class="metric-label">Concurrent Users</div>
+                <div class="metric-description">Supported scale</div>
+            </div>
+        </div>
+        
+        <div class="performance-targets">
+            <h3>Key Performance Indicators</h3>
+            <div class="kpi-grid">
+                <div class="kpi">
+                    <div class="kpi-name">Time to First Byte (TTFB)</div>
+                    <div class="kpi-target">&lt; 100ms</div>
+                    <div class="kpi-current">85ms</div>
+                </div>
+                <div class="kpi">
+                    <div class="kpi-name">Database Query Time</div>
+                    <div class="kpi-target">&lt; 50ms</div>
+                    <div class="kpi-current">32ms</div>
+                </div>
+                <div class="kpi">
+                    <div class="kpi-name">Cache Hit Ratio</div>
+                    <div class="kpi-target">&gt; 90%</div>
+                    <div class="kpi-current">94%</div>
+                </div>
+                <div class="kpi">
+                    <div class="kpi-name">WebSocket Latency</div>
+                    <div class="kpi-target">&lt; 20ms</div>
+                    <div class="kpi-current">15ms</div>
+                </div>
+                <div class="kpi">
+                    <div class="kpi-name">Blockchain Sync Time</div>
+                    <div class="kpi-target">&lt; 5s</div>
+                    <div class="kpi-current">3.2s</div>
+                </div>
+                <div class="kpi">
+                    <div class="kpi-name">Error Rate</div>
+                    <div class="kpi-target">&lt; 0.1%</div>
+                    <div class="kpi-current">0.05%</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Stack Details -->
+    <section class="architecture-section techstack-section">
+        <div class="section-header">
+            <h2>Technology Stack Details</h2>
+            <p>Complete list of technologies and versions</p>
+        </div>
+        
+        <div class="techstack-tabs">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="backend">Backend</button>
+                <button class="tab-btn" data-tab="frontend">Frontend</button>
+                <button class="tab-btn" data-tab="devops">DevOps</button>
+                <button class="tab-btn" data-tab="blockchain">Blockchain</button>
+            </div>
+            
+            <div class="tab-content">
+                <div class="tab-pane active" id="backend">
+                    <div class="tech-category">
+                        <h4>Core Framework</h4>
+                        <ul>
+                            <li>Django 5.0.6</li>
+                            <li>Python 3.11+</li>
+                            <li>Django REST Framework 3.14.0</li>
+                            <li>Django Channels 4.0.0</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-category">
+                        <h4>Database & Cache</h4>
+                        <ul>
+                            <li>PostgreSQL 14+ with PostGIS</li>
+                            <li>Redis 6.2+</li>
+                            <li>Django Redis 5.2.0</li>
+                            <li>psycopg2 2.9.9</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-category">
+                        <h4>Authentication & Security</h4>
+                        <ul>
+                            <li>Django Allauth 0.57.0</li>
+                            <li>Simple JWT 5.3.0</li>
+                            <li>django-cors-headers 4.3.1</li>
+                            <li>python-dotenv 1.0.0</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="tab-pane" id="frontend">
+                    <div class="tech-category">
+                        <h4>3D Visualization</h4>
+                        <ul>
+                            <li>Three.js r160+</li>
+                            <li>Tween.js 21.0.0</li>
+                            <li>OrbitControls</li>
+                            <li>WebGL 2.0</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-category">
+                        <h4>UI Framework</h4>
+                        <ul>
+                            <li>Vanilla JavaScript (ES6+)</li>
+                            <li>CSS3 with Grid/Flexbox</li>
+                            <li>Font Awesome 6.4.0</li>
+                            <li>Google Fonts (Inter, JetBrains Mono)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-category">
+                        <h4>Real-time Communication</h4>
+                        <ul>
+                            <li>WebSocket API</li>
+                            <li>Server-Sent Events</li>
+                            <li>Django Channels</li>
+                            <li>channels-redis 4.1.0</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="tab-pane" id="devops">
+                    <div class="tech-category">
+                        <h4>Containerization</h4>
+                        <ul>
+                            <li>Docker 24.0+</li>
+                            <li>Docker Compose 2.20+</li>
+                            <li>Kubernetes 1.27+</li>
+                            <li>Helm 3.12+</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-category">
+                        <h4>CI/CD</h4>
+                        <ul>
+                            <li>GitHub Actions</li>
+                            <li>GitLab CI/CD</li>
+                            <li>Jenkins 2.4+</li>
+                            <li>ArgoCD 2.7+</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-category">
+                        <h4>Monitoring</h4>
+                        <ul>
+                            <li>Prometheus 2.45+</li>
+                            <li>Grafana 10.0+</li>
+                            <li>ELK Stack 8.9+</li>
+                            <li>Sentry 1.40+</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="tab-pane" id="blockchain">
+                    <div class="tech-category">
+                        <h4>Core Blockchain</h4>
+                        <ul>
+                            <li>Custom Proof-of-Work</li>
+                            <li>RSA Encryption</li>
+                            <li>SHA-256 Hashing</li>
+                            <li>Base64 Encoding</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-category">
+                        <h4>Cryptography</h4>
+                        <ul>
+                            <li>PyCryptodome 3.20.0</li>
+                            <li>cryptography 42.0.4</li>
+                            <li>ecdsa 0.18.0</li>
+                            <li>base58 2.1.1</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-category">
+                        <h4>Wallet System</h4>
+                        <ul>
+                            <li>Custom Wallet Implementation</li>
+                            <li>Key Generation & Management</li>
+                            <li>Transaction Signing</li>
+                            <li>Balance Tracking</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
 {% endblock %}
 
-{% block extra_scripts %}
-<script src="{% static 'js/globe.js' %}"></script>
-<script src="{% static 'js/news.js' %}"></script>
+{% block extra_js %}
 <script>
-    // Загрузка новостей при открытии страницы
+    // Architecture page interactions
     document.addEventListener('DOMContentLoaded', function() {
-        loadNewsArticles();
-        initGlobe();
+        // Component details interaction
+        const components = document.querySelectorAll('.component');
+        const detailSections = document.querySelectorAll('.component-detail');
+        
+        components.forEach(component => {
+            component.addEventListener('click', function() {
+                const componentId = this.dataset.component;
+                showComponentDetail(componentId);
+            });
+        });
+        
+        // Tab functionality
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const tabId = this.dataset.tab;
+                
+                // Update active button
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show corresponding pane
+                tabPanes.forEach(pane => {
+                    pane.classList.remove('active');
+                    if (pane.id === tabId) {
+                        pane.classList.add('active');
+                    }
+                });
+            });
+        });
+        
+        // Performance metrics animation
+        const metricCards = document.querySelectorAll('.metric-card');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animated');
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        metricCards.forEach(card => observer.observe(card));
     });
+    
+    function showComponentDetail(componentId) {
+        // Hide all detail sections
+        document.querySelectorAll('.component-detail').forEach(detail => {
+            detail.style.display = 'none';
+        });
+        
+        // Show corresponding detail section
+        const detailId = `detail-${componentId}`;
+        const detailSection = document.getElementById(detailId);
+        if (detailSection) {
+            detailSection.style.display = 'block';
+            detailSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
 </script>
+
+<style>
+    /* Architecture page specific styles */
+    .architecture-diagram {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 3rem;
+        border: 1px solid var(--border-color);
+        overflow-x: auto;
+    }
+    
+    .diagram-container {
+        min-width: 800px;
+        position: relative;
+    }
+    
+    .diagram-layer {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .diagram-layer:hover {
+        border-color: var(--primary-color);
+        transform: translateX(5px);
+    }
+    
+    .client-layer { border-left: 4px solid #3498db; }
+    .presentation-layer { border-left: 4px solid #9b59b6; }
+    .application-layer { border-left: 4px solid #2ecc71; }
+    .data-layer { border-left: 4px solid #e74c3c; }
+    .blockchain-layer { border-left: 4px solid #f39c12; }
+    
+    .layer-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .layer-icon {
+        font-size: 2rem;
+    }
+    
+    .layer-components {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .component {
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 1rem;
+        min-width: 150px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+    
+    .component:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-2px);
+        border-color: var(--primary-color);
+    }
+    
+    .component-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .component-name {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .component-description {
+        font-size: 0.85rem;
+        opacity: 0.8;
+    }
+    
+    .connection-arrows {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin: 1rem 0;
+    }
+    
+    .arrow-down {
+        width: 0;
+        height: 30px;
+        border-left: 2px dashed var(--border-color);
+    }
+    
+    .diagram-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+    }
+    
+    .legend-color.client { background: #3498db; }
+    .legend-color.presentation { background: #9b59b6; }
+    .legend-color.application { background: #2ecc71; }
+    .legend-color.data { background: #e74c3c; }
+    .legend-color.blockchain { background: #f39c12; }
+    
+    .components-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    
+    .component-detail {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        display: none;
+    }
+    
+    .component-detail:first-of-type {
+        display: block;
+    }
+    
+    .detail-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .detail-icon {
+        font-size: 2rem;
+    }
+    
+    .detail-features ul {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .detail-features li {
+        padding: 0.25rem 0;
+        position: relative;
+        padding-left: 1.5rem;
+    }
+    
+    .detail-features li:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: var(--success-color);
+        font-weight: bold;
+    }
+    
+    .detail-specs {
+        display: grid;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .spec {
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    .spec-label {
+        font-weight: 500;
+        color: var(--text-secondary);
+    }
+    
+    .dataflow-diagram {
+        max-width: 800px;
+        margin: 0 auto 3rem;
+    }
+    
+    .flow-step {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .step-number {
+        position: absolute;
+        left: -15px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--primary-color);
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    
+    .step-details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .flow-arrow {
+        text-align: center;
+        font-size: 1.5rem;
+        color: var(--primary-color);
+        margin: 0.5rem 0;
+    }
+    
+    .api-table {
+        background: var(--card-bg);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+    
+    .api-row {
+        display: grid;
+        grid-template-columns: 80px 1fr 2fr 80px;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .api-row.header {
+        background: var(--bg-secondary);
+        font-weight: 600;
+    }
+    
+    .api-row:last-child {
+        border-bottom: none;
+    }
+    
+    .api-method {
+        font-weight: 600;
+        text-align: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+    
+    .api-method.get { background: #2ecc71; color: white; }
+    .api-method.post { background: #3498db; color: white; }
+    .api-method.websocket { background: #9b59b6; color: white; }
+    
+    .security-layers {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    
+    .security-layer {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.5rem;
+        position: relative;
+        border: 1px solid var(--border-color);
+    }
+    
+    .layer-number {
+        position: absolute;
+        top: -15px;
+        left: -15px;
+        background: var(--primary-color);
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    
+    .deployment-diagram {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 3rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .deployment-cloud {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .cloud-region {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+    
+    .cloud-services {
+        display: grid;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .service {
+        background: var(--bg-secondary);
+        padding: 0.75rem;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+    
+    .service.load-balancer { background: #3498db; color: white; }
+    .service.app { background: #2ecc71; color: white; }
+    .service.database { background: #e74c3c; color: white; }
+    .service.cache { background: #f39c12; color: white; }
+    .service.storage { background: #9b59b6; color: white; }
+    .service.cdn { background: #1abc9c; color: white; }
+    .service.monitoring { background: #34495e; color: white; }
+    .service.backup { background: #7f8c8d; color: white; }
+    
+    .service-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .deployment-specs {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .spec-category h4 {
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+    }
+    
+    .spec-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .spec-item:last-child {
+        border-bottom: none;
+    }
+    
+    .performance-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    
+    .metric-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary-color);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .metric-card.animated {
+        animation: popIn 0.5s ease;
+    }
+    
+    @keyframes popIn {
+        0% { transform: scale(0.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-label {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .metric-description {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+    
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+    
+    .kpi {
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid var(--border-color);
+    }
+    
+    .kpi-name {
+        flex: 1;
+        font-weight: 500;
+    }
+    
+    .kpi-target {
+        color: var(--success-color);
+        font-weight: 600;
+        margin: 0 1rem;
+    }
+    
+    .kpi-current {
+        background: var(--primary-color);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .techstack-tabs {
+        background: var(--card-bg);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+    
+    .tab-buttons {
+        display: flex;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .tab-btn {
+        flex: 1;
+        padding: 1rem;
+        background: none;
+        border: none;
+        color: var(--text-color);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-bottom: 3px solid transparent;
+    }
+    
+    .tab-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .tab-btn.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
+        background: rgba(52, 152, 219, 0.1);
+    }
+    
+    .tab-content {
+        padding: 2rem;
+    }
+    
+    .tab-pane {
+        display: none;
+    }
+    
+    .tab-pane.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .tech-category {
+        margin-bottom: 2rem;
+    }
+    
+    .tech-category:last-child {
+        margin-bottom: 0;
+    }
+    
+    .tech-category h4 {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--border-color);
+    }
+    
+    .tech-category ul {
+        list-style: none;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .tech-category li {
+        padding: 0.5rem;
+        background: var(--bg-secondary);
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+        .diagram-layer {
+            padding: 1rem;
+        }
+        
+        .layer-components {
+            flex-direction: column;
+        }
+        
+        .component {
+            min-width: auto;
+        }
+        
+        .api-row {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+        
+        .api-row.header {
+            display: none;
+        }
+        
+        .tab-buttons {
+            flex-direction: column;
+        }
+        
+        .tech-category ul {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}

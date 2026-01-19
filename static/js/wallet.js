@@ -1,481 +1,306 @@
-// Интеграция с Solana кошельком
+// static/js/wallet.js - Полная реализация кошелька для блокчейн-транзакций
 
 class WalletManager {
     constructor() {
-        this.connection = null;
-        this.wallet = null;
-        this.userProfile = null;
-        this.provider = null;
-        
+        this.userAddress = localStorage.getItem('sui_wallet_address') || null;
+        this.balance = 0;
+        this.transactions = [];
+        this.offlineMode = false;
         this.init();
     }
     
-    async init() {
-        // Проверяем наличие Phantom Wallet
-        if ('solana' in window) {
-            this.provider = window.solana;
-            this.setupEventListeners();
-        } else {
-            console.warn('Solana wallet not found');
-        }
-        
-        // Проверяем сохраненное соединение
-        await this.checkSavedConnection();
+    init() {
+        this.bindEvents();
+        this.loadWalletInfo();
+        this.checkConnection();
     }
     
-    setupEventListeners() {
-        const connectBtn = document.getElementById('connectWalletBtn');
-        const disconnectBtn = document.getElementById('disconnectWalletBtn');
-        
+    bindEvents() {
+        // Кнопка подключения кошелька
+        const connectBtn = document.getElementById('connect-wallet');
         if (connectBtn) {
-            connectBtn.addEventListener('click', () => this.connect());
+            connectBtn.addEventListener('click', () => this.connectWallet());
         }
         
-        if (disconnectBtn) {
-            disconnectBtn.addEventListener('click', () => this.disconnect());
+        // Кнопка создания транзакции
+        const createTxBtn = document.getElementById('create-transaction');
+        if (createTxBtn) {
+            createTxBtn.addEventListener('click', () => this.createTransaction());
+        }
+        
+        // Офлайн подпись
+        const offlineSignBtn = document.getElementById('offline-sign');
+        if (offlineSignBtn) {
+            offlineSignBtn.addEventListener('click', () => this.signOffline());
+        }
+        
+        // Отправка подписанной транзакции
+        const submitTxBtn = document.getElementById('submit-transaction');
+        if (submitTxBtn) {
+            submitTxBtn.addEventListener('click', () => this.submitTransaction());
+        }
+        
+        // Обновление баланса
+        const refreshBtn = document.getElementById('refresh-balance');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this.updateBalance());
         }
     }
     
-    async connect() {
+    async connectWallet() {
         try {
-            if (!this.provider) {
-                this.showWalletInstallModal();
-                return;
+            // В реальном приложении: подключение через Sui Wallet Extension
+            // Демо-реализация
+            if (typeof window.suiWallet !== 'undefined') {
+                const accounts = await window.suiWallet.requestAccounts();
+                this.userAddress = accounts[0];
+                localStorage.setItem('sui_wallet_address', this.userAddress);
+                this.showNotification('Кошелек подключен', 'success');
+                this.updateUI();
+                this.updateBalance();
+            } else {
+                // Режим демо: генерируем тестовый адрес
+                this.userAddress = this.generateDemoAddress();
+                localStorage.setItem('sui_wallet_address', this.userAddress);
+                this.showNotification('Демо-кошелек создан', 'info');
+                this.offlineMode = true;
+                this.updateUI();
+                this.updateBalance();
             }
-            
-            // Запрос на подключение кошелька
-            const response = await this.provider.connect();
-            this.wallet = response.publicKey.toString();
-            
-            // Сохраняем в localStorage
-            localStorage.setItem('z96a_wallet_address', this.wallet);
-            
-            // Отправляем на сервер для верификации
-            await this.verifyWalletOnServer();
-            
-            // Показываем уведомление
-            window.Z96A.utils.showNotification('Кошелек успешно подключен', 'success');
-            
         } catch (error) {
             console.error('Wallet connection error:', error);
-            window.Z96A.utils.showNotification('Ошибка подключения кошелька', 'error');
+            this.showNotification('Ошибка подключения кошелька', 'error');
         }
     }
     
-    async verifyWalletOnServer() {
+    async createTransaction() {
+        if (!this.userAddress) {
+            this.showNotification('Сначала подключите кошелек', 'warning');
+            return;
+        }
+        
+        const recipient = document.getElementById('recipient-address')?.value;
+        const amount = document.getElementById('transaction-amount')?.value;
+        const betType = document.getElementById('bet-type')?.value;
+        
+        if (!recipient || !amount) {
+            this.showNotification('Заполните все поля', 'warning');
+            return;
+        }
+        
+        const txData = {
+            sender: this.userAddress,
+            recipient: recipient,
+            amount: parseFloat(amount),
+            metadata: {
+                bet_type: betType,
+                timestamp: new Date().toISOString()
+            }
+        };
+        
         try {
-            // Создаем сообщение для подписи
-            const message = `Z96A Login: ${Date.now()}`;
-            const encodedMessage = new TextEncoder().encode(message);
+            const response = await fetch('/api/blockchain/create-transaction/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(txData)
+            });
             
-            // Запрашиваем подпись
-            const signature = await this.provider.signMessage(encodedMessage, 'utf8');
+            const result = await response.json();
             
-            // Отправляем на сервер
-            const response = await fetch('/api/connect-wallet/', {
+            if (result.success) {
+                this.showNotification('Транзакция создана', 'success');
+                this.displayTransaction(result.transaction);
+                
+                if (result.offline_mode) {
+                    this.showOfflineSigning(result.transaction);
+                }
+            } else {
+                this.showNotification(result.error || 'Ошибка создания транзакции', 'error');
+            }
+        } catch (error) {
+            console.error('Create transaction error:', error);
+            this.showNotification('Сетевая ошибка', 'error');
+        }
+    }
+    
+    async signOffline() {
+        const privateKey = document.getElementById('offline-private-key')?.value;
+        const txHash = document.getElementById('offline-tx-hash')?.value;
+        
+        if (!privateKey || !txHash) {
+            this.showNotification('Введите приватный ключ и хеш транзакции', 'warning');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/blockchain/sign-offline/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    wallet_address: this.wallet,
-                    signature: Array.from(signature),
-                    message: message
+                    tx_hash: txHash,
+                    private_key: privateKey
                 })
             });
             
-            const data = await response.json();
+            const result = await response.json();
             
-            if (data.success) {
-                this.userProfile = {
-                    nickname: data.nickname,
-                    walletAddress: data.wallet_address
-                };
-                
-                // Сохраняем nickname
-                localStorage.setItem('z96a_user_nickname', data.nickname);
-                
-                // Обновляем UI
-                this.updateUI();
-                
+            if (result.success) {
+                this.showNotification('Транзакция подписана', 'success');
+                this.displaySignedTransaction(result.signed_transaction);
             } else {
-                throw new Error(data.error || 'Verification failed');
+                this.showNotification(result.error, 'error');
             }
-            
         } catch (error) {
-            console.error('Verification error:', error);
-            throw error;
+            console.error('Offline signing error:', error);
+            this.showNotification('Ошибка подписи', 'error');
         }
     }
     
-    async checkSavedConnection() {
-        const savedWallet = localStorage.getItem('z96a_wallet_address');
-        const savedNickname = localStorage.getItem('z96a_user_nickname');
+    async submitTransaction() {
+        const signedData = document.getElementById('signed-transaction-data')?.value;
         
-        if (savedWallet && savedNickname) {
-            this.wallet = savedWallet;
-            this.userProfile = {
-                nickname: savedNickname,
-                walletAddress: savedWallet
-            };
-            this.updateUI();
+        if (!signedData) {
+            this.showNotification('Нет данных для отправки', 'warning');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/blockchain/submit-transaction/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(JSON.parse(signedData))
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification('Транзакция отправлена в сеть', 'success');
+                this.updateTransactionStatus(result.tx_digest, 'submitted');
+            } else {
+                this.showNotification(result.error, 'error');
+            }
+        } catch (error) {
+            console.error('Submit transaction error:', error);
+            this.showNotification('Ошибка отправки', 'error');
+        }
+    }
+    
+    async updateBalance() {
+        if (!this.userAddress) return;
+        
+        try {
+            const response = await fetch(`/api/blockchain/balance/${this.userAddress}/`);
+            const result = await response.json();
+            
+            if (result.success) {
+                this.balance = result.balance;
+                this.displayBalance();
+            }
+        } catch (error) {
+            console.error('Balance update error:', error);
+            this.balance = 0;
+            this.displayBalance();
+        }
+    }
+    
+    // Вспомогательные методы
+    displayBalance() {
+        const balanceElement = document.getElementById('wallet-balance');
+        if (balanceElement) {
+            balanceElement.textContent = `${this.balance} SUI`;
+        }
+    }
+    
+    displayTransaction(tx) {
+        const txList = document.getElementById('transactions-list');
+        if (!txList) return;
+        
+        const txElement = document.createElement('div');
+        txElement.className = 'transaction-item';
+        txElement.innerHTML = `
+            <div class="tx-hash">${tx.hash.substring(0, 16)}...</div>
+            <div class="tx-amount">${tx.amount} SUI</div>
+            <div class="tx-status ${tx.status}">${this.getStatusText(tx.status)}</div>
+            <div class="tx-actions">
+                ${tx.status === 'pending' ? '<button class="btn-sign">Подписать</button>' : ''}
+                ${tx.status === 'signed' ? '<button class="btn-submit">Отправить</button>' : ''}
+            </div>
+        `;
+        
+        txList.prepend(txElement);
+    }
+    
+    showOfflineSigning(tx) {
+        const offlineSection = document.getElementById('offline-signing-section');
+        const txHashInput = document.getElementById('offline-tx-hash');
+        
+        if (offlineSection && txHashInput) {
+            offlineSection.style.display = 'block';
+            txHashInput.value = tx.hash;
+        }
+    }
+    
+    showNotification(message, type = 'info') {
+        // Реализация уведомлений
+        console.log(`${type.toUpperCase()}: ${message}`);
+        alert(`${type}: ${message}`); // Временная реализация
+    }
+    
+    generateDemoAddress() {
+        return `0x${Array.from({length: 64}, () => 
+            Math.floor(Math.random() * 16).toString(16)
+        ).join('')}`;
+    }
+    
+    getStatusText(status) {
+        const statusMap = {
+            'pending': 'Ожидает',
+            'signed': 'Подписана',
+            'submitted': 'Отправлена',
+            'confirmed': 'Подтверждена',
+            'failed': 'Ошибка'
+        };
+        return statusMap[status] || status;
+    }
+    
+    async checkConnection() {
+        try {
+            const response = await fetch('/api/blockchain/status/');
+            const result = await response.json();
+            this.offlineMode = !result.online;
+            
+            const statusElement = document.getElementById('blockchain-status');
+            if (statusElement) {
+                statusElement.textContent = this.offlineMode ? 'Офлайн режим' : 'Онлайн';
+                statusElement.className = this.offlineMode ? 'offline' : 'online';
+            }
+        } catch (error) {
+            this.offlineMode = true;
         }
     }
     
     updateUI() {
-        const walletBtn = document.getElementById('connectWalletBtn');
-        const userInfo = document.getElementById('userInfo');
-        const userNickname = document.getElementById('userNickname');
+        const addressElement = document.getElementById('wallet-address');
+        const connectBtn = document.getElementById('connect-wallet');
         
-        if (walletBtn && userInfo && userNickname && this.userProfile) {
-            walletBtn.style.display = 'none';
-            userInfo.style.display = 'flex';
-            userNickname.textContent = this.userProfile.nickname;
-        }
-    }
-    
-    async disconnect() {
-        try {
-            if (this.provider && this.provider.disconnect) {
-                await this.provider.disconnect();
-            }
-            
-            // Очищаем localStorage
-            localStorage.removeItem('z96a_wallet_address');
-            localStorage.removeItem('z96a_user_nickname');
-            
-            // Сбрасываем состояние
-            this.wallet = null;
-            this.userProfile = null;
-            
-            // Обновляем UI
-            const walletBtn = document.getElementById('connectWalletBtn');
-            const userInfo = document.getElementById('userInfo');
-            
-            if (walletBtn && userInfo) {
-                walletBtn.style.display = 'flex';
-                userInfo.style.display = 'none';
-            }
-            
-            window.Z96A.utils.showNotification('Кошелек отключен', 'info');
-            
-        } catch (error) {
-            console.error('Disconnect error:', error);
-            window.Z96A.utils.showNotification('Ошибка отключения', 'error');
-        }
-    }
-    
-    showWalletInstallModal() {
-        const modal = document.createElement('div');
-        modal.className = 'wallet-modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h3>Установите кошелек</h3>
-                <p>Для работы с блокчейном необходим Solana кошелек. Рекомендуем установить Phantom:</p>
-                <div class="wallet-options">
-                    <a href="https://phantom.app/" target="_blank" class="wallet-option">
-                        <img src="https://phantom.app/img/logo.png" alt="Phantom">
-                        <span>Phantom Wallet</span>
-                    </a>
-                </div>
-                <button class="close-modal">Закрыть</button>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Стили для модального окна
-        const styles = `
-        .wallet-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            backdrop-filter: blur(5px);
+        if (addressElement && this.userAddress) {
+            addressElement.textContent = `${this.userAddress.substring(0, 10)}...`;
         }
         
-        .wallet-modal .modal-content {
-            background: linear-gradient(135deg, #1b1523 0%, #0a1a2d 100%);
-            padding: 2rem;
-            border-radius: 16px;
-            max-width: 400px;
-            width: 90%;
-            border: 1px solid rgba(108, 99, 255, 0.3);
-        }
-        
-        .wallet-modal h3 {
-            color: #6c63ff;
-            margin-bottom: 1rem;
-        }
-        
-        .wallet-modal p {
-            margin-bottom: 1.5rem;
-            color: #aaa;
-        }
-        
-        .wallet-options {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .wallet-option {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            text-decoration: none;
-            color: white;
-            transition: all 0.3s ease;
-        }
-        
-        .wallet-option:hover {
-            background: rgba(108, 99, 255, 0.2);
-            transform: translateY(-2px);
-        }
-        
-        .wallet-option img {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-        }
-        
-        .close-modal {
-            width: 100%;
-            padding: 0.8rem;
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: inherit;
-        }
-        `;
-        
-        const styleEl = document.createElement('style');
-        styleEl.textContent = styles;
-        document.head.appendChild(styleEl);
-        
-        // Закрытие модального окна
-        modal.querySelector('.close-modal').addEventListener('click', () => {
-            modal.remove();
-            styleEl.remove();
-        });
-        
-        // Закрытие по клику на фон
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.remove();
-                styleEl.remove();
-            }
-        });
-    }
-    
-    // Получить публичный ключ
-    getPublicKey() {
-        return this.wallet;
-    }
-    
-    // Получить информацию о пользователе
-    getUserInfo() {
-        return this.userProfile;
-    }
-    
-    // Проверить, подключен ли кошелек
-    isConnected() {
-        return !!this.wallet && !!this.userProfile;
-    }
-    
-    // Отправить транзакцию
-    async sendTransaction(transactionData) {
-        if (!this.isConnected()) {
-            throw new Error('Wallet not connected');
-        }
-        
-        try {
-            // В реальном проекте здесь будет создание и отправка транзакции
-            // Для демо создаем mock транзакцию
-            
-            const mockTransaction = {
-                signature: `mock_signature_${Date.now()}`,
-                slot: Math.floor(Math.random() * 1000000),
-                blockTime: Date.now() / 1000
-            };
-            
-            window.Z96A.utils.showNotification('Транзакция отправлена', 'success');
-            
-            return mockTransaction;
-            
-        } catch (error) {
-            console.error('Transaction error:', error);
-            window.Z96A.utils.showNotification('Ошибка транзакции', 'error');
-            throw error;
-        }
-    }
-    
-    // Подписать сообщение
-    async signMessage(message) {
-        if (!this.isConnected()) {
-            throw new Error('Wallet not connected');
-        }
-        
-        try {
-            const encodedMessage = new TextEncoder().encode(message);
-            const signature = await this.provider.signMessage(encodedMessage, 'utf8');
-            return Array.from(signature);
-        } catch (error) {
-            console.error('Sign message error:', error);
-            throw error;
+        if (connectBtn) {
+            connectBtn.textContent = this.userAddress ? 'Кошелек подключен' : 'Подключить кошелек';
+            connectBtn.disabled = !!this.userAddress;
         }
     }
 }
 
-// Инициализация менеджера кошельков
-let walletManager = null;
-
-document.addEventListener('DOMContentLoaded', function() {
-    walletManager = new WalletManager();
-    
-    // Экспортируем для глобального доступа
-    window.Z96A.wallet = walletManager;
-    
-    // Обработка предложений через блокчейн
-    setupProposalSubmission();
-});
-
-function setupProposalSubmission() {
-    const proposalForm = document.getElementById('proposalForm');
-    if (!proposalForm) return;
-    
-    proposalForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        if (!window.Z96A.wallet.isConnected()) {
-            window.Z96A.utils.showNotification('Подключите кошелек для отправки предложений', 'error');
-            return;
-        }
-        
-        const formData = {
-            type: document.getElementById('proposalType').value,
-            title: document.getElementById('proposalTitle').value,
-            description: document.getElementById('proposalDescription').value,
-            location: document.getElementById('proposalLocation').value,
-            specifications: document.getElementById('proposalSpecs').value
-        };
-        
-        try {
-            // Парсим спецификации если они есть
-            let specs = {};
-            if (formData.specifications) {
-                try {
-                    specs = JSON.parse(formData.specifications);
-                } catch (e) {
-                    console.warn('Invalid JSON in specs, using empty object');
-                }
-            }
-            
-            // Создаем транзакцию
-            const tx = await window.Z96A.wallet.sendTransaction({
-                type: 'proposal',
-                data: {
-                    proposal_type: formData.type,
-                    title: formData.title,
-                    description: formData.description,
-                    specifications: specs
-                }
-            });
-            
-            // Отправляем на сервер
-            const response = await fetch('/api/submit-proposal/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    wallet_address: window.Z96A.wallet.getPublicKey(),
-                    proposal: {
-                        type: formData.type,
-                        description: formData.description,
-                        specifications: specs,
-                        transaction_hash: tx.signature
-                    }
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                window.Z96A.utils.showNotification('Предложение успешно отправлено!', 'success');
-                
-                // Закрываем модальное окно
-                const modal = document.getElementById('proposalModal');
-                if (modal) {
-                    modal.style.display = 'none';
-                }
-                
-                // Очищаем форму
-                proposalForm.reset();
-                
-            } else {
-                throw new Error(data.error || 'Submission failed');
-            }
-            
-        } catch (error) {
-            console.error('Proposal submission error:', error);
-            window.Z96A.utils.showNotification('Ошибка отправки предложения', 'error');
-        }
-    });
-}
-
-// Закрытие модального окна
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('proposalModal');
-    if (!modal) return;
-    
-    const closeBtn = modal.querySelector('.close');
-    const cancelBtn = modal.querySelector('.cancel-btn');
-    
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-    }
-    
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-    }
-    
-    // Закрытие по клику вне окна
-    window.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-});
-
-// Открытие модального окна
-document.addEventListener('DOMContentLoaded', function() {
-    const proposeBtn = document.getElementById('btnPropose');
-    const modal = document.getElementById('proposalModal');
-    
-    if (proposeBtn && modal) {
-        proposeBtn.addEventListener('click', () => {
-            if (!window.Z96A.wallet.isConnected()) {
-                window.Z96A.utils.showNotification('Подключите кошелек для отправки предложений', 'error');
-                return;
-            }
-            modal.style.display = 'block';
-        });
-    }
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    window.walletManager = new WalletManager();
 });

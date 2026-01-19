@@ -1,0 +1,606 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Discussion" %} - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .discussion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .new-topic-btn {
+            background: linear-gradient(135deg, #9d4edd, #00d4ff);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .new-topic-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.4);
+        }
+        
+        .comment-form-container {
+            background: rgba(30, 30, 46, 0.8);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .comment-form textarea {
+            min-height: 120px;
+        }
+        
+        .comments-list {
+            margin: 2rem 0;
+        }
+        
+        .comment {
+            background: rgba(30, 30, 46, 0.8);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .comment:hover {
+            border-color: #9d4edd;
+        }
+        
+        .comment.pinned {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+        
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .comment-author {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .author-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #9d4edd, #00d4ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .author-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .author-name {
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        
+        .author-reputation {
+            font-size: 0.875rem;
+            color: #9d4edd;
+        }
+        
+        .comment-date {
+            color: #888;
+            font-size: 0.875rem;
+        }
+        
+        .comment-content {
+            color: #ccc;
+            line-height: 1.6;
+            margin: 1rem 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .comment-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #444;
+        }
+        
+        .vote-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: none;
+            border: 1px solid #444;
+            color: #aaa;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .vote-btn:hover {
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+        
+        .vote-btn.upvoted {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+        
+        .vote-btn.downvoted {
+            background: rgba(255, 68, 68, 0.1);
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+        
+        .reply-btn {
+            background: none;
+            border: 1px solid #444;
+            color: #aaa;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .reply-btn:hover {
+            border-color: #9d4edd;
+            color: #9d4edd;
+        }
+        
+        .replies {
+            margin-left: 3rem;
+            margin-top: 1rem;
+            padding-left: 1rem;
+            border-left: 2px solid #444;
+        }
+        
+        .comment-form.reply-form {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(40, 40, 60, 0.5);
+            border-radius: 4px;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .page-link {
+            padding: 0.5rem 1rem;
+            background: rgba(30, 30, 46, 0.8);
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #aaa;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .page-link:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+        
+        .page-link.active {
+            background: rgba(0, 212, 255, 0.3);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+        
+        @media (max-width: 768px) {
+            .comment-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .replies {
+                margin-left: 1rem;
+            }
+            
+            .comment-actions {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="discussion-header">
+        <h1>💬 {% trans "Community Discussion" %}</h1>
+        
+        {% if user.is_authenticated %}
+            <button id="new-topic-btn" class="new-topic-btn">
+                ✏️ {% trans "New Topic" %}
+            </button>
+        {% endif %}
+    </div>
+    
+    <p class="subtitle">
+        {% trans "Discuss network architecture, propose improvements, share ideas, and collaborate with the community. All proposals require Solana wallet connection for verification." %}
+    </p>
+    
+    <!-- Comment Form -->
+    {% if user.is_authenticated %}
+        <div class="comment-form-container card">
+            <h3>{% trans "Start a New Discussion" %}</h3>
+            <form id="comment-form" class="comment-form">
+                <div class="form-group">
+                    <textarea 
+                        id="comment-content" 
+                        class="form-textarea" 
+                        placeholder="{% trans "Share your thoughts, ideas, or proposals..." %}"
+                        required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        {% trans "Post Comment" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    {% else %}
+        <div class="auth-required card">
+            <h3>🔐 {% trans "Authentication Required" %}</h3>
+            <p>{% trans "Please connect your Solana wallet to participate in discussions and submit proposals." %}</p>
+            <button id="connect-for-discussion" class="btn btn-primary">
+                👛 {% trans "Connect Wallet" %}
+            </button>
+        </div>
+    {% endif %}
+    
+    <!-- Comments List -->
+    <div class="comments-list">
+        <h2>{% trans "Recent Discussions" %}</h2>
+        
+        {% for comment in page_obj %}
+            <div class="comment {% if comment.is_pinned %}pinned{% endif %}" data-comment-id="{{ comment.id }}">
+                <div class="comment-header">
+                    <div class="comment-author">
+                        <div class="author-avatar">
+                            {{ comment.user.nickname|first|upper }}
+                        </div>
+                        <div class="author-info">
+                            <span class="author-name">{{ comment.user.nickname }}</span>
+                            <span class="author-reputation">
+                                {% trans "Reputation:" %} {{ comment.user.reputation_score|default:0 }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="comment-date">
+                        {{ comment.created_at|date:"d.m.Y H:i" }}
+                        {% if comment.is_pinned %}📍{% endif %}
+                        {% if comment.is_edited %}({% trans "edited" %}){% endif %}
+                    </div>
+                </div>
+                
+                <div class="comment-content">
+                    {{ comment.content|linebreaks }}
+                </div>
+                
+                <div class="comment-actions">
+                    <button class="vote-btn upvote-btn" onclick="voteComment('{{ comment.id }}', 'up')">
+                        👍 <span class="upvote-count">{{ comment.upvotes }}</span>
+                    </button>
+                    <button class="vote-btn downvote-btn" onclick="voteComment('{{ comment.id }}', 'down')">
+                        👎 <span class="downvote-count">{{ comment.downvotes }}</span>
+                    </button>
+                    <button class="reply-btn" onclick="showReplyForm('{{ comment.id }}')">
+                        💬 {% trans "Reply" %}
+                    </button>
+                    
+                    {% if user.is_staff %}
+                        <button class="pin-btn" onclick="togglePinComment('{{ comment.id }}')">
+                            {% if comment.is_pinned %}📌 {% trans "Unpin" %}{% else %}📍 {% trans "Pin" %}{% endif %}
+                        </button>
+                    {% endif %}
+                </div>
+                
+                <!-- Replies -->
+                {% if comment.replies.all %}
+                    <div class="replies">
+                        {% for reply in comment.replies.all %}
+                            <div class="comment reply" data-comment-id="{{ reply.id }}">
+                                <div class="comment-header">
+                                    <div class="comment-author">
+                                        <div class="author-avatar">
+                                            {{ reply.user.nickname|first|upper }}
+                                        </div>
+                                        <div class="author-info">
+                                            <span class="author-name">{{ reply.user.nickname }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="comment-date">
+                                        {{ reply.created_at|date:"d.m.Y H:i" }}
+                                    </div>
+                                </div>
+                                
+                                <div class="comment-content">
+                                    {{ reply.content|linebreaks }}
+                                </div>
+                                
+                                <div class="comment-actions">
+                                    <button class="vote-btn upvote-btn" onclick="voteComment('{{ reply.id }}', 'up')">
+                                        👍 <span class="upvote-count">{{ reply.upvotes }}</span>
+                                    </button>
+                                    <button class="vote-btn downvote-btn" onclick="voteComment('{{ reply.id }}', 'down')">
+                                        👎 <span class="downvote-count">{{ reply.downvotes }}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <!-- Reply Form (hidden by default) -->
+                {% if user.is_authenticated %}
+                    <form class="comment-form reply-form" id="reply-form-{{ comment.id }}" style="display: none;">
+                        <div class="form-group">
+                            <textarea 
+                                class="form-textarea" 
+                                placeholder="{% trans "Write your reply..." %}"
+                                required></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                {% trans "Post Reply" %}
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" 
+                                    onclick="hideReplyForm('{{ comment.id }}')">
+                                {% trans "Cancel" %}
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        {% empty %}
+            <div class="no-comments card">
+                <h3>{% trans "No discussions yet" %}</h3>
+                <p>{% trans "Be the first to start a discussion!" %}</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="page-link">
+                    ← {% trans "Previous" %}
+                </a>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="page-link active">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="page-link">
+                    {% trans "Next" %} →
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // Handle new topic button
+        document.getElementById('new-topic-btn')?.addEventListener('click', function() {
+            document.getElementById('comment-content').focus();
+            window.scrollTo({
+                top: document.querySelector('.comment-form-container').offsetTop - 100,
+                behavior: 'smooth'
+            });
+        });
+        
+        // Handle connect for discussion button
+        document.getElementById('connect-for-discussion')?.addEventListener('click', function() {
+            if (window.app) {
+                window.app.connectWallet();
+            }
+        });
+        
+        // Handle comment form submission
+        document.getElementById('comment-form')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const content = document.getElementById('comment-content').value.trim();
+            if (!content) return;
+            
+            if (!window.app || !window.app.walletConnected) {
+                window.app.showNotification('{% trans "Please connect wallet first" %}', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/comments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ content })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.app.showNotification('{% trans "Comment posted successfully!" %}', 'success');
+                    document.getElementById('comment-content').value = '';
+                    location.reload(); // Reload to show new comment
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                window.app.showNotification(`{% trans "Failed to post comment:" %} ${error.message}`, 'error');
+            }
+        });
+        
+        // Reply form handling
+        function showReplyForm(commentId) {
+            if (!window.app || !window.app.walletConnected) {
+                window.app.showNotification('{% trans "Please connect wallet first" %}', 'error');
+                return;
+            }
+            
+            const form = document.getElementById(`reply-form-${commentId}`);
+            if (form) {
+                form.style.display = 'block';
+                form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                form.querySelector('textarea').focus();
+                
+                // Handle reply submission
+                form.onsubmit = async function(e) {
+                    e.preventDefault();
+                    const content = this.querySelector('textarea').value.trim();
+                    
+                    try {
+                        const response = await fetch('/api/comments', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({
+                                content,
+                                parent_comment: commentId
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            window.app.showNotification('{% trans "Reply posted!" %}', 'success');
+                            location.reload();
+                        }
+                    } catch (error) {
+                        window.app.showNotification('{% trans "Failed to post reply" %}', 'error');
+                    }
+                };
+            }
+        }
+        
+        function hideReplyForm(commentId) {
+            const form = document.getElementById(`reply-form-${commentId}`);
+            if (form) {
+                form.style.display = 'none';
+                form.querySelector('textarea').value = '';
+            }
+        }
+        
+        // Voting functionality
+        async function voteComment(commentId, voteType) {
+            if (!window.app || !window.app.walletConnected) {
+                window.app.showNotification('{% trans "Please connect wallet first" %}', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/comments/${commentId}/vote`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ vote_type: voteType })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update vote counts
+                    const comment = document.querySelector(`[data-comment-id="${commentId}"]`);
+                    if (comment) {
+                        const upvoteCount = comment.querySelector('.upvote-count');
+                        const downvoteCount = comment.querySelector('.downvote-count');
+                        
+                        if (voteType === 'up') {
+                            upvoteCount.textContent = parseInt(upvoteCount.textContent) + 1;
+                            comment.querySelector('.upvote-btn').classList.add('upvoted');
+                            comment.querySelector('.downvote-btn').classList.remove('downvoted');
+                        } else {
+                            downvoteCount.textContent = parseInt(downvoteCount.textContent) + 1;
+                            comment.querySelector('.downvote-btn').classList.add('downvoted');
+                            comment.querySelector('.upvote-btn').classList.remove('upvoted');
+                        }
+                    }
+                    
+                    window.app.showNotification('{% trans "Vote recorded!" %}', 'success');
+                }
+            } catch (error) {
+                window.app.showNotification('{% trans "Failed to record vote" %}', 'error');
+            }
+        }
+        
+        // Admin functions
+        async function togglePinComment(commentId) {
+            try {
+                const response = await fetch(`/api/comments/${commentId}/pin`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    location.reload();
+                }
+            } catch (error) {
+                window.app.showNotification('{% trans "Failed to pin/unpin comment" %}', 'error');
+            }
+        }
+        
+        // Utility function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+{% endblock %}

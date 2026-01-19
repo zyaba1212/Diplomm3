@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Roadmap" %} - Z96A{% endblock %}
+
+{% block content %}
+    <div class="roadmap-header">
+        <h1>🗺️ {% trans "Project Roadmap" %}</h1>
+        <p class="subtitle">
+            {% trans "Development timeline and future plans for the Z96A Network Architecture project." %}
+        </p>
+    </div>
+    
+    <div class="roadmap-timeline">
+        <!-- Q1 2026 -->
+        <div class="roadmap-phase current">
+            <div class="phase-header">
+                <div class="phase-quarter">Q1 2026</div>
+                <div class="phase-status">{% trans "In Progress" %}</div>
+            </div>
+            <h3 class="phase-title">{% trans "Stage 1: Core Platform Development" %}</h3>
+            <div class="phase-milestones">
+                <div class="milestone completed">
+                    <span class="milestone-check">✓</span>
+                    <span class="milestone-text">{% trans "Django backend setup and database models" %}</span>
+                </div>
+                <div class="milestone completed">
+                    <span class="milestone-check">✓</span>
+                    <span class="milestone-text">{% trans "Basic website structure and navigation" %}</span>
+                </div>
+                <div class="milestone in-progress">
+                    <span class="milestone-check">🔄</span>
+                    <span class="milestone-text">{% trans "3D network visualization implementation" %}</span>
+                </div>
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "Solana wallet integration" %}</span>
+                </div>
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "News aggregation system" %}</span>
+                </div>
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "Discussion forum implementation" %}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Q2 2026 -->
+        <div class="roadmap-phase">
+            <div class="phase-header">
+                <div class="phase-quarter">Q2 2026</div>
+                <div class="phase-status">{% trans "Planned" %}</div>
+            </div>
+            <h3 class="phase-title">{% trans "Stage 2: Token Launch and Community Features" %}</h3>
+            <div class="phase-milestones">
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "Z96A token launch on pump.fun" %}</span>
+                </div>
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "Token integration for network proposals" %}</span>
+                </div>
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "Advanced 3D visualization features" %}</span>
+                </div>
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "Real-time network monitoring" %}</span>
+                </div>
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "Mobile application development" %}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Q3 2026 -->
+        <div class="roadmap-phase">
+            <div class="phase-header">
+                <div class="phase-quarter">Q3 2026</div>
+                <div class="phase-status">{% trans "Planned" %}</div>
+            </div>
+            <h3 class="phase-title">{% trans "Stage 3: Advanced Network Simulation" %}</h3>
+            <div class="phase-milestones">
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "Network performance simulation engine" %}</span>
+                </div>
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "Disaster recovery scenario modeling" %}</span>
+                </div>
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "AI-powered network optimization" %}</span>
+                </div>
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "Multi-language support expansion" %}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Q4 2026 -->
+        <div class="roadmap-phase">
+            <div class="phase-header">
+                <div class="phase-quarter">Q4 2026</div>
+                <div class="phase-status">{% trans "Future" %}</div>
+            </div>
+            <h3 class="phase-title">{% trans "Stage 4: Global Deployment" %}</h3>
+            <div class="phase-milestones">
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "Production deployment and scaling" %}</span>
+                </div>
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "Partnership program launch" %}</span>
+                </div>
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "Research paper publication" %}</span>
+                </div>
+                <div class="milestone pending">
+                    <span class="milestone-check">⏳</span>
+                    <span class="milestone-text">{% trans "Open-source release of core components" %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="roadmap-legend card">
+        <h3>📊 {% trans "Progress Legend" %}</h3>
+        <div class="legend-items">
+            <div class="legend-item">
+                <span class="legend-color completed"></span>
+                <span>{% trans "Completed" %}</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color in-progress"></span>
+                <span>{% trans "In Progress" %}</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color pending"></span>
+                <span>{% trans "Planned" %}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="token-info card">
+        <h3>💰 {% trans "Z96A Token Information" %}</h3>
+        <p>{% trans "The Z96A token will be launched on Solana blockchain to facilitate community governance and fund network development." %}</p>
+        
+        <div class="token-details">
+            <div class="token-detail">
+                <strong>{% trans "Blockchain:" %}</strong> Solana
+            </div>
+            <div class="token-detail">
+                <strong>{% trans "Launch Platform:" %}</strong> pump.fun
+            </div>
+            <div class="token-detail">
+                <strong>{% trans "Purpose:" %}</strong> {% trans "Network governance and development funding" %}
+            </div>
+            <div class="token-detail">
+                <strong>{% trans "Launch Date:" %}</strong> Q2 2026 (Planned)
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .roadmap-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+    
+    .roadmap-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        background: linear-gradient(90deg, var(--color-neon-blue), var(--color-neon-purple));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .roadmap-timeline {
+        position: relative;
+        max-width: 900px;
+        margin: 0 auto 50px;
+    }
+    
+    .roadmap-timeline::before {
+        content: '';
+        position: absolute;
+        left: 30px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, var(--color-neon-blue), var(--color-neon-purple));
+    }
+    
+    .roadmap-phase {
+        position: relative;
+        margin-bottom: 40px;
+        padding-left: 70px;
+    }
+    
+    .roadmap-phase.current::before {
+        content: '🌟';
+        position: absolute;
+        left: 20px;
+        top: 0;
+        font-size: 24px;
+        z-index: 1;
+    }
+    
+    .phase-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 10px;
+    }
+    
+    .phase-quarter {
+        background: linear-gradient(135deg, var(--color-neon-blue), var(--color-neon-purple));
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+    
+    .phase-status {
+        background: rgba(30, 30, 46, 0.8);
+        border: 1px solid var(--color-border);
+        color: var(--color-text-secondary);
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+    }
+    
+    .phase-title {
+        color: var(--color-neon-blue);
+        margin-bottom: 20px;
+        font-size: 1.3rem;
+    }
+    
+    .phase-milestones {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .milestone {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px;
+        background: rgba(40, 40, 60, 0.5);
+        border-radius: 8px;
+        border-left: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .milestone:hover {
+        background: rgba(40, 40, 60, 0.8);
+        transform: translateX(5px);
+    }
+    
+    .milestone.completed {
+        border-left-color: #00c851;
+    }
+    
+    .milestone.in-progress {
+        border-left-color: #ff9900;
+    }
+    
+    .milestone.pending {
+        border-left-color: var(--color-border);
+    }
+    
+    .milestone-check {
+        font-size: 1.2rem;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    
+    .milestone.completed .milestone-check {
+        background: rgba(0, 200, 81, 0.2);
+        color: #00c851;
+    }
+    
+    .milestone.in-progress .milestone-check {
+        background: rgba(255, 153, 0, 0.2);
+        color: #ff9900;
+    }
+    
+    .milestone.pending .milestone-check {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--color-text-secondary);
+    }
+    
+    .milestone-text {
+        flex: 1;
+    }
+    
+    .roadmap-legend {
+        max-width: 900px;
+        margin: 0 auto 30px;
+    }
+    
+    .legend-items {
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
+        margin-top: 15px;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 3px;
+    }
+    
+    .legend-color.completed {
+        background: #00c851;
+    }
+    
+    .legend-color.in-progress {
+        background: #ff9900;
+    }
+    
+    .legend-color.pending {
+        background: var(--color-border);
+    }
+    
+    .token-info {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .token-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+    
+    .token-detail {
+        padding: 15px;
+        background: rgba(40, 40, 60, 0.5);
+        border-radius: 8px;
+        border-left: 3px solid var(--color-neon-purple);
+    }
+    
+    @media (max-width: 768px) {
+        .roadmap-timeline::before {
+            left: 20px;
+        }
+        
+        .roadmap-phase {
+            padding-left: 50px;
+        }
+        
+        .phase-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        
+        .legend-items {
+            flex-direction: column;
+            gap: 15px;
+        }
+    }
+</style>
+{% endblock %}
