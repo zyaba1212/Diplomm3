@@ -135,6 +135,8 @@
 {% endblock %}
 
 {% block extra_css %}
+<!-- Three.js Globe -->
+<script src="/static/js/globe.js"></script>
 <style>
     .globe-container {
         width: 100%;
@@ -376,9 +378,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Three.js Globe -->
-<script src="/static/js/globe.js"></script>
-<script src="/static/js/globe3d.js"></script>
 <script>
     // Three.js и глобус будут загружены позже
     // Сначала покажем, что страница загрузилась

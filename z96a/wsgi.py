@@ -1,3 +1,6 @@
+"""
+WSGI config for z96a project.
+"""
 import os
 from django.core.wsgi import get_wsgi_application
 

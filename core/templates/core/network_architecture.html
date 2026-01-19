@@ -1,0 +1,457 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans "Network Architecture" %} - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .network-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .network-view {
+            margin-top: 2rem;
+        }
+        
+        .globe-info {
+            background: rgba(30, 30, 46, 0.8);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .layer-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .layer-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .layer-toggle input {
+            width: auto;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h1>🌍 {% trans "Global Network Architecture" %}</h1>
+    
+    <p class="subtitle">
+        {% trans "Interactive 3D visualization of global infocommunication infrastructure. Switch between existing and proposed network architectures." %}
+    </p>
+    
+    <!-- Network Type Controls -->
+    <div class="network-controls">
+        <button class="control-btn network-switch active" data-network="existing">
+            🌐 {% trans "Existing Network" %}
+        </button>
+        <button class="control-btn network-switch" data-network="proposed">
+            🚀 {% trans "Proposed Network" %}
+        </button>
+        <button class="control-btn network-switch" data-network="hybrid">
+            🔗 {% trans "Hybrid View" %}
+        </button>
+    </div>
+    
+    <!-- Globe Controls -->
+    <div class="controls-panel">
+        <div class="control-group">
+            <div class="control-label">{% trans "Globe Controls" %}</div>
+            <button id="toggle-rotation" class="control-btn">
+                ⏸️ {% trans "Pause Rotation" %}
+            </button>
+            <button id="reset-view" class="control-btn">
+            🔄 {% trans "Reset View" %}
+            </button>
+        </div>
+        
+        <div class="control-group">
+            <div class="control-label">{% trans "Network Layers" %}</div>
+            <div class="layer-controls">
+                <label class="layer-toggle">
+                    <input type="checkbox" id="toggle-submarine" checked>
+                    <span>🌊 {% trans "Submarine Cables" %}</span>
+                </label>
+                <label class="layer-toggle">
+                    <input type="checkbox" id="toggle-terrestrial" checked>
+                    <span>🛣️ {% trans "Terrestrial Links" %}</span>
+                </label>
+                <label class="layer-toggle">
+                    <input type="checkbox" id="toggle-satellite" checked>
+                    <span>🛰️ {% trans "Satellite Links" %}</span>
+                </label>
+                <label class="layer-toggle">
+                    <input type="checkbox" id="toggle-nodes" checked>
+                    <span>📡 {% trans "Network Nodes" %}</span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <div class="control-label">{% trans "Visual Effects" %}</div>
+            <button id="toggle-glow" class="control-btn active">
+                ✨ {% trans "Toggle Glow" %}
+            </button>
+            <button id="toggle-labels" class="control-btn">
+                🏷️ {% trans "Toggle Labels" %}
+            </button>
+        </div>
+    </div>
+    
+    <!-- 3D Globe Container -->
+    <div class="network-view">
+        <div id="globe-container" class="globe-container">
+            <!-- 3D Globe rendered by Three.js -->
+        </div>
+        
+        <div class="globe-info">
+            <h4>{% trans "How to Use" %}</h4>
+            <ul>
+                <li>{% trans "Drag to rotate the globe" %}</li>
+                <li>{% trans "Scroll to zoom in/out" %}</li>
+                <li>{% trans "Click on network nodes to view details" %}</li>
+                <li>{% trans "Hover over elements for information" %}</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Network Statistics -->
+    <div class="network-stats card">
+        <h3>📊 {% trans "Network Statistics" %}</h3>
+        <div class="stats-details">
+            <div class="stat-row">
+                <span class="stat-label">{% trans "Total Network Nodes:" %}</span>
+                <span class="stat-value" id="total-nodes">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">{% trans "Submarine Cables:" %}</span>
+                <span class="stat-value" id="submarine-cables">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">{% trans "Terrestrial Links:" %}</span>
+                <span class="stat-value" id="terrestrial-links">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">{% trans "Satellite Links:" %}</span>
+                <span class="stat-value" id="satellite-links">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">{% trans "Total Network Length:" %}</span>
+                <span class="stat-value" id="total-length">0 km</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Equipment Catalog -->
+    <div class="equipment-catalog card">
+        <h3>🔧 {% trans "Network Equipment" %}</h3>
+        <div class="equipment-grid" id="equipment-grid">
+            <!-- Equipment loaded via JavaScript -->
+        </div>
+        <div class="catalog-actions">
+            <button class="btn btn-secondary" onclick="loadMoreEquipment()">
+                {% trans "Load More Equipment" %}
+            </button>
+        </div>
+    </div>
+    
+    <!-- Legend -->
+    <div class="legend card">
+        <h3>🗺️ {% trans "Map Legend" %}</h3>
+        <div class="legend-items">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #0099ff;"></div>
+                <span>{% trans "Existing Network" %}</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #9d4edd;"></div>
+                <span>{% trans "Proposed Network" %}</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #00ff88;"></div>
+                <span>{% trans "Submarine Cables" %}</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ff9900;"></div>
+                <span>{% trans "Satellite Links" %}</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ff4444;"></div>
+                <span>{% trans "Internet Exchange Points" %}</span>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/globe.js' %}"></script>
+    <script>
+        // Network data loaded from Django template
+        const networkNodes = {{ nodes|safe }};
+        const networkConnections = {{ connections|safe }};
+        
+        // Initialize globe when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            init3DGlobe();
+            loadNetworkStats();
+            loadEquipment();
+            
+            // Setup layer controls
+            setupLayerControls();
+        });
+        
+        function loadNetworkStats() {
+            // Calculate statistics
+            const stats = {
+                totalNodes: networkNodes.length,
+                submarineCables: networkConnections.filter(c => c.type === 'submarine').length,
+                terrestrialLinks: networkConnections.filter(c => c.type === 'fiber').length,
+                satelliteLinks: networkConnections.filter(c => c.type === 'satellite').length,
+                totalLength: networkConnections.reduce((sum, conn) => sum + (conn.length || 0), 0)
+            };
+            
+            // Update UI
+            document.getElementById('total-nodes').textContent = stats.totalNodes;
+            document.getElementById('submarine-cables').textContent = stats.submarineCables;
+            document.getElementById('terrestrial-links').textContent = stats.terrestrialLinks;
+            document.getElementById('satellite-links').textContent = stats.satelliteLinks;
+            document.getElementById('total-length').textContent = 
+                Math.round(stats.totalLength).toLocaleString() + ' km';
+        }
+        
+        async function loadEquipment() {
+            try {
+                const response = await fetch('/api/equipment?limit=8');
+                const equipment = await response.json();
+                renderEquipment(equipment);
+            } catch (error) {
+                console.error('Failed to load equipment:', error);
+            }
+        }
+        
+        function renderEquipment(equipment) {
+            const container = document.getElementById('equipment-grid');
+            if (!container) return;
+            
+            container.innerHTML = equipment.map(item => `
+                <div class="equipment-card">
+                    <div class="equipment-image">
+                        ${item.image_url ? 
+                            `<img src="${item.image_url}" alt="${item.name}" loading="lazy">` : 
+                            `<div class="equipment-placeholder">🔧</div>`
+                        }
+                    </div>
+                    <div class="equipment-info">
+                        <h4>${item.name}</h4>
+                        <p class="equipment-type">${item.type}</p>
+                        <p class="equipment-manufacturer">${item.manufacturer} ${item.model}</p>
+                        <p class="equipment-specs">
+                            Throughput: ${item.throughput_gbps} Gbps
+                        </p>
+                        <button class="btn btn-sm" onclick="showEquipmentDetails('${item.id}')">
+                            {% trans "Details" %}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function loadMoreEquipment() {
+            // Implement pagination or load more
+            loadEquipment();
+        }
+        
+        function showEquipmentDetails(equipmentId) {
+            // Fetch and show equipment details modal
+            fetch(`/api/equipment/${equipmentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const modal = document.createElement('div');
+                    modal.className = 'modal-overlay';
+                    modal.innerHTML = `
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>${data.name}</h3>
+                                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">✕</button>
+                            </div>
+                            <div class="modal-body">
+                                ${data.image_url ? `<img src="${data.image_url}" alt="${data.name}" style="max-width:100%; margin-bottom:1rem;">` : ''}
+                                <p><strong>{% trans "Type:" %}</strong> ${data.type}</p>
+                                <p><strong>{% trans "Manufacturer:" %}</strong> ${data.manufacturer}</p>
+                                <p><strong>{% trans "Model:" %}</strong> ${data.model}</p>
+                                <p><strong>{% trans "Throughput:" %}</strong> ${data.throughput_gbps} Gbps</p>
+                                ${data.specifications ? `
+                                    <h4>{% trans "Specifications" %}</h4>
+                                    <pre>${JSON.stringify(data.specifications, null, 2)}</pre>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                })
+                .catch(error => {
+                    console.error('Error loading equipment details:', error);
+                    window.app.showNotification('{% trans "Failed to load equipment details" %}', 'error');
+                });
+        }
+        
+        function setupLayerControls() {
+            // Connect layer toggles to globe
+            const toggles = {
+                'toggle-submarine': 'submarine',
+                'toggle-terrestrial': 'terrestrial',
+                'toggle-satellite': 'satellite',
+                'toggle-nodes': 'nodes'
+            };
+            
+            Object.entries(toggles).forEach(([toggleId, layer]) => {
+                const toggle = document.getElementById(toggleId);
+                if (toggle) {
+                    toggle.addEventListener('change', function() {
+                        if (window.networkGlobe) {
+                            window.networkGlobe.toggleLayer(layer, this.checked);
+                        }
+                    });
+                }
+            });
+            
+            // Visual effects toggles
+            document.getElementById('toggle-glow')?.addEventListener('click', function() {
+                if (window.networkGlobe) {
+                    window.networkGlobe.toggleGlow(this.classList.toggle('active'));
+                }
+            });
+            
+            document.getElementById('toggle-labels')?.addEventListener('click', function() {
+                if (window.networkGlobe) {
+                    window.networkGlobe.toggleLabels(this.classList.toggle('active'));
+                }
+            });
+        }
+        
+        // Add equipment card styles
+        const style = document.createElement('style');
+        style.textContent = `
+            .equipment-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 1.5rem;
+                margin: 1.5rem 0;
+            }
+            
+            .equipment-card {
+                background: rgba(40, 40, 60, 0.8);
+                border: 1px solid #444;
+                border-radius: 8px;
+                overflow: hidden;
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+            
+            .equipment-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            }
+            
+            .equipment-image {
+                height: 150px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(0,0,0,0.3);
+            }
+            
+            .equipment-image img {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+            }
+            
+            .equipment-placeholder {
+                font-size: 3rem;
+                opacity: 0.5;
+            }
+            
+            .equipment-info {
+                padding: 1rem;
+            }
+            
+            .equipment-type {
+                color: #9d4edd;
+                font-weight: bold;
+                margin: 0.5rem 0;
+            }
+            
+            .equipment-manufacturer {
+                color: #aaa;
+                font-size: 0.9rem;
+                margin: 0.5rem 0;
+            }
+            
+            .equipment-specs {
+                color: #00d4ff;
+                font-size: 0.9rem;
+                margin: 0.5rem 0;
+            }
+            
+            .btn-sm {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .network-stats .stats-details {
+                display: grid;
+                gap: 0.5rem;
+            }
+            
+            .stat-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 0.5rem 0;
+                border-bottom: 1px solid #444;
+            }
+            
+            .stat-row:last-child {
+                border-bottom: none;
+            }
+            
+            .stat-label {
+                color: #aaa;
+            }
+            
+            .stat-value {
+                color: #00d4ff;
+                font-weight: bold;
+            }
+            
+            .legend-items {
+                display: grid;
+                gap: 0.5rem;
+            }
+            
+            .legend-item {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+            
+            .legend-color {
+                width: 20px;
+                height: 20px;
+                border-radius: 4px;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+{% endblock %}

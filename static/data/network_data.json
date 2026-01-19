@@ -1,0 +1,89 @@
+{
+  "nodes": [
+    {
+      "name": "DE-CIX Frankfurt",
+      "type": "ix",
+      "latitude": 50.1109,
+      "longitude": 8.6821,
+      "country": "Germany",
+      "city": "Frankfurt",
+      "description": "World's largest internet exchange point",
+      "capacity_gbps": 10000,
+      "network_type": "existing"
+    },
+    {
+      "name": "AMS-IX Amsterdam",
+      "type": "ix",
+      "latitude": 52.3702,
+      "longitude": 4.8952,
+      "country": "Netherlands",
+      "city": "Amsterdam",
+      "description": "Major European internet exchange",
+      "capacity_gbps": 8000,
+      "network_type": "existing"
+    },
+    {
+      "name": "MSK-IX Moscow",
+      "type": "ix",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "country": "Russia",
+      "city": "Moscow",
+      "description": "Major Russian internet exchange",
+      "capacity_gbps": 5000,
+      "network_type": "existing"
+    },
+    {
+      "name": "NYIIX New York",
+      "type": "ix",
+      "latitude": 40.7128,
+      "longitude": -74.0060,
+      "country": "USA",
+      "city": "New York",
+      "description": "New York Internet Exchange",
+      "capacity_gbps": 6000,
+      "network_type": "existing"
+    },
+    {
+      "name": "Starlink Ground Station - Alaska",
+      "type": "satellite",
+      "latitude": 64.2008,
+      "longitude": -149.4937,
+      "country": "USA",
+      "city": "Fairbanks",
+      "description": "Starlink satellite ground station",
+      "capacity_gbps": 200,
+      "network_type": "proposed"
+    }
+  ],
+  "equipment": [
+    {
+      "name": "Cisco Nexus 9000",
+      "type": "switch",
+      "manufacturer": "Cisco",
+      "model": "N9K-C9336C-FX2",
+      "description": "High-performance data center switch",
+      "throughput_gbps": 25.6,
+      "power_consumption_w": 1200,
+      "specifications": {
+        "ports": "36x 100G",
+        "latency": "300ns",
+        "buffer": "36MB"
+      }
+    },
+    {
+      "name": "Juniper MX Router",
+      "type": "router",
+      "manufacturer": "Juniper",
+      "model": "MX204",
+      "description": "Universal routing platform",
+      "throughput_gbps": 400,
+      "power_consumption_w": 450,
+      "specifications": {
+        "ports": "4x 100G",
+        "routing_entries": "2M",
+        "vpn_support": "MPLS, VPLS"
+      }
+    }
+  ]
+}

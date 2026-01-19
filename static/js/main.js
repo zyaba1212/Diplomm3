@@ -1,311 +1,136 @@
-/**
- * Z96A - Основной JavaScript файл проекта
- * Версия: 1.0.0
- * Автор: Зыблиенко Дмитрий
- */
+// Z96A Main JavaScript
+let walletState = {
+    connected: false,
+    address: null,
+    nickname: null,
+    balance: 0
+};
 
-// ===== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ =====
-window.walletConnected = false;
-window.walletAddress = null;
-window.userProfile = null;
-window.solana = null;
-
-// ===== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ =====
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Z96A Platform initialized');
+    console.log('Z96A Network Architecture loaded');
     
-    // Инициализация основных функций
-    initSidebars();
+    // Загружаем сохраненное состояние кошелька
+    loadWalletState();
+    
+    // Инициализация
+    initNavigation();
+    initTheme();
+    initWalletIntegration();
     initLanguageSwitcher();
-    initWalletConnection();
-    initNotifications();
-    initScrollAnimations();
-    initMobileMenu();
     
-    // Проверка обновлений
-    checkForUpdates();
+    // Инициализация модальных окон
+    initModals();
+    
+    // Инициализация уведомлений
+    initNotifications();
 });
 
-// ===== УПРАВЛЕНИЕ БОКОВЫМИ ПАНЕЛЯМИ =====
-function initSidebars() {
-    // Восстановление состояния из localStorage
-    const leftSidebarState = localStorage.getItem('sidebar-left-state');
-    const rightSidebarState = localStorage.getItem('sidebar-right-state');
-    
-    if (leftSidebarState === 'collapsed') {
-        collapseSidebar('news-sidebar');
+function loadWalletState() {
+    try {
+        const saved = localStorage.getItem('z96a_wallet_state');
+        if (saved) {
+            const state = JSON.parse(saved);
+            walletState = {
+                ...walletState,
+                ...state
+            };
+            
+            if (walletState.connected && walletState.address) {
+                updateWalletUI();
+            }
+        }
+    } catch (error) {
+        console.error('Error loading wallet state:', error);
     }
-    
-    if (rightSidebarState === 'collapsed') {
-        collapseSidebar('comments-sidebar');
-    }
-    
-    // Обработчики для кнопок
-    document.querySelectorAll('.sidebar-toggle').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const sidebarId = this.closest('.sidebar-left, .sidebar-right').id;
-            toggleSidebar(sidebarId);
-        });
-    });
-    
-    document.querySelectorAll('.sidebar-close').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const sidebarId = this.closest('.sidebar-left, .sidebar-right').id;
-            closeSidebar(sidebarId);
-        });
-    });
 }
 
-function toggleSidebar(sidebarId) {
-    const sidebar = document.getElementById(sidebarId);
-    if (!sidebar) return;
+function saveWalletState() {
+    try {
+        localStorage.setItem('z96a_wallet_state', JSON.stringify(walletState));
+    } catch (error) {
+        console.error('Error saving wallet state:', error);
+    }
+}
+
+function initNavigation() {
+    // Подсветка активной навигации
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('.nav-link');
     
-    sidebar.classList.toggle('collapsed');
-    
-    // Сохранение состояния
-    const state = sidebar.classList.contains('collapsed') ? 'collapsed' : 'expanded';
-    localStorage.setItem(`${sidebarId}-state`, state);
-    
-    // Обновление иконки
-    const toggleIcon = sidebar.querySelector('.toggle-icon');
-    if (toggleIcon) {
-        if (sidebar.classList.contains('collapsed')) {
-            if (sidebarId === 'news-sidebar') {
-                toggleIcon.textContent = '→';
-            } else {
-                toggleIcon.textContent = '←';
-            }
+    navLinks.forEach(link => {
+        const linkPath = link.getAttribute('href');
+        if (linkPath === currentPath || 
+            (linkPath !== '/' && currentPath.startsWith(linkPath)) ||
+            (linkPath === '/' && currentPath === '/')) {
+            link.classList.add('active');
         } else {
-            if (sidebarId === 'news-sidebar') {
-                toggleIcon.textContent = '←';
-            } else {
-                toggleIcon.textContent = '→';
-            }
-        }
-    }
-    
-    // Уведомление о изменении
-    showNotification('Настройки панели сохранены', 'info');
-}
-
-function collapseSidebar(sidebarId) {
-    const sidebar = document.getElementById(sidebarId);
-    if (sidebar) {
-        sidebar.classList.add('collapsed');
-        const toggleIcon = sidebar.querySelector('.toggle-icon');
-        if (toggleIcon) {
-            if (sidebarId === 'news-sidebar') {
-                toggleIcon.textContent = '→';
-            } else {
-                toggleIcon.textContent = '←';
-            }
-        }
-    }
-}
-
-function closeSidebar(sidebarId) {
-    const sidebar = document.getElementById(sidebarId);
-    if (sidebar) {
-        sidebar.style.display = 'none';
-        localStorage.setItem(`${sidebarId}-state`, 'hidden');
-        showNotification('Панель скрыта', 'info');
-    }
-}
-
-// ===== ПЕРЕКЛЮЧЕНИЕ ЯЗЫКА =====
-function initLanguageSwitcher() {
-    const langButtons = document.querySelectorAll('.lang-btn');
-    const currentLang = localStorage.getItem('z96a-language') || 'ru';
-    
-    // Установка активного языка
-    langButtons.forEach(btn => {
-        if (btn.dataset.lang === currentLang) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-        
-        btn.addEventListener('click', function() {
-            const lang = this.dataset.lang;
-            switchLanguage(lang);
-        });
-    });
-    
-    // Загрузка переводов
-    loadTranslations(currentLang);
-}
-
-function switchLanguage(lang) {
-    if (lang === localStorage.getItem('z96a-language')) {
-        return;
-    }
-    
-    // Обновление кнопок
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.lang === lang) {
-            btn.classList.add('active');
+            link.classList.remove('active');
         }
     });
-    
-    // Сохранение в localStorage
-    localStorage.setItem('z96a-language', lang);
-    
-    // Загрузка переводов
-    loadTranslations(lang);
-    
-    // Обновление страницы
-    applyTranslations(lang);
-    
-    showNotification(`Язык изменен на ${lang === 'ru' ? 'Русский' : 'English'}`, 'success');
 }
 
-function loadTranslations(lang) {
-    // В реальном проекте здесь будет загрузка JSON файла с переводами
-    const translations = {
-        ru: {
-            // Общие фразы
-            'connect_wallet': 'Подключить кошелек',
-            'disconnect': 'Отключить',
-            'loading': 'Загрузка...',
-            'error': 'Ошибка',
-            'success': 'Успешно',
-            'warning': 'Предупреждение',
-            'info': 'Информация',
-            
-            // Навигация
-            'home': 'Главная',
-            'architecture': 'Архитектура',
-            'news': 'Новости',
-            'discussion': 'Обсуждение',
-            'about': 'О проекте',
-            'roadmap': 'Дорожная карта',
-            
-            // Боковая панель новостей
-            'latest_news': 'Последние новости',
-            'all_news': 'Все новости',
-            'no_news': 'Новости загружаются...',
-            
-            // Подвал
-            'copyright': 'Все права защищены',
-            'privacy': 'Политика конфиденциальности',
-            'terms': 'Условия использования',
-        },
-        en: {
-            // Common phrases
-            'connect_wallet': 'Connect Wallet',
-            'disconnect': 'Disconnect',
-            'loading': 'Loading...',
-            'error': 'Error',
-            'success': 'Success',
-            'warning': 'Warning',
-            'info': 'Information',
-            
-            // Navigation
-            'home': 'Home',
-            'architecture': 'Architecture',
-            'news': 'News',
-            'discussion': 'Discussion',
-            'about': 'About',
-            'roadmap': 'Roadmap',
-            
-            // News sidebar
-            'latest_news': 'Latest News',
-            'all_news': 'All News',
-            'no_news': 'Loading news...',
-            
-            // Footer
-            'copyright': 'All rights reserved',
-            'privacy': 'Privacy Policy',
-            'terms': 'Terms of Service',
-        }
-    };
-    
-    window.appTranslations = translations[lang] || translations.ru;
+function initTheme() {
+    // Инициализация темы
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (prefersDark) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
 }
 
-function applyTranslations(lang) {
-    // Применение переводов к элементам страницы
-    const elements = document.querySelectorAll('[data-translate]');
-    
-    elements.forEach(element => {
-        const key = element.dataset.translate;
-        if (window.appTranslations && window.appTranslations[key]) {
-            if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-                element.placeholder = window.appTranslations[key];
-            } else {
-                element.textContent = window.appTranslations[key];
-            }
-        }
-    });
-    
-    // Обновление meta тегов
-    document.documentElement.lang = lang;
-}
-
-// ===== ПОДКЛЮЧЕНИЕ КОШЕЛЬКА =====
-function initWalletConnection() {
-    // Проверка сохраненного кошелька
-    const savedWallet = localStorage.getItem('z96a-wallet-address');
-    const savedNickname = localStorage.getItem('z96a-user-nickname');
-    const savedReputation = localStorage.getItem('z96a-user-reputation');
-    
-    if (savedWallet) {
-        window.walletAddress = savedWallet;
-        window.walletConnected = true;
-        window.userProfile = {
-            nickname: savedNickname || 'User',
-            reputation: savedReputation ? parseInt(savedReputation) : 0
-        };
+function initWalletIntegration() {
+    // Инициализация интеграции с кошельком
+    const walletBtn = document.getElementById('wallet-btn');
+    if (walletBtn) {
+        walletBtn.addEventListener('click', toggleWalletConnection);
         updateWalletUI();
     }
     
-    // Проверка поддержки Solana
-    if (typeof window.solana !== 'undefined') {
-        window.solana = window.solana;
-        console.log('Solana wallet detected');
+    // Добавляем контекстное меню для отключения
+    addWalletContextMenu();
+}
+
+async function toggleWalletConnection() {
+    if (walletState.connected) {
+        await disconnectWallet();
+    } else {
+        await connectWallet();
     }
 }
 
 async function connectWallet() {
     try {
-        showNotification('Подключение кошелька...', 'info');
-        
-        // Проверка поддержки Solana
-        if (typeof window.solana === 'undefined') {
-            throw new Error('Пожалуйста, установите кошелек Phantom или другой Solana кошелек');
+        // Проверяем доступность Solana
+        if (!window.solana || !window.solana.isPhantom) {
+            showNotification('Please install Phantom wallet!', 'error');
+            
+            // Показать модальное окно с инструкцией
+            showWalletInstallModal();
+            return;
         }
         
-        // Запрос подключения
-        const response = await window.solana.connect();
-        const walletAddress = response.publicKey.toString();
+        // Подключаемся к кошельку
+        const resp = await window.solana.connect();
+        const publicKey = resp.publicKey.toString();
         
-        // Сохранение данных
-        window.walletAddress = walletAddress;
-        window.walletConnected = true;
+        // Обновляем состояние
+        walletState = {
+            connected: true,
+            address: publicKey,
+            nickname: generateNickname(publicKey),
+            balance: await getWalletBalance(publicKey)
+        };
         
-        // Получение информации о пользователе
-        const userInfo = await getUserInfo(walletAddress);
-        window.userProfile = userInfo;
-        
-        // Сохранение в localStorage
-        localStorage.setItem('z96a-wallet-address', walletAddress);
-        localStorage.setItem('z96a-user-nickname', userInfo.nickname);
-        localStorage.setItem('z96a-user-reputation', userInfo.reputation);
-        
-        // Обновление интерфейса
+        saveWalletState();
         updateWalletUI();
         
-        // Отправка на сервер
-        await registerWalletConnection(walletAddress, userInfo);
+        showNotification(`Wallet connected: ${walletState.nickname}`, 'success');
         
-        showNotification('Кошелек успешно подключен!', 'success');
+        // Обновляем статистику пользователя
+        updateUserStats();
         
     } catch (error) {
         console.error('Wallet connection error:', error);
-        showNotification(`Ошибка подключения: ${error.message}`, 'error');
+        showNotification('Failed to connect wallet: ' + error.message, 'error');
     }
 }
 
@@ -315,415 +140,397 @@ async function disconnectWallet() {
             await window.solana.disconnect();
         }
         
-        // Очистка данных
-        window.walletConnected = false;
-        window.walletAddress = null;
-        window.userProfile = null;
+        walletState = {
+            connected: false,
+            address: null,
+            nickname: null,
+            balance: 0
+        };
         
-        // Очистка localStorage
-        localStorage.removeItem('z96a-wallet-address');
-        localStorage.removeItem('z96a-user-nickname');
-        localStorage.removeItem('z96a-user-reputation');
-        
-        // Обновление интерфейса
+        saveWalletState();
         updateWalletUI();
         
-        showNotification('Кошелек отключен', 'info');
+        showNotification('Wallet disconnected', 'info');
         
     } catch (error) {
-        console.error('Wallet disconnection error:', error);
-        showNotification('Ошибка отключения кошелька', 'error');
+        console.error('Wallet disconnect error:', error);
+        showNotification('Error disconnecting wallet', 'error');
     }
 }
 
 function updateWalletUI() {
-    const connectBtn = document.getElementById('connect-wallet-btn');
-    const walletConnected = document.getElementById('wallet-connected');
-    const walletAddressElem = document.getElementById('wallet-address');
-    const walletNicknameElem = document.getElementById('wallet-nickname');
-    const walletReputationElem = document.getElementById('wallet-reputation');
+    const walletBtn = document.getElementById('wallet-btn');
+    if (!walletBtn) return;
     
-    if (window.walletConnected && walletAddressElem && walletNicknameElem && walletReputationElem) {
-        // Показать информацию о кошельке
-        connectBtn.style.display = 'none';
-        walletConnected.style.display = 'flex';
+    if (walletState.connected && walletState.address) {
+        walletBtn.innerHTML = `
+            <span class="wallet-icon">🔗</span>
+            <span class="wallet-info">
+                <span class="wallet-nickname">${walletState.nickname}</span>
+                <span class="wallet-address">${walletState.address.slice(0, 6)}...${walletState.address.slice(-4)}</span>
+            </span>
+        `;
+        walletBtn.classList.add('connected');
+        walletBtn.title = `Click to disconnect\nBalance: ${walletState.balance.toFixed(2)} SOL`;
         
-        // Обновить данные
-        walletAddressElem.textContent = `${window.walletAddress.slice(0, 8)}...${window.walletAddress.slice(-6)}`;
-        walletNicknameElem.textContent = window.userProfile?.nickname || 'User';
-        walletReputationElem.textContent = `${window.userProfile?.reputation || 0} очков`;
+        // Показываем меню пользователя
+        showUserMenu();
         
     } else {
-        // Показать кнопку подключения
-        connectBtn.style.display = 'flex';
-        if (walletConnected) {
-            walletConnected.style.display = 'none';
-        }
+        walletBtn.innerHTML = `
+            <span class="wallet-icon">👛</span>
+            <span>Connect Wallet</span>
+        `;
+        walletBtn.classList.remove('connected');
+        walletBtn.title = 'Click to connect wallet';
+        
+        // Скрываем меню пользователя
+        hideUserMenu();
     }
 }
 
-async function getUserInfo(walletAddress) {
-    try {
-        // Запрос к API для получения информации о пользователе
-        const response = await fetch(`${window.APP_CONFIG.apiBaseUrl}wallet-info/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ wallet_address: walletAddress })
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            return data;
-        }
-        
-        // Если пользователь новый, создать профиль
-        return {
-            nickname: generateNickname(),
-            reputation: 0,
-            is_new: true
-        };
-        
-    } catch (error) {
-        console.error('Error getting user info:', error);
-        return {
-            nickname: generateNickname(),
-            reputation: 0,
-            is_new: true
-        };
-    }
-}
-
-async function registerWalletConnection(walletAddress, userInfo) {
-    try {
-        const response = await fetch(`${window.APP_CONFIG.apiBaseUrl}wallet-connect/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                wallet_address: walletAddress,
-                nickname: userInfo.nickname,
-                reputation: userInfo.reputation,
-                timestamp: new Date().toISOString()
-            })
-        });
-        
-        return response.ok;
-        
-    } catch (error) {
-        console.error('Error registering wallet:', error);
-        return false;
-    }
-}
-
-function generateNickname() {
-    const adjectives = ['Cosmic', 'Stellar', 'Quantum', 'Digital', 'Neural', 'Cyber'];
-    const nouns = ['Explorer', 'Pioneer', 'Voyager', 'Traveler', 'Nomad', 'Seeker'];
-    const numbers = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+function generateNickname(address) {
+    // Генерируем никнейм на основе адреса кошелька
+    const hexPart = address.slice(-8);
+    const adjectives = ['Cosmic', 'Digital', 'Network', 'Crypto', 'Block', 'Chain', 'Data', 'Byte'];
+    const nouns = ['Pioneer', 'Explorer', 'Architect', 'Node', 'Validator', 'Router', 'Gateway'];
     
-    const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    const adj = adjectives[parseInt(hexPart.slice(0, 2), 16) % adjectives.length];
+    const noun = nouns[parseInt(hexPart.slice(2, 4), 16) % nouns.length];
     
-    return `${adjective}${noun}${numbers}`;
+    return `${adj}${noun}`;
 }
 
-// ===== УВЕДОМЛЕНИЯ =====
+async function getWalletBalance(address) {
+    try {
+        // В реальном приложении здесь будет запрос к Solana RPC
+        // Для демонстрации возвращаем случайное значение
+        return Math.random() * 10;
+    } catch (error) {
+        console.error('Error getting wallet balance:', error);
+        return 0;
+    }
+}
+
+function addWalletContextMenu() {
+    const walletBtn = document.getElementById('wallet-btn');
+    if (!walletBtn) return;
+    
+    // Добавляем контекстное меню по правому клику
+    walletBtn.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        
+        if (walletState.connected) {
+            showWalletContextMenu(e.clientX, e.clientY);
+        }
+    });
+}
+
+function showWalletContextMenu(x, y) {
+    // Удаляем старое меню если есть
+    const oldMenu = document.getElementById('wallet-context-menu');
+    if (oldMenu) oldMenu.remove();
+    
+    const menu = document.createElement('div');
+    menu.id = 'wallet-context-menu';
+    menu.style.cssText = `
+        position: fixed;
+        left: ${x}px;
+        top: ${y}px;
+        background: rgba(30, 30, 46, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--color-space-purple);
+        border-radius: 8px;
+        padding: 10px 0;
+        min-width: 200px;
+        z-index: 1000;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    `;
+    
+    menu.innerHTML = `
+        <div class="context-menu-header" style="padding: 10px 15px; border-bottom: 1px solid var(--color-border);">
+            <div style="font-weight: bold; color: var(--color-neon-blue);">${walletState.nickname}</div>
+            <div style="font-size: 0.8rem; color: var(--color-text-secondary); font-family: monospace;">
+                ${walletState.address}
+            </div>
+        </div>
+        <div class="context-menu-item" style="padding: 10px 15px; cursor: pointer; transition: background 0.3s ease;" 
+             onclick="copyWalletAddress()">
+            📋 Copy Address
+        </div>
+        <div class="context-menu-item" style="padding: 10px 15px; cursor: pointer; transition: background 0.3s ease;"
+             onclick="viewOnSolscan()">
+            🔍 View on Solscan
+        </div>
+        <div class="context-menu-item" style="padding: 10px 15px; border-top: 1px solid var(--color-border); cursor: pointer; transition: background 0.3s ease; color: #ff4444;"
+             onclick="disconnectWallet()">
+            🚫 Disconnect Wallet
+        </div>
+    `;
+    
+    document.body.appendChild(menu);
+    
+    // Закрываем меню при клике вне его
+    setTimeout(() => {
+        document.addEventListener('click', function closeMenu(e) {
+            if (!menu.contains(e.target)) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+            }
+        });
+    }, 0);
+}
+
+function copyWalletAddress() {
+    if (!walletState.address) return;
+    
+    navigator.clipboard.writeText(walletState.address)
+        .then(() => {
+            showNotification('Wallet address copied to clipboard!', 'success');
+            document.getElementById('wallet-context-menu')?.remove();
+        })
+        .catch(err => {
+            console.error('Failed to copy:', err);
+            showNotification('Failed to copy address', 'error');
+        });
+}
+
+function viewOnSolscan() {
+    if (!walletState.address) return;
+    
+    window.open(`https://solscan.io/account/${walletState.address}`, '_blank');
+    document.getElementById('wallet-context-menu')?.remove();
+}
+
+function showUserMenu() {
+    let userMenu = document.getElementById('user-menu');
+    if (!userMenu) {
+        userMenu = document.createElement('div');
+        userMenu.id = 'user-menu';
+        userMenu.className = 'user-menu';
+        userMenu.style.cssText = `
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            background: rgba(30, 30, 46, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--color-space-purple);
+            border-radius: 10px;
+            padding: 20px;
+            min-width: 250px;
+            z-index: 999;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        `;
+        
+        document.querySelector('.header-content').appendChild(userMenu);
+    }
+    
+    userMenu.innerHTML = `
+        <div class="user-info">
+            <div class="user-avatar" style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--color-neon-blue), var(--color-neon-purple)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; margin-bottom: 15px;">
+                ${walletState.nickname?.charAt(0) || 'U'}
+            </div>
+            <h4 style="margin: 0 0 5px 0; color: var(--color-neon-blue);">${walletState.nickname}</h4>
+            <div style="font-family: monospace; font-size: 0.8rem; color: var(--color-text-secondary); margin-bottom: 15px;">
+                ${walletState.address}
+            </div>
+            <div class="user-stats" style="display: grid; gap: 10px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Reputation:</span>
+                    <span style="color: var(--color-neon-blue); font-weight: bold;">0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>SOL Balance:</span>
+                    <span style="color: var(--color-neon-blue); font-weight: bold;">${walletState.balance.toFixed(2)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Proposals:</span>
+                    <span style="color: var(--color-neon-blue); font-weight: bold;">0</span>
+                </div>
+            </div>
+            <button onclick="showProposalForm()" style="width: 100%; padding: 10px; background: linear-gradient(135deg, var(--color-neon-blue), var(--color-neon-purple)); border: none; border-radius: 5px; color: white; cursor: pointer; font-weight: bold; margin-bottom: 10px;">
+                ✨ Submit Proposal
+            </button>
+            <button onclick="disconnectWallet()" style="width: 100%; padding: 10px; background: rgba(255, 68, 68, 0.2); border: 1px solid #ff4444; border-radius: 5px; color: #ff4444; cursor: pointer;">
+                🚫 Disconnect
+            </button>
+        </div>
+    `;
+    
+    // Закрываем меню при клике вне его
+    setTimeout(() => {
+        document.addEventListener('click', function closeMenu(e) {
+            if (!userMenu.contains(e.target) && !document.getElementById('wallet-btn').contains(e.target)) {
+                userMenu.remove();
+                document.removeEventListener('click', closeMenu);
+            }
+        });
+    }, 0);
+}
+
+function hideUserMenu() {
+    const userMenu = document.getElementById('user-menu');
+    if (userMenu) {
+        userMenu.remove();
+    }
+}
+
+function showWalletInstallModal() {
+    // Создаем модальное окно с инструкцией по установке Phantom
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>🔧 Install Phantom Wallet</h3>
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>To use all features of Z96A Network Architecture, you need to install Phantom wallet:</p>
+                
+                <div style="margin: 20px 0;">
+                    <h4>For Chrome/Brave:</h4>
+                    <a href="https://chrome.google.com/webstore/detail/phantom/bfnaelmomeimhlpmgjnjophhpkkoljpa" target="_blank" style="display: block; padding: 10px; background: #9d4edd; color: white; text-align: center; border-radius: 5px; text-decoration: none; margin: 10px 0;">
+                        Install Phantom for Chrome
+                    </a>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4>For Firefox:</h4>
+                    <a href="https://addons.mozilla.org/en-US/firefox/addon/phantom-app/" target="_blank" style="display: block; padding: 10px; background: #ff9900; color: white; text-align: center; border-radius: 5px; text-decoration: none; margin: 10px 0;">
+                        Install Phantom for Firefox
+                    </a>
+                </div>
+                
+                <p style="font-size: 0.9rem; color: var(--color-text-secondary);">
+                    After installation, refresh this page and click "Connect Wallet" again.
+                </p>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function showProposalForm() {
+    // Здесь будет форма для подачи предложений
+    showNotification('Proposal form will be available soon!', 'info');
+}
+
+function updateUserStats() {
+    // Здесь будет обновление статистики пользователя с сервера
+    console.log('Updating user stats...');
+}
+
+function initLanguageSwitcher() {
+    const langBtn = document.querySelector('.lang-btn');
+    if (!langBtn) return;
+    
+    langBtn.addEventListener('click', function() {
+        const currentLang = document.documentElement.lang || 'en';
+        const newLang = currentLang === 'en' ? 'ru' : 'en';
+        
+        // Устанавливаем cookie для языка
+        document.cookie = `django_language=${newLang}; path=/; max-age=31536000`;
+        
+        // Показываем уведомление
+        showNotification(`Language switched to ${newLang === 'en' ? 'English' : 'Russian'}`, 'info');
+        
+        // Перезагружаем страницу
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    });
+}
+
+function initModals() {
+    // Инициализация модальных окон
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal-close') || 
+            e.target.classList.contains('modal-overlay')) {
+            e.target.closest('.modal-overlay')?.remove();
+        }
+    });
+}
+
 function initNotifications() {
-    // Создание контейнера если его нет
-    if (!document.getElementById('notifications')) {
-        const container = document.createElement('div');
-        container.id = 'notifications';
-        document.body.appendChild(container);
-    }
+    // Добавляем стили для уведомлений
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+            word-break: break-word;
+        }
+        
+        .notification-success {
+            background: linear-gradient(135deg, #00c851, #007e33);
+            color: white;
+        }
+        
+        .notification-error {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: white;
+        }
+        
+        .notification-info {
+            background: linear-gradient(135deg, #33b5e5, #0099cc);
+            color: white;
+        }
+        
+        .notification-warning {
+            background: linear-gradient(135deg, #ffbb33, #ff8800);
+            color: white;
+        }
+    `;
+    document.head.appendChild(style);
 }
 
 function showNotification(message, type = 'info') {
-    const notifications = document.getElementById('notifications');
-    if (!notifications) return;
+    // Удаляем старые уведомления
+    const oldNotifications = document.querySelectorAll('.notification');
+    oldNotifications.forEach(n => {
+        n.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => n.remove(), 300);
+    });
     
+    // Создаем новое уведомление
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
+    notification.textContent = message;
     
-    const icons = {
-        success: '✓',
-        error: '✗',
-        warning: '⚠',
-        info: '💡'
-    };
+    document.body.appendChild(notification);
     
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-icon">${icons[type] || '💡'}</span>
-            <span>${message}</span>
-        </div>
-    `;
-    
-    notifications.appendChild(notification);
-    
-    // Автоматическое удаление
+    // Автоматическое удаление через 5 секунд
     setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            if (notification.parentNode === notifications) {
-                notifications.removeChild(notification);
-            }
-        }, 300);
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
     }, 5000);
 }
 
-// ===== АНИМАЦИИ ПРИ ПРОКРУТКЕ =====
-function initScrollAnimations() {
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -100px 0px'
-    };
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate-in');
-            }
-        });
-    }, observerOptions);
-    
-    // Наблюдение за элементами с анимацией
-    document.querySelectorAll('.animate-on-scroll').forEach(element => {
-        observer.observe(element);
-    });
-}
-
-// ===== МОБИЛЬНОЕ МЕНЮ =====
-function initMobileMenu() {
-    const mobileMenuBtn = document.createElement('button');
-    mobileMenuBtn.className = 'mobile-menu-btn';
-    mobileMenuBtn.innerHTML = '☰';
-    mobileMenuBtn.setAttribute('aria-label', 'Меню');
-    
-    const headerRight = document.querySelector('.header-right');
-    if (headerRight) {
-        headerRight.insertBefore(mobileMenuBtn, headerRight.firstChild);
-        
-        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-    }
-    
-    // Создание мобильного меню
-    const mobileMenu = document.createElement('div');
-    mobileMenu.className = 'mobile-menu';
-    mobileMenu.innerHTML = `
-        <div class="mobile-menu-header">
-            <button class="mobile-menu-close">×</button>
-        </div>
-        <div class="mobile-menu-content"></div>
-    `;
-    
-    document.body.appendChild(mobileMenu);
-    
-    // Закрытие по клику вне меню
-    document.addEventListener('click', function(event) {
-        if (!mobileMenu.contains(event.target) && event.target !== mobileMenuBtn) {
-            mobileMenu.classList.remove('active');
-        }
-    });
-    
-    // Кнопка закрытия
-    mobileMenu.querySelector('.mobile-menu-close').addEventListener('click', () => {
-        mobileMenu.classList.remove('active');
-    });
-}
-
-function toggleMobileMenu() {
-    const mobileMenu = document.querySelector('.mobile-menu');
-    if (!mobileMenu) return;
-    
-    // Заполнение контентом
-    const content = mobileMenu.querySelector('.mobile-menu-content');
-    if (content.innerHTML === '') {
-        const nav = document.querySelector('.nav-list');
-        if (nav) {
-            content.innerHTML = nav.innerHTML;
-        }
-        
-        // Добавление дополнительных элементов
-        const extraContent = `
-            <div class="mobile-menu-extra">
-                <div class="language-switcher">
-                    <button class="lang-btn active" data-lang="ru">RU</button>
-                    <span class="lang-separator">/</span>
-                    <button class="lang-btn" data-lang="en">EN</button>
-                </div>
-                <button class="wallet-connect-btn" onclick="connectWallet()">
-                    👛 Подключить кошелек
-                </button>
-            </div>
-        `;
-        content.innerHTML += extraContent;
-        
-        // Обновление обработчиков
-        content.querySelectorAll('.lang-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                switchLanguage(this.dataset.lang);
-            });
-        });
-        
-        content.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenu.classList.remove('active');
-            });
-        });
-    }
-    
-    mobileMenu.classList.toggle('active');
-}
-
-// ===== ПРОВЕРКА ОБНОВЛЕНИЙ =====
-async function checkForUpdates() {
-    try {
-        const lastCheck = localStorage.getItem('z96a-last-update-check');
-        const now = Date.now();
-        
-        // Проверять не чаще чем раз в час
-        if (lastCheck && (now - parseInt(lastCheck)) < 3600000) {
-            return;
-        }
-        
-        const response = await fetch(`${window.APP_CONFIG.apiBaseUrl}check-updates/`);
-        if (response.ok) {
-            const data = await response.json();
-            localStorage.setItem('z96a-last-update-check', now.toString());
-            
-            if (data.update_available) {
-                showUpdateNotification(data);
-            }
-        }
-    } catch (error) {
-        console.error('Update check failed:', error);
-    }
-}
-
-function showUpdateNotification(updateData) {
-    const notification = document.createElement('div');
-    notification.className = 'notification notification-info update-notification';
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-icon">🔄</span>
-            <span>Доступно обновление ${updateData.version}</span>
-            <button class="update-dismiss">×</button>
-        </div>
-        <div class="update-details">
-            <p>${updateData.description}</p>
-            ${updateData.urgent ? '<p class="update-urgent">❗ Срочное обновление</p>' : ''}
-            <div class="update-actions">
-                <button class="btn btn-sm" onclick="location.reload()">Обновить сейчас</button>
-                <button class="btn btn-sm btn-outline" onclick="dismissUpdate()">Напомнить позже</button>
-            </div>
-        </div>
-    `;
-    
-    const notifications = document.getElementById('notifications');
-    if (notifications) {
-        notifications.appendChild(notification);
-    }
-    
-    // Кнопка закрытия
-    notification.querySelector('.update-dismiss').addEventListener('click', () => {
-        notification.remove();
-        localStorage.setItem('z96a-update-dismissed', Date.now().toString());
-    });
-}
-
-function dismissUpdate() {
-    const notification = document.querySelector('.update-notification');
-    if (notification) {
-        notification.remove();
-    }
-    localStorage.setItem('z96a-update-dismissed', Date.now().toString());
-}
-
-// ===== API ВЗАИМОДЕЙСТВИЕ =====
-async function apiRequest(endpoint, method = 'GET', data = null) {
-    try {
-        const url = `${window.APP_CONFIG.apiBaseUrl}${endpoint}`;
-        const options = {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Wallet-Address': window.walletAddress || ''
-            },
-            credentials: 'same-origin'
-        };
-        
-        if (data) {
-            options.body = JSON.stringify(data);
-        }
-        
-        const response = await fetch(url, options);
-        
-        if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
-        }
-        
-        return await response.json();
-        
-    } catch (error) {
-        console.error(`API request failed (${endpoint}):`, error);
-        throw error;
-    }
-}
-
-// ===== УТИЛИТЫ =====
-function formatDate(date) {
-    return new Date(date).toLocaleDateString('ru-RU', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
-
-function formatNumber(number) {
-    return new Intl.NumberFormat('ru-RU').format(number);
-}
-
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-function throttle(func, limit) {
-    let inThrottle;
-    return function() {
-        const args = arguments;
-        const context = this;
-        if (!inThrottle) {
-            func.apply(context, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
-}
-
-// ===== ЭКСПОРТ ФУНКЦИЙ =====
-window.connectWallet = connectWallet;
-window.disconnectWallet = disconnectWallet;
-window.switchLanguage = switchLanguage;
-window.showNotification = showNotification;
-window.toggleSidebar = toggleSidebar;
-window.closeSidebar = closeSidebar;
-
-// Проверка подключения кошелька при загрузке
-window.addEventListener('load', () => {
-    if (window.walletConnected) {
-        updateWalletUI();
-    }
-});
+// Экспортируем функции для использования в других скриптах
+window.Z96A = {
+    connectWallet,
+    disconnectWallet,
+    showNotification,
+    copyWalletAddress,
+    viewOnSolscan,
+    showProposalForm
+};

@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Home" %} - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>{% trans "Z96A Network Architecture" %}</h1>
+        <p class="hero-subtitle">
+            {% trans "A revolutionary approach to transaction processing in infocommunication systems under partial network absence conditions. Combining SUI offline transactions technology with Starlink satellite connectivity for robust global network infrastructure." %}
+        </p>
+        
+        <div class="cta-buttons">
+            <a href="{% url 'network_architecture' %}" class="btn btn-primary">
+                🌍 {% trans "Explore Network" %}
+            </a>
+            <a href="{% url 'discussion' %}" class="btn btn-secondary">
+                💬 {% trans "Join Discussion" %}
+            </a>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <h2>{% trans "Network Statistics" %}</h2>
+        <div class="stats-grid">
+            <div class="stat-card card">
+                <div class="stat-number">{{ stats.total_nodes|default:"0" }}</div>
+                <div class="stat-label">{% trans "Network Nodes" %}</div>
+            </div>
+            <div class="stat-card card">
+                <div class="stat-number">{{ stats.total_equipment|default:"0" }}</div>
+                <div class="stat-label">{% trans "Equipment Types" %}</div>
+            </div>
+            <div class="stat-card card">
+                <div class="stat-number">{{ stats.total_connections|default:"0" }}</div>
+                <div class="stat-label">{% trans "Connections" %}</div>
+            </div>
+            <div class="stat-card card">
+                <div class="stat-number">{{ stats.total_proposals|default:"0" }}</div>
+                <div class="stat-label">{% trans "User Proposals" %}</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Content -->
+    <div class="featured-grid">
+        <!-- Featured News -->
+        <section class="featured-news card">
+            <h3>📰 {% trans "Featured News" %}</h3>
+            <div class="featured-list">
+                {% for article in featured_news|slice:":3" %}
+                    <div class="featured-item">
+                        <a href="{{ article.source_url }}" target="_blank" class="featured-title">
+                            {{ article.title|truncatechars:80 }}
+                        </a>
+                        <div class="featured-meta">
+                            <span>{{ article.source|title }}</span> • 
+                            <span>{{ article.published_date|date:"d.m.Y" }}</span>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>{% trans "No featured news available." %}</p>
+                {% endfor %}
+            </div>
+            <a href="{% url 'news' %}" class="btn btn-secondary">
+                {% trans "View All News" %} →
+            </a>
+        </section>
+
+        <!-- Recent Proposals -->
+        <section class="recent-proposals card">
+            <h3>💡 {% trans "Recent Proposals" %}</h3>
+            <div class="proposals-list">
+                {% for proposal in recent_proposals %}
+                    <div class="proposal-item">
+                        <div class="proposal-title">{{ proposal.title|truncatechars:60 }}</div>
+                        <div class="proposal-meta">
+                            <span>👤 {{ proposal.user.nickname|default:"Anonymous" }}</span> • 
+                            <span>{{ proposal.created_at|date:"d.m.Y" }}</span>
+                        </div>
+                        <div class="proposal-status status-{{ proposal.status }}">
+                            {{ proposal.get_status_display }}
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>{% trans "No proposals yet. Be the first to submit!" %}</p>
+                {% endfor %}
+            </div>
+            {% if user.is_authenticated %}
+                <button class="btn btn-primary" onclick="showProposalModal()">
+                    {% trans "Submit Proposal" %}
+                </button>
+            {% endif %}
+        </section>
+    </div>
+
+    <!-- Technology Overview -->
+    <section class="tech-overview card">
+        <h2>🔬 {% trans "Technology Stack" %}</h2>
+        <div class="tech-grid">
+            <div class="tech-item">
+                <div class="tech-icon">🌐</div>
+                <h4>{% trans "Existing Network" %}</h4>
+                <p>{% trans "Global fiber optic infrastructure, submarine cables, internet exchange points, and data centers." %}</p>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">🛰️</div>
+                <h4>{% trans "Satellite Connectivity" %}</h4>
+                <p>{% trans "Starlink-like LEO satellite constellations for remote area coverage and disaster recovery." %}</p>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">⚡</div>
+                <h4>{% trans "Offline Transactions" %}</h4>
+                <p>{% trans "SUI blockchain technology enabling transaction processing without constant network connection." %}</p>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">🔗</div>
+                <h4>{% trans "Hybrid Architecture" %}</h4>
+                <p>{% trans "Seamless integration of terrestrial and satellite networks with blockchain verification." %}</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Project Goals -->
+    <section class="goals-section">
+        <h2>🎯 {% trans "Project Goals" %}</h2>
+        <div class="goals-list">
+            <div class="goal-item">
+                <h3>{% trans "Resilience" %}</h3>
+                <p>{% trans "Create network architecture capable of operating under partial connectivity conditions." %}</p>
+            </div>
+            <div class="goal-item">
+                <h3>{% trans "Global Coverage" %}</h3>
+                <p>{% trans "Extend network access to remote and underserved regions using satellite technology." %}</p>
+            </div>
+            <div class="goal-item">
+                <h3>{% trans "Community Driven" %}</h3>
+                <p>{% trans "Enable users to propose and vote on network improvements via blockchain." %}</p>
+            </div>
+            <div class="goal-item">
+                <h3>{% trans "Education" %}</h3>
+                <p>{% trans "Provide interactive visualization of global network infrastructure for educational purposes." %}</p>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        function showProposalModal() {
+            // Check if wallet is connected
+            if (!window.app || !window.app.walletConnected) {
+                window.app.showNotification('{% trans "Please connect wallet first" %}', 'error');
+                return;
+            }
+            
+            // Create proposal modal
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>{% trans "Submit Network Proposal" %}</h3>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="proposal-form">
+                            <div class="form-group">
+                                <label>{% trans "Proposal Type" %}</label>
+                                <select name="proposal_type" class="form-select" required>
+                                    <option value="">{% trans "Select type..." %}</option>
+                                    <option value="add_equipment">{% trans "Add Equipment" %}</option>
+                                    <option value="upgrade_equipment">{% trans "Upgrade Equipment" %}</option>
+                                    <option value="add_node">{% trans "Add Network Node" %}</option>
+                                    <option value="add_connection">{% trans "Add Connection" %}</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>{% trans "Title" %}</label>
+                                <input type="text" name="title" class="form-input" required 
+                                       placeholder="{% trans "Brief description of your proposal" %}">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>{% trans "Description" %}</label>
+                                <textarea name="description" class="form-textarea" rows="4" required
+                                          placeholder="{% trans "Detailed description of your proposal..." %}"></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>{% trans "Justification" %}</label>
+                                <textarea name="justification" class="form-textarea" rows="3" required
+                                          placeholder="{% trans "Why is this proposal important for the network?" %}"></textarea>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    {% trans "Submit Proposal" %}
+                                </button>
+                                <button type="button" class="btn btn-secondary" 
+                                        onclick="this.closest('.modal-overlay').remove()">
+                                    {% trans "Cancel" %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Handle form submission
+            modal.querySelector('form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                window.app.submitProposal(e);
+                modal.remove();
+            });
+        }
+        
+        // Add modal styles
+        const style = document.createElement('style');
+        style.textContent = `
+            .modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                backdrop-filter: blur(5px);
+            }
+            
+            .modal-content {
+                background: linear-gradient(135deg, #2e2d2e 0%, #1b1523 100%);
+                border: 2px solid #9d4edd;
+                border-radius: 10px;
+                padding: 2rem;
+                max-width: 500px;
+                width: 90%;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 0 50px rgba(157, 78, 221, 0.5);
+            }
+            
+            .modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+            }
+            
+            .modal-close {
+                background: none;
+                border: none;
+                color: #9d4edd;
+                font-size: 1.5rem;
+                cursor: pointer;
+            }
+            
+            .form-actions {
+                display: flex;
+                gap: 1rem;
+                margin-top: 2rem;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+{% endblock %}
