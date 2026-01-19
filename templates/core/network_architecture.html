@@ -1,105 +1,840 @@
-{% block content %}
-<!-- Loading overlay -->
-<div id="loading" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a1a; display: flex; justify-content: center; align-items: center; z-index: 1000; color: #00ffff; font-size: 24px;">
-    ЗАГРУЗКА 3D ГЛОБУСА...
-</div>
-
-<!-- Globe container -->
-<div id="globe-container" style="width: 100%; height: 80vh; position: relative;"></div>
-
-<!-- Control panel -->
-<div style="position: absolute; top: 20px; right: 20px; background: rgba(30, 30, 46, 0.9); padding: 15px; border-radius: 8px; border: 1px solid #8a2be2; z-index: 100; color: white; font-family: monospace;">
-    <h3 style="margin-top: 0; color: #00ffff;">Управление глобусом</h3>
-    
-    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-        <button onclick="window.globe.toggleRotation()" style="background: #8a2be2; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-            <span id="rotation-icon">⏸</span> Вращение
-        </button>
-        
-        <button onclick="window.globe.resetView()" style="background: #00ffff; color: black; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-            ⟲ Сброс вида
-        </button>
-        
-        <button onclick="window.globe.zoomIn()" style="background: #333135; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-            + Приблизить
-        </button>
-        
-        <button onclick="window.globe.zoomOut()" style="background: #333135; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-            - Отдалить
-        </button>
-        
-        <button onclick="window.globe.toggleEquipment()" style="background: #ff6600; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-            <span id="equipment-icon">🔧</span> Оборудование
-        </button>
-        
-        <button onclick="window.globe.toggleCables()" style="background: #00ffff; color: black; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-            <span id="cables-icon">🔗</span> Кабели
-        </button>
-    </div>
-    
-    <div style="margin-top: 10px;">
-        <label style="display: block; margin-bottom: 5px; color: #00ffff;">Тип сети:</label>
-        <select onchange="window.globe.switchNetwork(this.value)" style="background: #2e2d2e; color: white; border: 1px solid #8a2be2; padding: 5px; border-radius: 5px; width: 100%;">
-            <option value="existing">Существующая сеть</option>
-            <option value="proposed">Предлагаемая сеть (SUI + Starlink)</option>
-            <option value="hybrid">Гибридная сеть</option>
-        </select>
-    </div>
-</div>
-
-<!-- Network info -->
-<div style="position: absolute; bottom: 20px; left: 20px; background: rgba(30, 30, 46, 0.9); padding: 15px; border-radius: 8px; border: 1px solid #00ffff; z-index: 100; color: white; font-family: monospace; max-width: 300px;">
-    <h4 style="margin-top: 0; color: #00ffff;">Глобальная инфраструктура</h4>
-    <p style="margin: 5px 0;">🌐 <strong id="node-count">8</strong> узлов сети</p>
-    <p style="margin: 5px 0;">🔗 <strong id="cable-count">8</strong> подводных кабелей</p>
-    <p style="margin: 5px 0;">🔧 <strong id="equipment-count">4</strong> единиц оборудования</p>
-    <p style="margin: 5px 0; font-size: 12px; color: #aaa;">Кликните на объект для информации</p>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<!-- Three.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
-
-<!-- Full globe with cables -->
-<script src="{% static 'js/globe3d_full.js' %}"></script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Initializing full globe...');
-    
-    setTimeout(function() {
-        // Hide loading
-        const loading = document.getElementById('loading');
-        if (loading) loading.style.display = 'none';
-        
-        // Initialize globe
-        try {
-            if (typeof NetworkGlobe !== 'undefined') {
-                window.globe = new NetworkGlobe('globe-container');
-                console.log('✅ Full globe initialized with cables!');
-                
-                // Update counters
-                setTimeout(function() {
-                    document.getElementById('node-count').textContent = window.globe.nodes.length;
-                    document.getElementById('cable-count').textContent = window.globe.connections.length;
-                    document.getElementById('equipment-count').textContent = window.globe.equipment.length;
-                }, 1000);
-                
-                // Window resize handler
-                window.addEventListener('resize', function() {
-                    if (window.globe && window.globe.onWindowResize) {
-                        window.globe.onWindowResize();
-                    }
-                });
-            } else {
-                console.error('NetworkGlobe class not found');
-            }
-        } catch (error) {
-            console.error('Globe initialization error:', error);
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Архитектура сети - Z96A</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="icon" href="{% static 'images/favicon.ico' %}">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #0a0a1a;
+            color: white;
+            font-family: 'CGXYZ PC', sans-serif;
         }
-    }, 1500);
-});
-</script>
-{% endblock %}
+        
+        #globe-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        /* Панель навигации */
+        .network-nav {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            background: rgba(27, 21, 35, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-family: 'CGXYZ PC', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-btn:hover {
+            background: rgba(153, 69, 255, 0.3);
+            border-color: #9945FF;
+            transform: translateY(-2px);
+        }
+        
+        /* Панель управления */
+        .controls-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(27, 21, 35, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            min-width: 250px;
+        }
+        
+        .controls-title {
+            color: #14F195;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-label {
+            display: block;
+            color: #aaa;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        .control-btn {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'CGXYZ PC', sans-serif;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+        
+        .control-btn:hover {
+            background: rgba(153, 69, 255, 0.3);
+            border-color: #9945FF;
+        }
+        
+        .control-btn.active {
+            background: rgba(20, 241, 149, 0.2);
+            border-color: #14F195;
+            color: #14F195;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #9945FF;
+            cursor: pointer;
+        }
+        
+        /* Легенда */
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(27, 21, 35, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .legend-title {
+            color: #fff;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        /* Подсказка */
+        .hint {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(27, 21, 35, 0.9);
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            font-size: 12px;
+            color: #aaa;
+            max-width: 300px;
+        }
+        
+        .hint strong {
+            color: #14F195;
+        }
+    </style>
+</head>
+<body>
+    <!-- Навигация -->
+    <div class="network-nav">
+        <a href="/" class="nav-btn">← На главную</a>
+        <a href="/news/" class="nav-btn">Новости</a>
+        <a href="/discussion/" class="nav-btn">Обсуждение</a>
+        <a href="/about/" class="nav-btn">О проекте</a>
+        <a href="/roadmap/" class="nav-btn">Roadmap</a>
+    </div>
+    
+    <!-- Панель управления -->
+    <div class="controls-panel">
+        <h3 class="controls-title">Управление сетью</h3>
+        
+        <div class="control-group">
+            <div class="control-label">Вращение Земли</div>
+            <button id="toggle-rotation" class="control-btn active">Вращение: ВКЛ</button>
+        </div>
+        
+        <div class="control-group">
+            <div class="control-label">Видимость элементов</div>
+            <button id="toggle-cables" class="control-btn active">Кабели: ВКЛ</button>
+            <button id="toggle-equipment" class="control-btn active">Оборудование: ВКЛ</button>
+        </div>
+        
+        <div class="control-group">
+            <div class="control-label">Тип сети</div>
+            <button id="switch-network" class="control-btn">Существующая сеть</button>
+        </div>
+        
+        <div class="control-group">
+            <div class="control-label">Приближение</div>
+            <div class="slider-container">
+                <input type="range" id="zoom" class="slider" min="1" max="10" value="5">
+                <span id="zoom-value" style="color: #aaa; font-size: 12px;">5</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Легенда -->
+    <div class="legend">
+        <h4 class="legend-title">Легенда сети</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #00ff00;"></div>
+            <span>Хабы (Нью-Йорк, Лондон)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff9900;"></div>
+            <span>Точки обмена (Москва, Франкфурт)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #3498db;"></div>
+            <span>Подводные кабели (MAREA)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #e74c3c;"></div>
+            <span>Тихоокеанские кабели (FASTER)</span>
+        </div>
+    </div>
+    
+    <!-- Подсказка -->
+    <div class="hint">
+        <strong>Управление:</strong><br>
+        • ЛКМ + движение — вращение камеры<br>
+        • ПКМ + движение — перемещение<br>
+        • Колёсико мыши — приближение<br>
+        • Клик на оборудование — информация
+    </div>
+    
+    <!-- Контейнер для 3D сцены -->
+    <div id="globe-container"></div>
+    
+    <!-- Three.js библиотеки -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    
+    <!-- Наш 3D скрипт -->
+    <script>
+        // Основные переменные
+        let scene, camera, renderer, controls;
+        let earthMesh;
+        let rotationEnabled = true;
+        let cablesVisible = true;
+        let equipmentVisible = true;
+        let currentNetworkType = 'existing';
+
+        // Инициализация
+        function init() {
+            console.log('Инициализация Three.js сцены...');
+            
+            // Создаём сцену
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a1a);
+            
+            // Звёздное небо
+            createStarfield();
+            
+            // Создаём камеру
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 15;
+            
+            // Создаём рендерер
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('globe-container').appendChild(renderer.domElement);
+            
+            // Элементы управления камерой
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 8;
+            controls.maxDistance = 50;
+            controls.maxPolarAngle = Math.PI;
+            
+            // Освещение
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 3, 5);
+            scene.add(directionalLight);
+            
+            // Создаём Землю
+            createEarth();
+            
+            // Создаём кабели
+            createSubmarineCables();
+            
+            // Создаём оборудование
+            createNetworkEquipment();
+            
+            // Создаём спутники
+            createSatellites();
+            
+            // Запускаем анимацию
+            animate();
+            
+            // Обработка изменения размера окна
+            window.addEventListener('resize', onWindowResize);
+            
+            console.log('Three.js сцена успешно инициализирована');
+        }
+
+        // Звёздное небо
+        function createStarfield() {
+            const starCount = 10000;
+            const starGeometry = new THREE.BufferGeometry();
+            const starPositions = new Float32Array(starCount * 3);
+            
+            for (let i = 0; i < starCount * 3; i += 3) {
+                const radius = 500 + Math.random() * 1500;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos((Math.random() * 2) - 1);
+                
+                starPositions[i] = radius * Math.sin(phi) * Math.cos(theta);
+                starPositions[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
+                starPositions[i + 2] = radius * Math.cos(phi);
+            }
+            
+            starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+            
+            const starMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.7,
+                transparent: true,
+                sizeAttenuation: true
+            });
+            
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+        }
+
+        // Создание Земли
+        function createEarth() {
+            const geometry = new THREE.SphereGeometry(5, 128, 128);
+            
+            // Загрузка текстур
+            const textureLoader = new THREE.TextureLoader();
+            
+            // Основная текстура Земли
+            const earthTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg');
+            
+            // Нормальная карта для рельефа
+            const normalTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_normal_2048.jpg');
+            
+            // Карта отражений
+            const specularTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_specular_2048.jpg');
+            
+            const material = new THREE.MeshPhongMaterial({
+                map: earthTexture,
+                normalMap: normalTexture,
+                normalScale: new THREE.Vector2(0.05, 0.05),
+                specularMap: specularTexture,
+                specular: new THREE.Color(0x333333),
+                shininess: 10,
+                reflectivity: 0.5
+            });
+            
+            earthMesh = new THREE.Mesh(geometry, material);
+            scene.add(earthMesh);
+            
+            // Атмосфера
+            const atmosphereGeometry = new THREE.SphereGeometry(5.1, 64, 64);
+            const atmosphereMaterial = new THREE.MeshPhongMaterial({
+                color: 0x87ceeb,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.BackSide
+            });
+            const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+            scene.add(atmosphere);
+            
+            // Стратосфера
+            const stratosphereGeometry = new THREE.SphereGeometry(5.2, 32, 32);
+            const stratosphereMaterial = new THREE.MeshBasicMaterial({
+                color: 0x4682b4,
+                transparent: true,
+                opacity: 0.05,
+                side: THREE.BackSide
+            });
+            const stratosphere = new THREE.Mesh(stratosphereGeometry, stratosphereMaterial);
+            scene.add(stratosphere);
+        }
+
+        // Создание спутников
+        function createSatellites() {
+            const satCount = 30;
+            
+            for (let i = 0; i < satCount; i++) {
+                // Параметры орбиты
+                const altitude = 5.3 + Math.random() * 1.5;
+                const inclination = Math.random() * Math.PI;
+                const phase = Math.random() * Math.PI * 2;
+                
+                // Геометрия спутника
+                const geometry = new THREE.BoxGeometry(0.03, 0.03, 0.08);
+                
+                // Материал
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: i % 3 === 0 ? 0xff4444 : (i % 3 === 1 ? 0x44ff44 : 0x4444ff)
+                });
+                
+                const satellite = new THREE.Mesh(geometry, material);
+                
+                // Начальная позиция
+                const radius = altitude;
+                satellite.position.x = radius * Math.cos(phase);
+                satellite.position.z = radius * Math.sin(phase);
+                satellite.position.y = radius * Math.sin(inclination) * Math.cos(phase);
+                
+                // Сохраняем параметры для анимации
+                satellite.userData = {
+                    orbitRadius: radius,
+                    phase: phase,
+                    speed: 0.002 + Math.random() * 0.003,
+                    inclination: inclination,
+                    isSatellite: true
+                };
+                
+                scene.add(satellite);
+            }
+        }
+
+        // Создание подводного кабеля
+        function createSubmarineCable(startLat, startLon, endLat, endLon, color = 0x3498db, name = "") {
+            const radius = 5.05;
+            
+            const startPoint = latLonToVector3(startLat, startLon, radius);
+            const endPoint = latLonToVector3(endLat, endLon, radius);
+            
+            // Создаём кривую кабеля
+            const curve = new THREE.CatmullRomCurve3([
+                startPoint,
+                new THREE.Vector3(
+                    (startPoint.x + endPoint.x) / 2 * 1.15,
+                    (startPoint.y + endPoint.y) / 2 * 1.15,
+                    (startPoint.z + endPoint.z) / 2 * 1.15
+                ),
+                endPoint
+            ]);
+            
+            const points = curve.getPoints(100);
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            
+            const material = new THREE.LineBasicMaterial({
+                color: color,
+                linewidth: 2,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const cable = new THREE.Line(geometry, material);
+            cable.name = name;
+            cable.userData = {
+                type: 'submarine_cable',
+                name: name,
+                start: [startLat, startLon],
+                end: [endLat, endLon],
+                visible: true
+            };
+            
+            scene.add(cable);
+            return cable;
+        }
+
+        // Конвертация координат в 3D
+        function latLonToVector3(lat, lon, radius) {
+            const phi = (90 - lat) * (Math.PI / 180);
+            const theta = (lon + 180) * (Math.PI / 180);
+            
+            const x = -(radius * Math.sin(phi) * Math.cos(theta));
+            const y = radius * Math.cos(phi);
+            const z = radius * Math.sin(phi) * Math.sin(theta);
+            
+            return new THREE.Vector3(x, y, z);
+        }
+
+        // Создание всех подводных кабелей
+        function createSubmarineCables() {
+            const cables = [
+                // Атлантические
+                {name: "MAREA (США-Испания)", start: [40, -74], end: [40, -4], color: 0x3498db},
+                {name: "Apollo (США-Франция)", start: [41, -70], end: [49, 2], color: 0x2ecc71},
+                {name: "Dunant (Google)", start: [37, -76], end: [46, -1], color: 0x9b59b6},
+                
+                // Тихоокеанские
+                {name: "FASTER (США-Япония)", start: [34, -118], end: [35, 139], color: 0xe74c3c},
+                {name: "JUPITER", start: [37, -122], end: [33, 130], color: 0xf39c12},
+                {name: "Southern Cross", start: [-33, 151], end: [21, -158], color: 0x1abc9c},
+                
+                // Азиатские
+                {name: "SEA-ME-WE 3", start: [43, 5], end: [1, 103], color: 0xe74c3c},
+                {name: "Asia Pacific Gateway", start: [22, 114], end: [1, 103], color: 0x2ecc71},
+                {name: "FLAG FEA", start: [30, 31], end: [1, 103], color: 0x9b59b6},
+                
+                // Африканские
+                {name: "2Africa", start: [-34, 18], end: [43, 5], color: 0xf1c40f},
+                {name: "EASSy", start: [-4, 39], end: [-34, 18], color: 0x1abc9c},
+                
+                // Латинская Америка
+                {name: "BRUSA (Майами-Бразилия)", start: [25, -80], end: [-3, -60], color: 0xe67e22},
+                {name: "South America-1", start: [25, -80], end: [-34, -58], color: 0x95a5a6},
+            ];
+            
+            cables.forEach(cable => {
+                createSubmarineCable(
+                    cable.start[0], cable.start[1],
+                    cable.end[0], cable.end[1],
+                    cable.color, cable.name
+                );
+            });
+        }
+
+        // Создание сетевого оборудования
+        function createNetworkEquipment() {
+            const cities = [
+                // Северная Америка
+                {name: "Нью-Йорк", lat: 40.7, lon: -74, type: "hub", color: 0x00ff00},
+                {name: "Ашберн", lat: 39.0, lon: -77.5, type: "datacenter", color: 0x3498db},
+                {name: "Лос-Анджелес", lat: 34.0, lon: -118, type: "hub", color: 0x00ff00},
+                {name: "Майами", lat: 25.8, lon: -80.2, type: "gateway", color: 0x9b59b6},
+                
+                // Европа
+                {name: "Франкфурт", lat: 50.1, lon: 8.7, type: "ix", color: 0xff9900},
+                {name: "Лондон", lat: 51.5, lon: -0.1, type: "hub", color: 0x00ff00},
+                {name: "Амстердам", lat: 52.4, lon: 4.9, type: "ix", color: 0xff9900},
+                {name: "Париж", lat: 48.9, lon: 2.4, type: "hub", color: 0x00ff00},
+                
+                // Азия
+                {name: "Сингапур", lat: 1.3, lon: 103.8, type: "hub", color: 0x00ff00},
+                {name: "Гонконг", lat: 22.3, lon: 114.2, type: "hub", color: 0x00ff00},
+                {name: "Токио", lat: 35.7, lon: 139.8, type: "hub", color: 0x00ff00},
+                {name: "Шанхай", lat: 31.2, lon: 121.5, type: "gateway", color: 0x9b59b6},
+                
+                // Россия
+                {name: "Москва", lat: 55.8, lon: 37.6, type: "ix", color: 0xff9900},
+                {name: "Санкт-Петербург", lat: 59.9, lon: 30.3, type: "pop", color: 0xff4444},
+                {name: "Владивосток", lat: 43.1, lon: 131.9, type: "gateway", color: 0x9b59b6},
+                
+                // Другие
+                {name: "Сидней", lat: -33.9, lon: 151.2, type: "hub", color: 0x00ff00},
+                {name: "Дубай", lat: 25.2, lon: 55.3, type: "gateway", color: 0x9b59b6},
+                {name: "Мумбаи", lat: 19.1, lon: 72.9, type: "hub", color: 0x00ff00},
+                {name: "Сан-Паулу", lat: -23.6, lon: -46.6, type: "hub", color: 0x00ff00},
+            ];
+            
+            cities.forEach(city => {
+                const radius = 5.01;
+                const position = latLonToVector3(city.lat, city.lon, radius);
+                
+                // Разная геометрия для разных типов
+                let geometry;
+                switch(city.type) {
+                    case 'hub':
+                        geometry = new THREE.ConeGeometry(0.04, 0.12, 8);
+                        break;
+                    case 'ix':
+                        geometry = new THREE.BoxGeometry(0.06, 0.06, 0.06);
+                        break;
+                    case 'datacenter':
+                        geometry = new THREE.CylinderGeometry(0.03, 0.05, 0.08, 6);
+                        break;
+                    default:
+                        geometry = new THREE.SphereGeometry(0.04, 8, 8);
+                }
+                
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: city.color,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                
+                const marker = new THREE.Mesh(geometry, material);
+                marker.position.copy(position);
+                
+                // Ориентация наружу от центра Земли
+                marker.lookAt(marker.position.clone().multiplyScalar(2));
+                if (city.type === 'cone') {
+                    marker.rotateX(Math.PI);
+                }
+                
+                // Информация для тултипа
+                marker.userData = {
+                    type: 'network_equipment',
+                    name: city.name,
+                    cityType: city.type,
+                    lat: city.lat,
+                    lon: city.lon,
+                    description: `${city.name} - ${getCityTypeDescription(city.type)}`
+                };
+                
+                scene.add(marker);
+                
+                // Свечение
+                const glowGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+                const glowMaterial = new THREE.MeshBasicMaterial({
+                    color: city.color,
+                    transparent: true,
+                    opacity: 0.3
+                });
+                const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                glow.position.copy(position);
+                scene.add(glow);
+            });
+        }
+
+        function getCityTypeDescription(type) {
+            const descriptions = {
+                'hub': 'Ключевой хаб глобальной сети',
+                'ix': 'Точка обмена интернет-трафиком',
+                'datacenter': 'Крупный дата-центр',
+                'gateway': 'Шлюз для международных соединений',
+                'pop': 'Точка присутствия провайдера'
+            };
+            return descriptions[type] || 'Сетевой узел';
+        }
+
+        // Анимация
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Вращение Земли
+            if (rotationEnabled && earthMesh) {
+                earthMesh.rotation.y += 0.001;
+            }
+            
+            // Анимация спутников
+            scene.children.forEach(child => {
+                if (child.userData && child.userData.isSatellite) {
+                    child.userData.phase += child.userData.speed;
+                    
+                    child.position.x = child.userData.orbitRadius * Math.cos(child.userData.phase);
+                    child.position.z = child.userData.orbitRadius * Math.sin(child.userData.phase);
+                    child.position.y = child.userData.orbitRadius * Math.sin(child.userData.inclination) * Math.cos(child.userData.phase * 0.5);
+                    
+                    child.lookAt(0, 0, 0);
+                }
+            });
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Изменение размера окна
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Функции управления
+        function toggleRotation() {
+            rotationEnabled = !rotationEnabled;
+            const btn = document.getElementById('toggle-rotation');
+            if (btn) {
+                btn.textContent = `Вращение: ${rotationEnabled ? 'ВКЛ' : 'ВЫКЛ'}`;
+                btn.classList.toggle('active', rotationEnabled);
+            }
+        }
+
+        function toggleCables() {
+            cablesVisible = !cablesVisible;
+            scene.children.forEach(child => {
+                if (child.userData && child.userData.type === 'submarine_cable') {
+                    child.visible = cablesVisible;
+                }
+            });
+            
+            const btn = document.getElementById('toggle-cables');
+            if (btn) {
+                btn.textContent = `Кабели: ${cablesVisible ? 'ВКЛ' : 'ВЫКЛ'}`;
+                btn.classList.toggle('active', cablesVisible);
+            }
+        }
+
+        function toggleEquipment() {
+            equipmentVisible = !equipmentVisible;
+            scene.children.forEach(child => {
+                if (child.userData && child.userData.type === 'network_equipment') {
+                    child.visible = equipmentVisible;
+                    // Скрываем также свечение
+                    if (child.parent && child.parent.type === 'Scene') {
+                        // Ищем связанное свечение
+                        scene.children.forEach(sibling => {
+                            if (sibling.position.distanceTo(child.position) < 0.1 && 
+                                sibling.material && sibling.material.opacity === 0.3) {
+                                sibling.visible = equipmentVisible;
+                            }
+                        });
+                    }
+                }
+            });
+            
+            const btn = document.getElementById('toggle-equipment');
+            if (btn) {
+                btn.textContent = `Оборудование: ${equipmentVisible ? 'ВКЛ' : 'ВЫКЛ'}`;
+                btn.classList.toggle('active', equipmentVisible);
+            }
+        }
+
+        function switchNetwork() {
+            currentNetworkType = currentNetworkType === 'existing' ? 'proposed' : 'existing';
+            const btn = document.getElementById('switch-network');
+            
+            if (currentNetworkType === 'proposed') {
+                btn.textContent = 'Предложенная сеть (Starlink)';
+                btn.style.background = 'rgba(255, 153, 0, 0.3)';
+                btn.style.borderColor = '#FF9900';
+                alert('Включён режим предложенной сети: спутники Starlink + оффлайн-транзакции SUI');
+            } else {
+                btn.textContent = 'Существующая сеть';
+                btn.style.background = 'rgba(255, 255, 255, 0.1)';
+                btn.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                alert('Включён режим существующей сети: подводные кабели + наземная инфраструктура');
+            }
+        }
+
+        function setZoom(value) {
+            if (controls) {
+                const zoomMap = [50, 45, 40, 35, 30, 25, 20, 15, 12, 10, 8];
+                controls.maxDistance = zoomMap[value] || 30;
+                
+                const zoomValue = document.getElementById('zoom-value');
+                if (zoomValue) {
+                    zoomValue.textContent = value;
+                }
+            }
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM загружен, инициализация Three.js...');
+            
+            if (typeof THREE === 'undefined') {
+                console.error('Three.js не загружен! Проверьте подключение библиотеки.');
+                alert('Ошибка: Three.js не загружен. Проверьте интернет-соединение.');
+                return;
+            }
+            
+            if (typeof THREE.OrbitControls === 'undefined') {
+                console.error('OrbitControls не загружены!');
+                alert('Ошибка: OrbitControls не загружены.');
+                return;
+            }
+            
+            try {
+                init();
+                console.log('3D сцена успешно инициализирована');
+            } catch (error) {
+                console.error('Ошибка инициализации Three.js:', error);
+                alert('Ошибка создания 3D сцены: ' + error.message);
+            }
+            
+            // Назначаем обработчики кнопок
+            const rotationBtn = document.getElementById('toggle-rotation');
+            if (rotationBtn) rotationBtn.addEventListener('click', toggleRotation);
+            
+            const cablesBtn = document.getElementById('toggle-cables');
+            if (cablesBtn) cablesBtn.addEventListener('click', toggleCables);
+            
+            const equipmentBtn = document.getElementById('toggle-equipment');
+            if (equipmentBtn) equipmentBtn.addEventListener('click', toggleEquipment);
+            
+            const networkBtn = document.getElementById('switch-network');
+            if (networkBtn) networkBtn.addEventListener('click', switchNetwork);
+            
+            const zoomSlider = document.getElementById('zoom');
+            if (zoomSlider) {
+                zoomSlider.addEventListener('input', function(e) {
+                    setZoom(parseInt(e.target.value));
+                });
+                // Устанавливаем начальное значение
+                setZoom(parseInt(zoomSlider.value));
+            }
+            
+            // Добавляем обработчик кликов для информации об оборудовании
+            renderer.domElement.addEventListener('click', function(event) {
+                const mouse = new THREE.Vector2(
+                    (event.clientX / window.innerWidth) * 2 - 1,
+                    -(event.clientY / window.innerHeight) * 2 + 1
+                );
+                
+                const raycaster = new THREE.Raycaster();
+                raycaster.setFromCamera(mouse, camera);
+                
+                const intersects = raycaster.intersectObjects(scene.children, true);
+                
+                if (intersects.length > 0) {
+                    const object = intersects[0].object;
+                    if (object.userData && object.userData.type === 'network_equipment') {
+                        const info = object.userData;
+                        alert(`${info.name}\nТип: ${info.cityType}\nКоординаты: ${info.lat}°, ${info.lon}°\n\n${info.description}`);
+                    } else if (object.userData && object.userData.type === 'submarine_cable') {
+                        const info = object.userData;
+                        alert(`Кабель: ${info.name}\nМаршрут: ${info.start[0]}°,${info.start[1]}° → ${info.end[0]}°,${info.end[1]}°`);
+                    }
+                }
+            });
+            
+            console.log('Все обработчики назначены');
+        });
+        
+        // Обработка ошибок загрузки текстур
+        THREE.DefaultLoadingManager.onError = function(url) {
+            console.warn('Ошибка загрузки текстуры:', url);
+        };
+        
+        console.log('Скрипт network_architecture загружен');
+    </script>
+</body>
+</html>

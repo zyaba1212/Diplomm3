@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="{% static 'fonts/font.css' %}">
     <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
     
+ <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+ <script src="{% static 'js/wallet.js' %}"></script>
+
     <style>
         /* Базовые стили на случай, если CSS не загрузится */
         :root {
@@ -85,6 +88,19 @@
         </div>
         <button class="wallet-btn" id="walletBtn">Подключить кошелёк</button>
     </nav>
+    <!-- КНОПКА КОШЕЛЬКА СПРАВА -->
+    <div id="wallet-section">
+        <button id="connect-wallet-btn" class="wallet-btn">
+            🔗 Connect Solana Wallet
+        </button>
+        <div id="wallet-info" style="display: none; color: white; background: rgba(0,0,0,0.3); padding: 8px 15px; border-radius: 20px;">
+            <span id="wallet-address" style="margin-right: 10px;"></span>
+            <button id="disconnect-wallet-btn" 
+                    style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 15px; cursor: pointer;">
+                ✕
+            </button>
+        </div>
+    </div>
 
     <!-- Контент -->
     <div style="padding: 20px;">
