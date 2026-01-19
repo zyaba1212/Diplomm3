@@ -1,171 +1,61 @@
-<!DOCTYPE html>
 {% load static %}
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Z96A - Архитектура сетей{% endblock %}</title>
-    
-    <!-- Подключение CSS -->
+    <title>{% block title %}Z96A Network Architecture{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'fonts/font.css' %}">
-    <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
-    
- <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
- <script src="{% static 'js/wallet.js' %}"></script>
-
-    <style>
-        /* Базовые стили на случай, если CSS не загрузится */
-        :root {
-            --primary-color: #2e2d2e;
-            --secondary-color: #333135;
-            --accent-color: #1b1523;
-            --space-blue: #0a0a1a;
-            --neon-purple: #8a2be2;
-            --electric-blue: #00ffff;
-        }
-        
-        body {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--space-blue) 100%);
-            color: white;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-        
-        .navbar {
-            background: rgba(46, 45, 46, 0.95);
-            padding: 15px 30px;
-            border-bottom: 2px solid #8a2be2;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            color: #00ffff;
-            font-size: 24px;
-            font-weight: bold;
-            text-decoration: none;
-        }
-        
-        .nav-links {
-            display: flex;
-            gap: 20px;
-        }
-        
-        .nav-link {
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-        }
-        
-        .nav-link:hover {
-            background: #8a2be2;
-        }
-        
-        .wallet-btn {
-            background: #8a2be2;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-    </style>
+    <link rel="icon" href="{% static 'images/favicon.ico' %}">
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Навигация -->
-    <nav class="navbar">
-        <a href="{% url 'home' %}" class="logo">Z96A</a>
-        <div class="nav-links">
-            <a href="{% url 'home' %}" class="nav-link">Главная</a>
-            <a href="{% url 'network_architecture' %}" class="nav-link">Архитектура сети</a>
-            <a href="{% url 'news' %}" class="nav-link">Новости</a>
-            <a href="{% url 'discussion' %}" class="nav-link">Обсуждение</a>
-            <a href="{% url 'about' %}" class="nav-link">О проекте</a>
-            <a href="{% url 'roadmap' %}" class="nav-link">Roadmap</a>
-        </div>
-        <button class="wallet-btn" id="walletBtn">Подключить кошелёк</button>
-    </nav>
-    <!-- КНОПКА КОШЕЛЬКА СПРАВА -->
-    <div id="wallet-section">
-        <button id="connect-wallet-btn" class="wallet-btn">
-            🔗 Connect Solana Wallet
-        </button>
-        <div id="wallet-info" style="display: none; color: white; background: rgba(0,0,0,0.3); padding: 8px 15px; border-radius: 20px;">
-            <span id="wallet-address" style="margin-right: 10px;"></span>
-            <button id="disconnect-wallet-btn" 
-                    style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 15px; cursor: pointer;">
-                ✕
-            </button>
-        </div>
-    </div>
+    <!-- Header -->
+    <header class="site-header">
+        <a href="/" class="logo">
+            <div class="logo-icon">Z</div>
+            <div class="logo-text">96A</div>
+        </a>
 
-    <!-- Контент -->
-    <div style="padding: 20px;">
-        {% block content %}{% endblock %}
-    </div>
+        <nav class="main-nav">
+            <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Главная</a>
+            <a href="/network/" class="nav-link {% if request.path == '/network/' %}active{% endif %}">Архитектура сети</a>
+            <a href="/news/" class="nav-link {% if request.path == '/news/' %}active{% endif %}">Новости</a>
+            <a href="/discussion/" class="nav-link {% if request.path == '/discussion/' %}active{% endif %}">Обсуждение</a>
+            <a href="/about/" class="nav-link {% if request.path == '/about/' %}active{% endif %}">О проекте</a>
+            <a href="/roadmap/" class="nav-link {% if request.path == '/roadmap/' %}active{% endif %}">Roadmap</a>
+        </nav>
 
-    <!-- Футер -->
-    <footer style="background: #1b1523; padding: 20px; text-align: center; margin-top: 40px;">
-        <p>Z96A - Дипломный проект Зыблиенко Дмитрия</p>
-        <p>Белорусская Государственная Академия Связи</p>
+        <div class="wallet-section">
+            <span id="wallet-status" class="status-disconnected"></span>
+            <button id="connect-wallet-btn" class="btn-wallet">Подключить кошелек</button>
+            <span id="wallet-address">Не подключено</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}
+        <!-- Контент страницы будет здесь -->
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-copyright">
+                &copy; 2026 Z96A Network Architecture. Дипломный проект Зыблиенко Дмитрия
+            </div>
+            <div class="footer-links">
+                <a href="/about/" class="footer-link">О проекте</a>
+                <a href="/discussion/" class="footer-link">Обсуждение</a>
+                <a href="mailto:contact@z96a.com" class="footer-link">Контакты</a>
+            </div>
+        </div>
     </footer>
 
-    <!-- Базовые скрипты -->
-    <script>
-        // Кошелёк
-        document.getElementById('walletBtn').addEventListener('click', function() {
-            console.log('Кошелёк Solana: подключение...');
-            alert('Интеграция с Solana будет на следующем этапе');
-        });
-        
-        // Проверка статики
-        console.log('Сайт Z96A загружен');
-    </script>
-    
+    <!-- JavaScript -->
+    <script src="{% static 'js/wallet_connect.js' %}"></script>
     {% block extra_js %}{% endblock %}
-
-<script>
-// Solana wallet integration
-document.getElementById('wallet-connect-btn').addEventListener('click', async function() {
-    const btn = this;
-    btn.disabled = true;
-    btn.innerHTML = 'Подключение...';
-    
-    try {
-        // Check if Phantom wallet is installed
-        if (!window.solana || !window.solana.isPhantom) {
-            alert('Установите Phantom Wallet для подключения!');
-            window.open('https://phantom.app/', '_blank');
-            return;
-        }
-        
-        // Connect wallet
-        const response = await window.solana.connect();
-        const publicKey = response.publicKey.toString();
-        
-        // Update UI
-        btn.innerHTML = `✅ ${publicKey.slice(0, 8)}...`;
-        btn.style.background = 'linear-gradient(135deg, #00ff00, #008800)';
-        
-        console.log('Connected wallet:', publicKey);
-        alert(`Кошелёк подключен: ${publicKey.slice(0, 8)}...`);
-        
-    } catch (error) {
-        console.error('Wallet connection error:', error);
-        alert('Ошибка подключения кошелька');
-        btn.innerHTML = '🔗 Подключить кошелёк';
-    } finally {
-        btn.disabled = false;
-    }
-});
-
-// Check if wallet is already connected
-if (window.solana && window.solana.isConnected) {
-    document.getElementById('wallet-connect-btn').innerHTML = '✅ Кошелёк подключен';
-}
-</script>
 </body>
 </html>

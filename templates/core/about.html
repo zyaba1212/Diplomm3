@@ -1,10 +1,323 @@
-{% extends 'base.html' %} 
-{% load static %} 
-{% block content %} 
-����� �뢮�� ������ �� ��࠭ (ECHO) ����祭.
-����� �뢮�� ������ �� ��࠭ (ECHO) ����祭.
-����� �뢮�� ������ �� ��࠭ (ECHO) ����祭.
-            ��᫥������� ���ਤ��� �⥩ �裡, ������ ���������� ������������, 
-            �孮����� ��䫠��-�࠭���権 (SUI Blockchain) � ��⭨����� ��� (Starlink) 
-            ��� ���ᯥ祭�� ��⮩稢�� ����㭨��樨 � �᫮���� �⥢�� �����樨. 
-{% endblock %} 
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <section class="about-section">
+        <div class="about-header">
+            <h1 class="page-title">О проекте Z96A</h1>
+            <p class="page-subtitle">Дипломная работа по специальности "Сопровождение программного обеспечения"</p>
+        </div>
+
+        <div class="about-content">
+            <div class="about-card">
+                <h2 class="section-title">👨‍🎓 Об авторе</h2>
+                <div class="author-info">
+                    <div class="author-avatar">
+                        <!-- Здесь может быть аватар -->
+                        <div class="avatar-placeholder">ДЗ</div>
+                    </div>
+                    <div class="author-details">
+                        <h3>Зыблиенко Дмитрий</h3>
+                        <p class="author-title">Студент Белорусской Государственной Академии Связи</p>
+                        <p class="author-description">
+                            Обучаюсь по специальности "Сопровождение программного обеспечения". 
+                            Проект Z96A является дипломной работой, объединяющей исследования 
+                            в области инфокоммуникационных сетей и блокчейн-технологий.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="about-card">
+                <h2 class="section-title">🎯 Цель проекта</h2>
+                <p class="goal-text">
+                    Разработка архитектуры системы обработки транзакций для инфокоммуникационных систем 
+                    в условиях частичного отсутствия сетевого соединения. Проект исследует гибридные 
+                    решения на основе существующих сетей, технологий оффлайн-транзакций (SUI Blockchain) 
+                    и спутниковой связи (Starlink).
+                </p>
+                <div class="goal-points">
+                    <div class="goal-point">
+                        <div class="goal-icon">🌍</div>
+                        <div class="goal-text-small">
+                            <strong>Визуализация глобальной сети</strong>
+                            <p>Интерактивная 3D-карта инфокоммуникационной инфраструктуры Земли</p>
+                        </div>
+                    </div>
+                    <div class="goal-point">
+                        <div class="goal-icon">🔗</div>
+                        <div class="goal-text-small">
+                            <strong>Блокчейн-интеграция</strong>
+                            <p>Подключение Solana-кошельков для участия в развитии сети</p>
+                        </div>
+                    </div>
+                    <div class="goal-point">
+                        <div class="goal-icon">🛰️</div>
+                        <div class="goal-text-small">
+                            <strong>Гибридная архитектура</strong>
+                            <p>Исследование устойчивых сетей для кризисных ситуаций</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="about-card">
+                <h2 class="section-title">🏫 Образовательное учреждение</h2>
+                <div class="institution-info">
+                    <h3>Белорусская Государственная Академия Связи</h3>
+                    <p class="institution-description">
+                        Ведущее учебное заведение в области телекоммуникаций и информационных технологий 
+                        в Республике Беларусь. Академия готовит специалистов в области связи, 
+                        телекоммуникационных систем и программного обеспечения.
+                    </p>
+                    <div class="institution-details">
+                        <p><strong>Специальность:</strong> Сопровождение программного обеспечения</p>
+                        <p><strong>Форма обучения:</strong> Очная</p>
+                        <p><strong>Год выпуска:</strong> 2026</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="about-card">
+                <h2 class="section-title">🤝 Сообщество</h2>
+                <p class="community-text">
+                    Z96A — это не только дипломный проект, но и платформа для обсуждения будущего 
+                    инфокоммуникационных сетей. Присоединяйтесь к обсуждению, предлагайте идеи 
+                    через блокчейн-транзакции и участвуйте в развитии проекта.
+                </p>
+                <div class="community-actions">
+                    <a href="/discussion/" class="btn-primary">
+                        <i class="icon-chat"></i> Присоединиться к обсуждению
+                    </a>
+                    <a href="/network/" class="btn-secondary">
+                        <i class="icon-globe"></i> Исследовать сеть
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+.about-section {
+    padding: 2rem 0;
+}
+
+.about-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid rgba(153, 69, 255, 0.3);
+}
+
+.page-title {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--color-neon-purple), var(--color-neon-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.page-subtitle {
+    font-size: 1.2rem;
+    color: var(--color-text-dim);
+}
+
+.about-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.about-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s;
+}
+
+.about-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--color-neon-purple);
+}
+
+.section-title {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.author-info {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.author-avatar {
+    flex-shrink: 0;
+}
+
+.avatar-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-neon-purple), var(--color-neon-green));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: bold;
+    color: var(--color-space-dark);
+}
+
+.author-details h3 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-neon-green);
+}
+
+.author-title {
+    color: var(--color-neon-purple);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.author-description {
+    line-height: 1.6;
+    color: var(--color-text-dim);
+}
+
+.goal-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    color: var(--color-text-dim);
+}
+
+.goal-points {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.goal-point {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.goal-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.goal-text-small {
+    flex: 1;
+}
+
+.goal-text-small strong {
+    color: var(--color-neon-green);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.goal-text-small p {
+    color: var(--color-text-dim);
+    line-height: 1.5;
+}
+
+.institution-info h3 {
+    color: var(--color-neon-green);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.institution-description {
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    color: var(--color-text-dim);
+}
+
+.institution-details {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: 10px;
+    border-left: 4px solid var(--color-neon-purple);
+}
+
+.institution-details p {
+    margin-bottom: 0.5rem;
+    color: var(--color-text-dim);
+}
+
+.institution-details strong {
+    color: var(--color-neon-green);
+}
+
+.community-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    color: var(--color-text-dim);
+}
+
+.community-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 12px 24px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-neon-purple), var(--color-neon-green));
+    color: var(--color-space-dark);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-text);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-primary:hover, .btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(153, 69, 255, 0.3);
+}
+
+@media (max-width: 768px) {
+    .author-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .page-title {
+        font-size: 2.5rem;
+    }
+    
+    .goal-points {
+        grid-template-columns: 1fr;
+    }
+    
+    .community-actions {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}

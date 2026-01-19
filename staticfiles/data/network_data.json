@@ -1,0 +1,180 @@
+{
+  "nodes": [
+    {
+      "name": "Москва (MSK-IX)",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "type": "datacenter",
+      "network_type": "existing",
+      "description": "Крупнейший узел обмена трафиком в России"
+    },
+    {
+      "name": "Франкфурт (DE-CIX)",
+      "latitude": 50.1109,
+      "longitude": 8.6821,
+      "type": "ix",
+      "network_type": "existing",
+      "description": "Крупнейший интернет-хаб в мире"
+    },
+    {
+      "name": "Сингапур (Equinix)",
+      "latitude": 1.3521,
+      "longitude": 103.8198,
+      "type": "datacenter",
+      "network_type": "existing",
+      "description": "Азиатский центр подводных кабелей"
+    },
+    {
+      "name": "Нью-Йорк (NYIIX)",
+      "latitude": 40.7128,
+      "longitude": -74.0060,
+      "type": "city",
+      "network_type": "existing",
+      "description": "Основной трансатлантический хаб"
+    },
+    {
+      "name": "Токио (JPIX)",
+      "latitude": 35.6762,
+      "longitude": 139.6503,
+      "type": "city",
+      "network_type": "existing",
+      "description": "Японский центр сетевой инфраструктуры"
+    },
+    {
+      "name": "Лондон (LINX)",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "type": "ix",
+      "network_type": "existing",
+      "description": "Исторический европейский интернет-хаб"
+    },
+    {
+      "name": "Starlink Gateway (Лондон)",
+      "latitude": 51.5074,
+      "longitude": -0.1378,
+      "type": "satellite",
+      "network_type": "proposed",
+      "description": "Наземная станция спутниковой связи"
+    },
+    {
+      "name": "SUI Relay Node (Париж)",
+      "latitude": 48.8566,
+      "longitude": 2.3522,
+      "type": "router",
+      "network_type": "proposed",
+      "description": "Оффлайн-транзакции SUI блокчейна"
+    },
+    {
+      "name": "Административный узел (Берлин)",
+      "latitude": 52.5200,
+      "longitude": 13.4050,
+      "type": "datacenter",
+      "network_type": "proposed",
+      "description": "Центр управления гибридной сетью"
+    }
+  ],
+  
+  "connections": [
+    {
+      "from": { "lat": 55.7558, "lon": 37.6173 },
+      "to": { "lat": 50.1109, "lon": 8.6821 },
+      "type": "terrestrial",
+      "network_type": "existing",
+      "description": "Волоконно-оптическая магистраль Москва-Франкфурт"
+    },
+    {
+      "from": { "lat": 50.1109, "lon": 8.6821 },
+      "to": { "lat": 40.7128, "lon": -74.0060 },
+      "type": "undersea",
+      "network_type": "existing",
+      "description": "Подводный кабель MAREA (Европа-США)"
+    },
+    {
+      "from": { "lat": 1.3521, "lon": 103.8198 },
+      "to": { "lat": 35.6762, "lon": 139.6503 },
+      "type": "undersea",
+      "network_type": "existing",
+      "description": "Азиатско-тихоокеанский кабель FASTER"
+    },
+    {
+      "from": { "lat": 51.5074, "lon": -0.1278 },
+      "to": { "lat": 40.7128, "lon": -74.0060 },
+      "type": "undersea",
+      "network_type": "existing",
+      "description": "Североатлантический кабель Apollo"
+    },
+    {
+      "from": { "lat": 51.5074, "lon": -0.1278 },
+      "to": { "lat": 50.1109, "lon": 8.6821 },
+      "type": "terrestrial",
+      "network_type": "existing",
+      "description": "Кабель через Ла-Манш"
+    },
+    {
+      "from": { "lat": 51.5074, "lon": -0.1378 },
+      "to": { "lat": 48.8566, "lon": 2.3522 },
+      "type": "satellite",
+      "network_type": "proposed",
+      "description": "Starlink + SUI оффлайн-транзакции"
+    },
+    {
+      "from": { "lat": 48.8566, "lon": 2.3522 },
+      "to": { "lat": 52.5200, "lon": 13.4050 },
+      "type": "wireless",
+      "network_type": "proposed",
+      "description": "Беспроводная ретрансляция (радио/Bluetooth)"
+    }
+  ],
+  
+  "equipment": [
+    {
+      "name": "Маршрутизатор Cisco ASR 9000",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "type": "router",
+      "description": "Высокопроизводительный маршрутизатор для магистральных сетей"
+    },
+    {
+      "name": "Коммутатор Juniper QFX10002",
+      "latitude": 50.1109,
+      "longitude": 8.6821,
+      "type": "switch",
+      "description": "Коммутатор для точек обмена трафиком (IX)"
+    },
+    {
+      "name": "Серверная стойка Dell PowerEdge",
+      "latitude": 1.3521,
+      "longitude": 103.8198,
+      "type": "server",
+      "description": "Дата-центр с облачной инфраструктурой"
+    },
+    {
+      "name": "Оптический мультиплексор Nokia 1830 PSS",
+      "latitude": 40.7128,
+      "longitude": -74.0060,
+      "type": "multiplexer",
+      "description": "Оборудование для плотного волнового мультиплексирования (DWDM)"
+    },
+    {
+      "name": "Спутниковая антенна Starlink",
+      "latitude": 51.5074,
+      "longitude": -0.1378,
+      "type": "satellite",
+      "description": "Пользовательский терминал Starlink (Dishy)"
+    },
+    {
+      "name": "Радиорелейная станция SUI",
+      "latitude": 48.8566,
+      "longitude": 2.3522,
+      "type": "antenna",
+      "description": "Оборудование для оффлайн-транзакций блокчейна SUI"
+    },
+    {
+      "name": "Межсетевой экран Palo Alto PA-7000",
+      "latitude": 52.5200,
+      "longitude": 13.4050,
+      "type": "firewall",
+      "description": "Система сетевой безопасности следующего поколения"
+    }
+  ]
+}

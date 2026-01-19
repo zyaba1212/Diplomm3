@@ -1,0 +1,13 @@
+/* Fallback font definitions */
+body {
+    font-family: 'Arial', 'Segoe UI', sans-serif;
+}
+
+/* Если нужен кастомный шрифт CGXYZ PC, можно использовать похожий */
+@font-face {
+    font-family: 'CGXYZ PC';
+    src: local('Arial'), local('Segoe UI');
+    /* Это заглушка чтобы избежать ошибки 404 */
+}
+
+/* Теперь ссылка на woff2 файл не обязательна */

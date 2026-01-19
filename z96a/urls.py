@@ -1,12 +1,14 @@
-from django.urls import path 
-from core.views import home, network_architecture, news, discussion, about, roadmap, connect_wallet 
- 
-urlpatterns = [ 
-    path('', home, name='home'), 
-    path('network/', network_architecture, name='network_architecture'), 
-    path('news/', news, name='news'), 
-    path('discussion/', discussion, name='discussion'), 
-    path('about/', about, name='about'), 
-    path('roadmap/', roadmap, name='roadmap'), 
-    path('api/wallet/connect/', connect_wallet, name='connect_wallet'), 
-] 
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('core.urls')),
+]
+
+# Добавляем обработку медиафайлов в режиме разработки
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

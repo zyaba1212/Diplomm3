@@ -8,19 +8,36 @@ from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db.models import Q
 import json
+import datetime
 from .models import NetworkNode, Equipment, UserProposal, Comment, NewsArticle, NetworkConnection
-from .services.news_parser import NewsParser
-from .services.solana_client import SolanaClient
-from django.views.decorators.csrf import csrf_exempt
 
 def home(request):
     """Home page view"""
     # Get featured news
     featured_news = NewsArticle.objects.filter(is_featured=True).order_by('-published_date')[:5]
     
+    # If no news in database, create test news
+    if not featured_news:
+        featured_news = [
+            {
+                'title': 'SUI Blockchain оффлайн-транзакции успешно протестированы',
+                'source': 'SUI Network',
+                'url': '#',
+                'date': '2026-01-19',
+                'excerpt': 'Команда SUI провела успешные испытания оффлайн-транзакций'
+            },
+            {
+                'title': 'Starlink расширяет покрытие в удаленных регионах',
+                'source': 'SpaceX Updates',
+                'url': '#',
+                'date': '2026-01-18',
+                'excerpt': 'Новые спутники для расширения покрытия Starlink'
+            }
+        ]
+
     # Get recent proposals
     recent_proposals = UserProposal.objects.filter(status='approved').order_by('-created_at')[:5]
-    
+
     # Get statistics
     stats = {
         'total_nodes': NetworkNode.objects.count(),
@@ -28,7 +45,7 @@ def home(request):
         'total_connections': NetworkConnection.objects.count(),
         'total_proposals': UserProposal.objects.count(),
     }
-    
+
     context = {
         'featured_news': featured_news,
         'recent_proposals': recent_proposals,
@@ -42,7 +59,7 @@ def network_architecture(request):
     # Get all nodes for the map
     nodes = NetworkNode.objects.all()
     connections = NetworkConnection.objects.filter(is_active=True)
-    
+
     # Convert to GeoJSON format for the map
     nodes_data = []
     for node in nodes:
@@ -56,7 +73,7 @@ def network_architecture(request):
             'city': node.city,
             'description': node.description,
         })
-    
+
     connections_data = []
     for conn in connections:
         connections_data.append({
@@ -68,7 +85,7 @@ def network_architecture(request):
             'path': conn.geojson_path,
             'capacity': conn.capacity_gbps,
         })
-    
+
     context = {
         'nodes': json.dumps(nodes_data),
         'connections': json.dumps(connections_data),
@@ -78,29 +95,53 @@ def network_architecture(request):
 
 def news(request):
     """News page"""
-    # Временные тестовые данные вместо парсера
-    news_items = [
-        {"title": "SUI Blockchain Offline Transactions Research", "source": "Twitter", "url": "#", "date": "2026-01-19"},
-        {"title": "Starlink Expands Global Coverage", "source": "Reddit", "url": "#", "date": "2026-01-18"},
-        {"title": "New Submarine Cable Connects Europe and Africa", "source": "Habr", "url": "#", "date": "2026-01-17"},
-        {"title": "5G Network Infrastructure Updates", "source": "Twitter", "url": "#", "date": "2026-01-16"},
-        {"title": "Blockchain for Network Resilience", "source": "Habr", "url": "#", "date": "2026-01-15"},
-    ]
+    # Get news from database or use test data
+    news_items = NewsArticle.objects.all().order_by('-published_date')[:20]
     
+    if not news_items:
+        # Test data
+        news_items = [
+            {
+                'title': 'SUI Blockchain Offline Transactions Research',
+                'source': 'Twitter',
+                'url': '#',
+                'date': '2026-01-19',
+                'excerpt': 'Research on offline transactions using radio waves',
+                'category': 'blockchain'
+            },
+            {
+                'title': 'Starlink Expands Global Coverage',
+                'source': 'Reddit',
+                'url': '#',
+                'date': '2026-01-18',
+                'excerpt': 'New satellite launches for remote areas',
+                'category': 'satellite'
+            },
+            {
+                'title': 'New Submarine Cable Connects Europe and Africa',
+                'source': 'Habr',
+                'url': '#',
+                'date': '2026-01-17',
+                'excerpt': '2Africa cable project announced',
+                'category': 'infrastructure'
+            },
+        ]
+
     context = {
         'title': 'Infocommunication News',
         'news_items': news_items,
+        'page_title': _('News - Z96A'),
     }
     return render(request, 'core/news.html', context)
 
 def discussion(request):
     """Discussion forum page"""
     comments = Comment.objects.filter(parent_comment__isnull=True).order_by('-is_pinned', '-created_at')
-    
+
     paginator = Paginator(comments, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
     context = {
         'page_obj': page_obj,
         'page_title': _('Discussion - Z96A'),
@@ -139,23 +180,27 @@ def roadmap(request):
             ]
         },
     ]
-    
+
     context = {
         'roadmap': roadmap_data,
         'page_title': _('Roadmap - Z96A'),
     }
     return render(request, 'core/roadmap.html', context)
 
-@csrf_exempt
 def connect_wallet(request):
     """Connect Solana wallet"""
     if request.method == 'POST':
         try:
+            import json
             data = json.loads(request.body)
             wallet_address = data.get('address')
-            
+
             if wallet_address:
+                # Здесь будет сохранение в базу данных
+                # Пока сохраняем в сессии
                 request.session['wallet_address'] = wallet_address
+                request.session['wallet_connected'] = True
+                
                 return JsonResponse({
                     'status': 'success',
                     'message': 'Wallet connected',
@@ -166,7 +211,7 @@ def connect_wallet(request):
                 'status': 'error',
                 'message': str(e)
             }, status=400)
-    
+
     return JsonResponse({
         'status': 'error',
         'message': 'Invalid request method'
