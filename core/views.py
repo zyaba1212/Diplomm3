@@ -75,21 +75,24 @@ def network_architecture(request):
     return render(request, 'core/network_architecture.html', context)
 
 def news(request):
-    """News page with parsed articles"""
-    news_articles = NewsArticle.objects.all().order_by('-published_date')
+    """Страница новостей"""
+    try:
+        news_items = NewsParser.get_latest_news()
+    except:
+        # Если парсер не работает, показываем примерные новости
+        news_items = [
+            {"title": "Обновление инфраструктуры сетей", "source": "Habr", "url": "#", "date": "2026-01-19"},
+            {"title": "SUI Blockchain Offline Transactions", "source": "Twitter", "url": "#", "date": "2026-01-18"},
+            {"title": "Starlink расширяет покрытие", "source": "Reddit", "url": "#", "date": "2026-01-17"},
+        ]
     
-    # Pagination
-    paginator = Paginator(news_articles, 20)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    # Sources for filter
-    sources = NewsArticle.SOURCE_CHOICES
+    # УБЕРИ ЭТУ СТРОКУ (или закомментируй):
+    # sources = NewsArticle.SOURCE_CHOICES
     
     context = {
-        'page_obj': page_obj,
-        'sources': sources,
-        'page_title': _('News - Z96A'),
+        'title': 'Новости инфокоммуникаций',
+        'news_items': news_items,
+        # 'sources': sources,  # УБЕРИ ИЛИ ЗАКОММЕНТИРУЙ
     }
     return render(request, 'core/news.html', context)
 

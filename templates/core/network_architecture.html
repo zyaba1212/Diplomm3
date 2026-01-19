@@ -1,486 +1,105 @@
-{% extends "base.html" %}
-{% load i18n %}
-
-{% block title %}{% trans "Network Architecture" %} - Z96A{% endblock %}
-
 {% block content %}
-    <h1>🌍 {% trans "Global Network Architecture" %}</h1>
-    
-    <p class="subtitle">
-        {% trans "Interactive 3D visualization of global infocommunication infrastructure. Switch between existing and proposed network architectures." %}
-    </p>
-    
-    <!-- Network Type Controls -->
-    <div class="network-controls">
-        <button class="control-btn network-switch active" data-network="existing">
-            🌐 {% trans "Existing Network" %}
-        </button>
-        <button class="control-btn network-switch" data-network="proposed">
-            🚀 {% trans "Proposed Network" %}
-        </button>
-        <button class="control-btn network-switch" data-network="hybrid">
-            🔗 {% trans "Hybrid View" %}
-        </button>
-    </div>
-    
-    <!-- 3D Globe Container -->
-    <div class="globe-container" id="globe-container">
-        <!-- Globe will be rendered here by Three.js -->
-        <div class="globe-loading">
-            <div class="spinner"></div>
-            <p>{% trans "Loading 3D globe..." %}</p>
-        </div>
-    </div>
-    
-    <!-- Globe Controls -->
-    <div class="globe-controls card">
-        <h3>🎮 {% trans "Controls" %}</h3>
-        <div class="control-buttons">
-            <button id="toggle-rotation" class="btn btn-control">
-                ⏸️ {% trans "Pause Rotation" %}
-            </button>
-            <button id="reset-view" class="btn btn-control">
-                🔄 {% trans "Reset View" %}
-            </button>
-            <button id="toggle-labels" class="btn btn-control">
-                🏷️ {% trans "Toggle Labels" %}
-            </button>
-        </div>
-        
-        <div class="layer-controls">
-            <h4>{% trans "Network Layers" %}</h4>
-            <div class="layer-checkboxes">
-                <label>
-                    <input type="checkbox" id="toggle-submarine" checked>
-                    🌊 {% trans "Submarine Cables" %}
-                </label>
-                <label>
-                    <input type="checkbox" id="toggle-terrestrial" checked>
-                    🛣️ {% trans "Terrestrial Links" %}
-                </label>
-                <label>
-                    <input type="checkbox" id="toggle-satellite" checked>
-                    🛰️ {% trans "Satellite Links" %}
-                </label>
-                <label>
-                    <input type="checkbox" id="toggle-nodes" checked>
-                    📡 {% trans "Network Nodes" %}
-                </label>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Network Information -->
-    <div class="network-info card">
-        <h3>📊 {% trans "Network Information" %}</h3>
-        <div class="info-grid">
-            <div class="info-item">
-                <span class="info-label">{% trans "Total Nodes:" %}</span>
-                <span class="info-value" id="total-nodes">0</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">{% trans "Submarine Cables:" %}</span>
-                <span class="info-value" id="submarine-cables">0</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">{% trans "Terrestrial Links:" %}</span>
-                <span class="info-value" id="terrestrial-links">0</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">{% trans "Satellite Links:" %}</span>
-                <span class="info-value" id="satellite-links">0</span>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Legend -->
-    <div class="legend card">
-        <h3>🗺️ {% trans "Legend" %}</h3>
-        <div class="legend-items">
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #0099ff;"></div>
-                <span>{% trans "Existing Network" %}</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #9d4edd;"></div>
-                <span>{% trans "Proposed Network" %}</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #00ff88;"></div>
-                <span>{% trans "Submarine Cables" %}</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #ff9900;"></div>
-                <span>{% trans "Satellite Links" %}</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background-color: #ff4444;"></div>
-                <span>{% trans "Internet Exchange Points" %}</span>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Node Details Modal (hidden by default) -->
-    <div id="node-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modal-title">{% trans "Node Details" %}</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body" id="modal-body">
-                <!-- Content will be loaded here -->
-            </div>
-        </div>
-    </div>
-{% endblock %}
+<!-- Loading overlay -->
+<div id="loading" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a1a; display: flex; justify-content: center; align-items: center; z-index: 1000; color: #00ffff; font-size: 24px;">
+    ЗАГРУЗКА 3D ГЛОБУСА...
+</div>
 
-{% block extra_css %}
-<!-- Three.js Globe -->
-<script src="/static/js/globe.js"></script>
-<style>
-    .globe-container {
-        width: 100%;
-        height: 600px;
-        background: rgba(10, 10, 26, 0.8);
-        border-radius: 10px;
-        border: 1px solid var(--color-space-purple);
-        position: relative;
-        overflow: hidden;
-        margin: 20px 0;
-    }
+<!-- Globe container -->
+<div id="globe-container" style="width: 100%; height: 80vh; position: relative;"></div>
+
+<!-- Control panel -->
+<div style="position: absolute; top: 20px; right: 20px; background: rgba(30, 30, 46, 0.9); padding: 15px; border-radius: 8px; border: 1px solid #8a2be2; z-index: 100; color: white; font-family: monospace;">
+    <h3 style="margin-top: 0; color: #00ffff;">Управление глобусом</h3>
     
-    .globe-loading {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        text-align: center;
-        color: var(--color-neon-blue);
-    }
-    
-    .spinner {
-        border: 4px solid rgba(0, 212, 255, 0.3);
-        border-top: 4px solid var(--color-neon-blue);
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 15px;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    .network-controls {
-        display: flex;
-        gap: 15px;
-        margin: 30px 0;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-    
-    .control-btn {
-        background: rgba(30, 30, 46, 0.8);
-        border: 1px solid var(--color-border);
-        color: var(--color-text);
-        padding: 12px 24px;
-        border-radius: 25px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-    }
-    
-    .control-btn:hover,
-    .control-btn.active {
-        background: rgba(0, 212, 255, 0.2);
-        border-color: var(--color-neon-blue);
-        color: var(--color-neon-blue);
-    }
-    
-    .control-btn.active {
-        background: rgba(0, 212, 255, 0.3);
-        box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
-    }
-    
-    .globe-controls {
-        margin: 20px 0;
-    }
-    
-    .control-buttons {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 20px;
-    }
-    
-    .btn-control {
-        background: rgba(30, 30, 46, 0.8);
-        border: 1px solid var(--color-border);
-        color: var(--color-text);
-        padding: 8px 16px;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-control:hover {
-        border-color: var(--color-neon-blue);
-        color: var(--color-neon-blue);
-    }
-    
-    .layer-controls {
-        margin-top: 20px;
-    }
-    
-    .layer-checkboxes {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 10px;
-        margin-top: 10px;
-    }
-    
-    .layer-checkboxes label {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        padding: 8px;
-        border-radius: 5px;
-        transition: background 0.3s ease;
-    }
-    
-    .layer-checkboxes label:hover {
-        background: rgba(0, 212, 255, 0.1);
-    }
-    
-    .network-info {
-        margin: 20px 0;
-    }
-    
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 15px;
-        margin-top: 15px;
-    }
-    
-    .info-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px;
-        background: rgba(40, 40, 60, 0.5);
-        border-radius: 5px;
-        border-left: 3px solid var(--color-neon-blue);
-    }
-    
-    .info-label {
-        color: var(--color-text-secondary);
-    }
-    
-    .info-value {
-        font-weight: bold;
-        color: var(--color-neon-blue);
-        font-size: 1.2rem;
-    }
-    
-    .legend {
-        margin: 20px 0;
-    }
-    
-    .legend-items {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-        margin-top: 15px;
-    }
-    
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .legend-color {
-        width: 20px;
-        height: 20px;
-        border-radius: 3px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    /* Modal Styles */
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .modal-content {
-        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-space-dark) 100%);
-        border: 2px solid var(--color-neon-blue);
-        border-radius: 10px;
-        width: 90%;
-        max-width: 600px;
-        max-height: 80vh;
-        overflow-y: auto;
-        box-shadow: 0 0 40px rgba(0, 212, 255, 0.3);
-    }
-    
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px;
-        border-bottom: 1px solid var(--color-border);
-    }
-    
-    .modal-close {
-        background: none;
-        border: none;
-        color: var(--color-neon-blue);
-        font-size: 24px;
-        cursor: pointer;
-        padding: 0;
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .modal-body {
-        padding: 20px;
-    }
-    
-    @media (max-width: 768px) {
-        .globe-container {
-            height: 400px;
-        }
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+        <button onclick="window.globe.toggleRotation()" style="background: #8a2be2; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+            <span id="rotation-icon">⏸</span> Вращение
+        </button>
         
-        .network-controls {
-            flex-direction: column;
-        }
+        <button onclick="window.globe.resetView()" style="background: #00ffff; color: black; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+            ⟲ Сброс вида
+        </button>
         
-        .control-buttons {
-            flex-direction: column;
-        }
-    }
-</style>
+        <button onclick="window.globe.zoomIn()" style="background: #333135; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+            + Приблизить
+        </button>
+        
+        <button onclick="window.globe.zoomOut()" style="background: #333135; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+            - Отдалить
+        </button>
+        
+        <button onclick="window.globe.toggleEquipment()" style="background: #ff6600; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+            <span id="equipment-icon">🔧</span> Оборудование
+        </button>
+        
+        <button onclick="window.globe.toggleCables()" style="background: #00ffff; color: black; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+            <span id="cables-icon">🔗</span> Кабели
+        </button>
+    </div>
+    
+    <div style="margin-top: 10px;">
+        <label style="display: block; margin-bottom: 5px; color: #00ffff;">Тип сети:</label>
+        <select onchange="window.globe.switchNetwork(this.value)" style="background: #2e2d2e; color: white; border: 1px solid #8a2be2; padding: 5px; border-radius: 5px; width: 100%;">
+            <option value="existing">Существующая сеть</option>
+            <option value="proposed">Предлагаемая сеть (SUI + Starlink)</option>
+            <option value="hybrid">Гибридная сеть</option>
+        </select>
+    </div>
+</div>
+
+<!-- Network info -->
+<div style="position: absolute; bottom: 20px; left: 20px; background: rgba(30, 30, 46, 0.9); padding: 15px; border-radius: 8px; border: 1px solid #00ffff; z-index: 100; color: white; font-family: monospace; max-width: 300px;">
+    <h4 style="margin-top: 0; color: #00ffff;">Глобальная инфраструктура</h4>
+    <p style="margin: 5px 0;">🌐 <strong id="node-count">8</strong> узлов сети</p>
+    <p style="margin: 5px 0;">🔗 <strong id="cable-count">8</strong> подводных кабелей</p>
+    <p style="margin: 5px 0;">🔧 <strong id="equipment-count">4</strong> единиц оборудования</p>
+    <p style="margin: 5px 0; font-size: 12px; color: #aaa;">Кликните на объект для информации</p>
+</div>
 {% endblock %}
 
 {% block extra_js %}
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+
+<!-- Full globe with cables -->
+<script src="{% static 'js/globe3d_full.js' %}"></script>
+
 <script>
-    // Three.js и глобус будут загружены позже
-    // Сначала покажем, что страница загрузилась
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Network Architecture page loaded');
-        
-        // Убираем сообщение о загрузке через 2 секунды
-        setTimeout(() => {
-            const loadingElement = document.querySelector('.globe-loading');
-            if (loadingElement) {
-                loadingElement.innerHTML = '<p>🌍 3D Globe will be implemented with Three.js</p>' +
-                                          '<p>Network visualization coming soon...</p>';
-            }
-            
-            // Обновляем статистику (заглушка)
-            updateNetworkStats();
-            
-            // Инициализируем кнопки
-            initControls();
-        }, 2000);
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing full globe...');
     
-    function updateNetworkStats() {
-        // Заглушка для статистики
-        document.getElementById('total-nodes').textContent = '12';
-        document.getElementById('submarine-cables').textContent = '8';
-        document.getElementById('terrestrial-links').textContent = '24';
-        document.getElementById('satellite-links').textContent = '3';
-    }
-    
-    function initControls() {
-        // Network switching
-        const networkButtons = document.querySelectorAll('.network-switch');
-        networkButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                networkButtons.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                const networkType = this.dataset.network;
-                console.log('Switched to network:', networkType);
-                // Здесь будет логика переключения сетей
-            });
-        });
+    setTimeout(function() {
+        // Hide loading
+        const loading = document.getElementById('loading');
+        if (loading) loading.style.display = 'none';
         
-        // Globe controls
-        document.getElementById('toggle-rotation')?.addEventListener('click', function() {
-            const isPaused = this.textContent.includes('Pause');
-            this.textContent = isPaused ? '▶️ Resume Rotation' : '⏸️ Pause Rotation';
-            console.log('Rotation:', isPaused ? 'resumed' : 'paused');
-        });
-        
-        document.getElementById('reset-view')?.addEventListener('click', function() {
-            console.log('View reset');
-        });
-        
-        document.getElementById('toggle-labels')?.addEventListener('click', function() {
-            const showLabels = this.textContent.includes('Toggle Labels');
-            this.textContent = showLabels ? '🏷️ Show Labels' : '🏷️ Hide Labels';
-            console.log('Labels:', showLabels ? 'hidden' : 'shown');
-        });
-        
-        // Layer toggles
-        const layerToggles = ['submarine', 'terrestrial', 'satellite', 'nodes'];
-        layerToggles.forEach(layer => {
-            const toggle = document.getElementById(`toggle-${layer}`);
-            if (toggle) {
-                toggle.addEventListener('change', function() {
-                    console.log(`${layer} layer:`, this.checked ? 'shown' : 'hidden');
+        // Initialize globe
+        try {
+            if (typeof NetworkGlobe !== 'undefined') {
+                window.globe = new NetworkGlobe('globe-container');
+                console.log('✅ Full globe initialized with cables!');
+                
+                // Update counters
+                setTimeout(function() {
+                    document.getElementById('node-count').textContent = window.globe.nodes.length;
+                    document.getElementById('cable-count').textContent = window.globe.connections.length;
+                    document.getElementById('equipment-count').textContent = window.globe.equipment.length;
+                }, 1000);
+                
+                // Window resize handler
+                window.addEventListener('resize', function() {
+                    if (window.globe && window.globe.onWindowResize) {
+                        window.globe.onWindowResize();
+                    }
                 });
+            } else {
+                console.error('NetworkGlobe class not found');
             }
-        });
-        
-        // Modal close button
-        document.querySelector('.modal-close')?.addEventListener('click', function() {
-            document.getElementById('node-modal').style.display = 'none';
-        });
-        
-        // Close modal when clicking outside
-        window.addEventListener('click', function(event) {
-            const modal = document.getElementById('node-modal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-    }
-    
-    // Функция для показа деталей узла (будет вызываться при клике на узел в глобусе)
-    function showNodeDetails(nodeData) {
-        const modal = document.getElementById('node-modal');
-        const title = document.getElementById('modal-title');
-        const body = document.getElementById('modal-body');
-        
-        title.textContent = nodeData.name || 'Node Details';
-        body.innerHTML = `
-            <div class="node-info">
-                <p><strong>Location:</strong> ${nodeData.city || ''}, ${nodeData.country || ''}</p>
-                <p><strong>Type:</strong> ${nodeData.type || 'Unknown'}</p>
-                <p><strong>Network:</strong> ${nodeData.network_type || 'Unknown'}</p>
-                <p><strong>Coordinates:</strong> ${nodeData.latitude ? nodeData.latitude.toFixed(4) : 'N/A'}, ${nodeData.longitude ? nodeData.longitude.toFixed(4) : 'N/A'}</p>
-                <p><strong>Description:</strong> ${nodeData.description || 'No description available.'}</p>
-            </div>
-        `;
-        
-        modal.style.display = 'flex';
-    }
+        } catch (error) {
+            console.error('Globe initialization error:', error);
+        }
+    }, 1500);
+});
 </script>
 {% endblock %}

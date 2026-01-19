@@ -172,6 +172,7 @@ class Comment(models.Model):
     """Комментарии пользователей"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
     content = models.TextField(verbose_name="Содержание")
+    parent_comment = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, verbose_name="Родительский комментарий")  # <-- ДОБАВЬ ЭТУ СТРОКУ
     upvotes = models.IntegerField(default=0, verbose_name="Голосов за")
     downvotes = models.IntegerField(default=0, verbose_name="Голосов против")
     is_pinned = models.BooleanField(default=False, verbose_name="Закреплен")
@@ -182,6 +183,15 @@ class Comment(models.Model):
         return f"Комментарий от {self.user.nickname}"
 
 class NewsArticle(models.Model):
+
+    SOURCE_CHOICES = [
+        ('habr', 'Хабр'),
+        ('twitter', 'Twitter/X'),
+        ('reddit', 'Reddit'),
+        ('telegram', 'Telegram'),
+        ('other', 'Другое'),
+    ]
+
     """Новости из парсера"""
     CATEGORIES = [
         ('infrastructure', 'Инфраструктура'),

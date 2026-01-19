@@ -1,119 +1,155 @@
-{% load i18n %}
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE|default:'en' }}">
+{% load static %}
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{% trans "Z96A Network Architecture" %}{% endblock %}</title>
+    <title>{% block title %}Z96A - Архитектура сетей{% endblock %}</title>
     
-    <!-- CSS -->
-    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Подключение CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'fonts/font.css' %}">
+    <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
     
-    <!-- Favicon -->
-    <link rel="icon" href="/static/images/logo.svg" type="image/svg+xml">
-    
-    <!-- Шрифт -->
-    <link rel="stylesheet" href="/static/fonts/font.css">
-    
-    <!-- JavaScript -->
-    <script src="/static/js/main.js" defer></script>
-    
-    <!-- Solana Web3 -->
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    <script src="https://unpkg.com/@solana/wallet-adapter-wallets@latest/lib/index.iife.min.js"></script>
+    <style>
+        /* Базовые стили на случай, если CSS не загрузится */
+        :root {
+            --primary-color: #2e2d2e;
+            --secondary-color: #333135;
+            --accent-color: #1b1523;
+            --space-blue: #0a0a1a;
+            --neon-purple: #8a2be2;
+            --electric-blue: #00ffff;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--space-blue) 100%);
+            color: white;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        .navbar {
+            background: rgba(46, 45, 46, 0.95);
+            padding: 15px 30px;
+            border-bottom: 2px solid #8a2be2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            color: #00ffff;
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+        }
+        
+        .nav-link:hover {
+            background: #8a2be2;
+        }
+        
+        .wallet-btn {
+            background: #8a2be2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="site-header">
-        <div class="container header-content">
-            <div class="logo">
-                <img src="/static/images/logo.svg" alt="Z96A Logo" class="logo-img" onerror="this.onerror=null; this.src='/static/images/icons/logo-placeholder.png'">
-                <span class="logo-text">Z96A</span>
-            </div>
-            
-            <nav class="main-nav">
-                <a href="{% url 'home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">
-                    🏠 {% trans "Home" %}
-                </a>
-                <a href="{% url 'network_architecture' %}" class="nav-link {% if 'network' in request.path %}active{% endif %}">
-                    🌍 {% trans "Network Architecture" %}
-                </a>
-                <a href="{% url 'news' %}" class="nav-link {% if 'news' in request.path %}active{% endif %}">
-                    📰 {% trans "News" %}
-                </a>
-                <a href="{% url 'discussion' %}" class="nav-link {% if 'discussion' in request.path %}active{% endif %}">
-                    💬 {% trans "Discussion" %}
-                </a>
-                <a href="{% url 'about' %}" class="nav-link {% if 'about' in request.path %}active{% endif %}">
-                    👤 {% trans "About" %}
-                </a>
-                <a href="{% url 'roadmap' %}" class="nav-link {% if 'roadmap' in request.path %}active{% endif %}">
-                    🗺️ {% trans "Roadmap" %}
-                </a>
-            </nav>
-            
-            <button id="wallet-btn" class="wallet-btn">
-                👛 {% trans "Connect Wallet" %}
-            </button>
+    <!-- Навигация -->
+    <nav class="navbar">
+        <a href="{% url 'home' %}" class="logo">Z96A</a>
+        <div class="nav-links">
+            <a href="{% url 'home' %}" class="nav-link">Главная</a>
+            <a href="{% url 'network_architecture' %}" class="nav-link">Архитектура сети</a>
+            <a href="{% url 'news' %}" class="nav-link">Новости</a>
+            <a href="{% url 'discussion' %}" class="nav-link">Обсуждение</a>
+            <a href="{% url 'about' %}" class="nav-link">О проекте</a>
+            <a href="{% url 'roadmap' %}" class="nav-link">Roadmap</a>
         </div>
-    </header>
+        <button class="wallet-btn" id="walletBtn">Подключить кошелёк</button>
+    </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            {% block content %}
-            {% endblock %}
-        </div>
-    </main>
+    <!-- Контент -->
+    <div style="padding: 20px;">
+        {% block content %}{% endblock %}
+    </div>
 
-    <!-- Footer -->
-    <footer class="site-footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>{% trans "Z96A Project" %}</h3>
-                    <p>{% trans "Architecture of transaction processing system for infocommunication systems in conditions of partial network absence." %}</p>
-                </div>
-                
-                <div class="footer-section">
-                    <h3>{% trans "Quick Links" %}</h3>
-                    <ul class="footer-links">
-                        <li><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
-                        <li><a href="{% url 'network_architecture' %}">{% trans "Network Architecture" %}</a></li>
-                        <li><a href="{% url 'news' %}">{% trans "News" %}</a></li>
-                        <li><a href="{% url 'discussion' %}">{% trans "Discussion" %}</a></li>
-                        <li><a href="{% url 'about' %}">{% trans "About" %}</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-section">
-                    <h3>{% trans "Technology" %}</h3>
-                    <ul class="footer-links">
-                        <li>Django + Python</li>
-                        <li>Three.js 3D Visualization</li>
-                        <li>Solana Blockchain</li>
-                        <li>SQLite Database</li>
-                    </ul>
-                </div>
-                
-                <div class="footer-section">
-                    <h3>{% trans "Contact" %}</h3>
-                    <p>{% trans "Diploma Project by Dmitry Zyblienko" %}</p>
-                    <p>{% trans "Belarusian State Academy of Communications" %}</p>
-                </div>
-            </div>
-            
-            <div class="copyright">
-                <p>&copy; {% now "Y" %} Z96A Project. {% trans "All rights reserved." %}</p>
-            </div>
-        </div>
+    <!-- Футер -->
+    <footer style="background: #1b1523; padding: 20px; text-align: center; margin-top: 40px;">
+        <p>Z96A - Дипломный проект Зыблиенко Дмитрия</p>
+        <p>Белорусская Государственная Академия Связи</p>
     </footer>
 
-    <!-- Language Switcher -->
-    <div class="lang-switcher">
-        <button class="lang-btn">
-            {% if LANGUAGE_CODE == 'en' %}🇷🇺 RU{% else %}🇺🇸 EN{% endif %}
-        </button>
-    </div>
+    <!-- Базовые скрипты -->
+    <script>
+        // Кошелёк
+        document.getElementById('walletBtn').addEventListener('click', function() {
+            console.log('Кошелёк Solana: подключение...');
+            alert('Интеграция с Solana будет на следующем этапе');
+        });
+        
+        // Проверка статики
+        console.log('Сайт Z96A загружен');
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+
+<script>
+// Solana wallet integration
+document.getElementById('wallet-connect-btn').addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = 'Подключение...';
+    
+    try {
+        // Check if Phantom wallet is installed
+        if (!window.solana || !window.solana.isPhantom) {
+            alert('Установите Phantom Wallet для подключения!');
+            window.open('https://phantom.app/', '_blank');
+            return;
+        }
+        
+        // Connect wallet
+        const response = await window.solana.connect();
+        const publicKey = response.publicKey.toString();
+        
+        // Update UI
+        btn.innerHTML = `✅ ${publicKey.slice(0, 8)}...`;
+        btn.style.background = 'linear-gradient(135deg, #00ff00, #008800)';
+        
+        console.log('Connected wallet:', publicKey);
+        alert(`Кошелёк подключен: ${publicKey.slice(0, 8)}...`);
+        
+    } catch (error) {
+        console.error('Wallet connection error:', error);
+        alert('Ошибка подключения кошелька');
+        btn.innerHTML = '🔗 Подключить кошелёк';
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+// Check if wallet is already connected
+if (window.solana && window.solana.isConnected) {
+    document.getElementById('wallet-connect-btn').innerHTML = '✅ Кошелёк подключен';
+}
+</script>
 </body>
 </html>

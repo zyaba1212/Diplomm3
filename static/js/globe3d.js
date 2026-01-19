@@ -1,260 +1,126 @@
-// Z96A 3D Globe with Three.js
-class Z96AGlobe {
+// static/js/globe3d.js
+// Z96A Network Architecture Visualization
+// Three.js 3D Globe with Network Infrastructure
+
+class NetworkGlobe {
     constructor(containerId) {
+        console.log('Initializing NetworkGlobe...');
+        
         this.container = document.getElementById(containerId);
         if (!this.container) {
-            console.error('Globe container not found');
+            console.error('Container not found:', containerId);
             return;
         }
         
-        this.scene = null;
-        this.camera = null;
-        this.renderer = null;
-        this.globe = null;
-        this.controls = null;
-        this.nodes = [];
-        this.connections = [];
-        
-        this.rotationSpeed = 0.001;
-        this.isRotating = true;
-        this.zoomLevel = 500;
-        
-        this.networkData = {
-            existing: [],
-            proposed: []
+        // Конфигурация
+        this.config = {
+            earthRadius: 3.0,
+            autoRotate: true,
+            rotationSpeed: 0.001,
+            showEquipment: true,
+            showCables: true,
+            currentNetwork: 'existing',
+            zoomLevel: 1.0
         };
         
-        this.init();
-    }
-    
-    async init() {
-        try {
-            // Загружаем Three.js если не загружен
-            await this.loadThreeJS();
-            
-            // Настраиваем сцену
-            this.setupScene();
-            
-            // Создаем глобус
-            await this.createGlobe();
-            
-            // Добавляем освещение
-            this.setupLighting();
-            
-            // Загружаем данные сети
-            await this.loadNetworkData();
-            
-            // Добавляем элементы сети
-            this.addNetworkElements();
-            
-            // Настраиваем контролы
-            this.setupControls();
-            
-            // Запускаем анимацию
-            this.animate();
-            
-            // Обработка ресайза
-            this.setupResizeHandler();
-            
-            // Скрываем сообщение о загрузке
-            this.hideLoading();
-            
-            console.log('3D Globe initialized successfully');
-            
-        } catch (error) {
-            console.error('Error initializing 3D globe:', error);
-            this.showFallback();
-        }
-    }
-    
-    async loadThreeJS() {
-        if (typeof THREE !== 'undefined') {
-            return;
-        }
+        // Данные
+        this.nodes = [];
+        this.connections = [];
+        this.equipment = [];
+        this.networkLayers = {
+            existing: { nodes: [], connections: [], visible: true },
+            proposed: { nodes: [], connections: [], visible: false },
+            hybrid: { nodes: [], connections: [], visible: false }
+        };
         
-        return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/three@0.155.0/build/three.min.js';
-            script.onload = resolve;
-            script.onerror = reject;
-            document.head.appendChild(script);
-        });
+        // Инициализация
+        this.initThreeJS();
+        this.createEarth();
+        this.loadNetworkData();
+        this.createControls();
+        
+        console.log('NetworkGlobe ready');
     }
     
-    setupScene() {
+    initThreeJS() {
         // Сцена
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x0a0a1a);
+        this.scene.fog = new THREE.Fog(0x0a0a1a, 10, 50);
         
         // Камера
-        const width = this.container.clientWidth;
-        const height = this.container.clientHeight;
-        
-        this.camera = new THREE.PerspectiveCamera(45, width / height, 1, 2000);
-        this.camera.position.z = this.zoomLevel;
+        this.camera = new THREE.PerspectiveCamera(
+            75,
+            this.container.clientWidth / this.container.clientHeight,
+            0.1,
+            1000
+        );
+        this.camera.position.set(0, 2, 8);
         
         // Рендерер
-        this.renderer = new THREE.WebGLRenderer({ 
-            antialias: true, 
+        this.renderer = new THREE.WebGLRenderer({
+            antialias: true,
             alpha: true,
             powerPreference: "high-performance"
         });
-        this.renderer.setSize(width, height);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        
         this.container.appendChild(this.renderer.domElement);
+        
+        // Освещение
+        this.setupLighting();
+        
+        // Звёздное небо
+        this.createStarfield();
+        
+        // Анимация
+        this.clock = new THREE.Clock();
+        this.animate();
+        
+        // Ресайз
+        window.addEventListener('resize', () => this.onWindowResize());
+        
+        // Клики по объектам
+        this.setupRaycaster();
     }
     
-    async createGlobe() {
-        const radius = 200;
+    setupLighting() {
+        // Основное освещение
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        this.scene.add(ambientLight);
         
-        // Загружаем текстуры Земли
-        const textures = await this.loadEarthTextures();
+        // Солнце (основной источник)
+        const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        sunLight.position.set(10, 10, 10);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 2048;
+        sunLight.shadow.mapSize.height = 2048;
+        this.scene.add(sunLight);
         
-        // Геометрия Земли
-        const geometry = new THREE.SphereGeometry(radius, 128, 128);
-        
-        // Материал Земли
-        const material = new THREE.MeshPhongMaterial({
-            map: textures.color,
-            bumpMap: textures.bump,
-            bumpScale: 0.05,
-            specularMap: textures.specular,
-            specular: new THREE.Color(0x333333),
-            shininess: 5
-        });
-        
-        // Создаем Землю
-        this.globe = new THREE.Mesh(geometry, material);
-        this.scene.add(this.globe);
-        
-        // Добавляем атмосферу
-        this.createAtmosphere(radius);
-        
-        // Добавляем звезды
-        this.createStars();
-        
-        // Добавляем облака
-        this.createClouds(radius);
+        // Заполняющий свет
+        const fillLight = new THREE.DirectionalLight(0x4466ff, 0.3);
+        fillLight.position.set(-10, 5, -10);
+        this.scene.add(fillLight);
     }
     
-    async loadEarthTextures() {
-        // Создаем текстуры программно для демонстрации
-        const createTexture = (color, detail = false) => {
-            const canvas = document.createElement('canvas');
-            const size = detail ? 2048 : 1024;
-            canvas.width = size * 2;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            
-            // Основной цвет
-            ctx.fillStyle = color;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            if (detail) {
-                // Добавляем детали для bump/specular карт
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-                
-                // Континенты
-                const continents = [
-                    { x: 0.15, y: 0.3, w: 0.2, h: 0.4 },  // Америка
-                    { x: 0.5, y: 0.3, w: 0.25, h: 0.4 },  // Европа/Африка
-                    { x: 0.75, y: 0.25, w: 0.2, h: 0.5 }, // Азия/Австралия
-                ];
-                
-                continents.forEach(cont => {
-                    ctx.fillRect(
-                        canvas.width * cont.x,
-                        canvas.height * cont.y,
-                        canvas.width * cont.w,
-                        canvas.height * cont.h
-                    );
-                });
-            }
-            
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
-            return texture;
-        };
-        
-        return {
-            color: createTexture('#1a5fb4'),
-            bump: createTexture('#888888', true),
-            specular: createTexture('#000000', true)
-        };
-    }
-    
-    createAtmosphere(radius) {
-        const atmosphereGeometry = new THREE.SphereGeometry(radius * 1.02, 64, 64);
-        const atmosphereMaterial = new THREE.ShaderMaterial({
-            uniforms: {
-                glowColor: { value: new THREE.Color(0x0099ff) },
-                viewVector: { value: this.camera.position }
-            },
-            vertexShader: `
-                uniform vec3 viewVector;
-                varying float intensity;
-                void main() {
-                    vec3 vNormal = normalize(normalMatrix * normal);
-                    vec3 vNormel = normalize(normalMatrix * viewVector);
-                    intensity = pow(0.8 - dot(vNormal, vNormel), 2.0);
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `,
-            fragmentShader: `
-                uniform vec3 glowColor;
-                varying float intensity;
-                void main() {
-                    vec3 glow = glowColor * intensity;
-                    gl_FragColor = vec4(glow, intensity * 0.3);
-                }
-            `,
-            side: THREE.BackSide,
-            blending: THREE.AdditiveBlending,
-            transparent: true
-        });
-        
-        const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
-        this.scene.add(atmosphere);
-    }
-    
-    createStars() {
+    createStarfield() {
         const starGeometry = new THREE.BufferGeometry();
-        const starCount = 10000;
+        const starCount = 5000;
         const positions = new Float32Array(starCount * 3);
-        const colors = new Float32Array(starCount * 3);
-        const sizes = new Float32Array(starCount);
         
-        for (let i = 0; i < starCount; i++) {
-            // Позиции в сфере
-            const radius = 800 + Math.random() * 200;
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.acos((Math.random() * 2) - 1);
-            
-            positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-            positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-            positions[i * 3 + 2] = radius * Math.cos(phi);
-            
-            // Цвета (белый с оттенками синего/фиолетового)
-            colors[i * 3] = 0.8 + Math.random() * 0.2;     // R
-            colors[i * 3 + 1] = 0.8 + Math.random() * 0.2; // G
-            colors[i * 3 + 2] = 1.0;                       // B
-            
-            // Размеры
-            sizes[i] = Math.random() * 2 + 0.5;
+        for (let i = 0; i < starCount * 3; i += 3) {
+            positions[i] = (Math.random() - 0.5) * 100;
+            positions[i + 1] = (Math.random() - 0.5) * 100;
+            positions[i + 2] = (Math.random() - 0.5) * 100;
         }
         
         starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        starGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        starGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
         
         const starMaterial = new THREE.PointsMaterial({
-            size: 1,
-            vertexColors: true,
-            sizeAttenuation: true,
+            color: 0xffffff,
+            size: 0.1,
             transparent: true
         });
         
@@ -262,562 +128,464 @@ class Z96AGlobe {
         this.scene.add(stars);
     }
     
-    createClouds(radius) {
-        const cloudGeometry = new THREE.SphereGeometry(radius * 1.01, 64, 64);
-        
-        // Создаем текстуру облаков
-        const canvas = document.createElement('canvas');
-        canvas.width = 1024;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-        
-        // Прозрачный фон
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Рисуем облачные паттерны
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        for (let i = 0; i < 50; i++) {
-            const x = Math.random() * canvas.width;
-            const y = Math.random() * canvas.height;
-            const size = 20 + Math.random() * 80;
+    async createEarth() {
+        try {
+            // Создаём Землю с текстурами
+            const geometry = new THREE.SphereGeometry(this.config.earthRadius, 64, 64);
             
-            ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
-            ctx.fill();
+            // Загружаем текстуры
+            const textureLoader = new THREE.TextureLoader();
+            const earthTexture = textureLoader.load('/static/images/earth_texture.jpg');
+            const bumpMap = textureLoader.load('/static/images/earth_bump.jpg');
+            const specularMap = textureLoader.load('/static/images/earth_lights.jpg');
+            
+            const material = new THREE.MeshPhongMaterial({
+                map: earthTexture,
+                bumpMap: bumpMap,
+                bumpScale: 0.05,
+                specularMap: specularMap,
+                specular: new THREE.Color(0x333333),
+                shininess: 5,
+                emissive: new THREE.Color(0x0a1a2a),
+                emissiveIntensity: 0.1
+            });
+            
+            this.earth = new THREE.Mesh(geometry, material);
+            this.earth.receiveShadow = true;
+            this.scene.add(this.earth);
+            
+            // Атмосфера
+            const atmosphereGeometry = new THREE.SphereGeometry(this.config.earthRadius * 1.02, 64, 64);
+            const atmosphereMaterial = new THREE.MeshPhongMaterial({
+                color: 0x4466ff,
+                transparent: true,
+                opacity: 0.1,
+                side: THREE.BackSide
+            });
+            
+            this.atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+            this.scene.add(this.atmosphere);
+            
+            // Облака
+            const cloudGeometry = new THREE.SphereGeometry(this.config.earthRadius * 1.01, 64, 64);
+            const cloudMaterial = new THREE.MeshPhongMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.2,
+                side: THREE.DoubleSide
+            });
+            
+            this.clouds = new THREE.Mesh(cloudGeometry, cloudMaterial);
+            this.scene.add(this.clouds);
+            
+            console.log('Earth created with textures');
+            
+        } catch (error) {
+            console.error('Error creating Earth:', error);
+            // Fallback: простая Земля без текстур
+            const geometry = new THREE.SphereGeometry(this.config.earthRadius, 32, 32);
+            const material = new THREE.MeshPhongMaterial({
+                color: 0x1a5fb4,
+                specular: 0x111111,
+                shininess: 30
+            });
+            
+            this.earth = new THREE.Mesh(geometry, material);
+            this.scene.add(this.earth);
         }
-        
-        const cloudTexture = new THREE.CanvasTexture(canvas);
-        const cloudMaterial = new THREE.MeshLambertMaterial({
-            map: cloudTexture,
-            transparent: true,
-            opacity: 0.4,
-            side: THREE.DoubleSide
-        });
-        
-        const clouds = new THREE.Mesh(cloudGeometry, cloudMaterial);
-        clouds.rotation.y = Math.PI / 8;
-        this.scene.add(clouds);
-        
-        // Анимация облаков
-        this.clouds = clouds;
     }
     
     async loadNetworkData() {
         try {
-            // Загружаем данные сети с сервера
-            const response = await fetch('/api/network/nodes');
-            const nodes = await response.json();
+            const response = await fetch('/static/data/network_data.json');
+            const data = await response.json();
             
-            // Разделяем на существующую и предлагаемую сети
-            this.networkData.existing = nodes.filter(node => node.network_type === 'existing');
-            this.networkData.proposed = nodes.filter(node => node.network_type === 'proposed');
+            console.log('Network data loaded:', data);
+            
+            // Создаём сетевые объекты
+            this.createNetworkNodes(data.nodes || []);
+            this.createNetworkConnections(data.connections || []);
+            this.createNetworkEquipment(data.equipment || []);
             
         } catch (error) {
             console.error('Error loading network data:', error);
-            
-            // Используем демо данные
-            this.networkData.existing = this.createDemoData('existing');
-            this.networkData.proposed = this.createDemoData('proposed');
+            this.createSampleNetwork();
         }
     }
     
-    createDemoData(type) {
-        const data = [];
-        const colors = type === 'existing' ? 0x0099ff : 0x9d4edd;
+    createNetworkNodes(nodes) {
+        nodes.forEach(node => {
+            const position = this.latLonToVector(node.latitude, node.longitude, this.config.earthRadius * 1.05);
+            
+            // Создаём маркер узла
+            let geometry, material;
+            
+            switch(node.type) {
+                case 'datacenter':
+                    geometry = new THREE.ConeGeometry(0.05, 0.1, 8);
+                    material = new THREE.MeshPhongMaterial({ color: 0xff4444, emissive: 0x441111 });
+                    break;
+                case 'ix':
+                    geometry = new THREE.BoxGeometry(0.07, 0.07, 0.07);
+                    material = new THREE.MeshPhongMaterial({ color: 0x44ff44, emissive: 0x114411 });
+                    break;
+                case 'city':
+                    geometry = new THREE.SphereGeometry(0.04, 8, 8);
+                    material = new THREE.MeshPhongMaterial({ color: 0x4444ff, emissive: 0x111144 });
+                    break;
+                default:
+                    geometry = new THREE.SphereGeometry(0.03, 8, 8);
+                    material = new THREE.MeshPhongMaterial({ color: 0xffff44 });
+            }
+            
+            const marker = new THREE.Mesh(geometry, material);
+            marker.position.copy(position);
+            marker.userData = node;
+            marker.castShadow = true;
+            
+            // Добавляем в соответствующий слой
+            if (node.network_type === 'proposed') {
+                this.networkLayers.proposed.nodes.push(marker);
+                marker.visible = false;
+            } else {
+                this.networkLayers.existing.nodes.push(marker);
+            }
+            
+            this.scene.add(marker);
+            this.nodes.push(marker);
+            
+            // Добавляем свечение
+            this.addNodeGlow(position, node.type);
+        });
+    }
+    
+    createNetworkConnections(connections) {
+        connections.forEach(conn => {
+            const fromPos = this.latLonToVector(conn.from.lat, conn.from.lon, this.config.earthRadius * 1.03);
+            const toPos = this.latLonToVector(conn.to.lat, conn.to.lon, this.config.earthRadius * 1.03);
+            
+            // Создаём кривую Безье для кабеля
+            const curve = new THREE.CubicBezierCurve3(
+                fromPos,
+                new THREE.Vector3(
+                    (fromPos.x + toPos.x) / 2 + (Math.random() - 0.5) * 0.5,
+                    (fromPos.y + toPos.y) / 2 + 0.3,
+                    (fromPos.z + toPos.z) / 2 + (Math.random() - 0.5) * 0.5
+                ),
+                new THREE.Vector3(
+                    (fromPos.x + toPos.x) / 2 + (Math.random() - 0.5) * 0.5,
+                    (fromPos.y + toPos.y) / 2 + 0.3,
+                    (fromPos.z + toPos.z) / 2 + (Math.random() - 0.5) * 0.5
+                ),
+                toPos
+            );
+            
+            const points = curve.getPoints(50);
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            
+            const material = new THREE.LineBasicMaterial({
+                color: conn.type === 'undersea' ? 0x00ffff : 0xffff00,
+                transparent: true,
+                opacity: 0.7,
+                linewidth: 2
+            });
+            
+            const cable = new THREE.Line(geometry, material);
+            cable.userData = conn;
+            
+            // Добавляем в соответствующий слой
+            if (conn.network_type === 'proposed') {
+                this.networkLayers.proposed.connections.push(cable);
+                cable.visible = false;
+            } else {
+                this.networkLayers.existing.connections.push(cable);
+            }
+            
+            this.scene.add(cable);
+            this.connections.push(cable);
+        });
+    }
+    
+    createNetworkEquipment(equipmentList) {
+        equipmentList.forEach(eq => {
+            const position = this.latLonToVector(eq.latitude, eq.longitude, this.config.earthRadius * 1.08);
+            
+            let geometry, material;
+            
+            switch(eq.type) {
+                case 'router':
+                    geometry = new THREE.BoxGeometry(0.06, 0.04, 0.08);
+                    material = new THREE.MeshPhongMaterial({ color: 0xff6600 });
+                    break;
+                case 'switch':
+                    geometry = new THREE.BoxGeometry(0.08, 0.02, 0.06);
+                    material = new THREE.MeshPhongMaterial({ color: 0x00cc66 });
+                    break;
+                case 'server':
+                    geometry = new THREE.BoxGeometry(0.05, 0.08, 0.05);
+                    material = new THREE.MeshPhongMaterial({ color: 0x3366ff });
+                    break;
+                case 'satellite':
+                    geometry = new THREE.OctahedronGeometry(0.04);
+                    material = new THREE.MeshPhongMaterial({ color: 0xff33cc, emissive: 0x330033 });
+                    break;
+                default:
+                    geometry = new THREE.BoxGeometry(0.04, 0.04, 0.04);
+                    material = new THREE.MeshPhongMaterial({ color: 0x888888 });
+            }
+            
+            const equipment = new THREE.Mesh(geometry, material);
+            equipment.position.copy(position);
+            equipment.userData = eq;
+            equipment.castShadow = true;
+            
+            // Вращение оборудования
+            equipment.rotation.y = Math.random() * Math.PI * 2;
+            
+            this.scene.add(equipment);
+            this.equipment.push(equipment);
+            
+            if (!this.config.showEquipment) {
+                equipment.visible = false;
+            }
+        });
+    }
+    
+    addNodeGlow(position, type) {
+        const glowGeometry = new THREE.SphereGeometry(0.08, 16, 16);
+        const glowMaterial = new THREE.MeshBasicMaterial({
+            color: type === 'datacenter' ? 0xff0000 : 0x00ff00,
+            transparent: true,
+            opacity: 0.3,
+            side: THREE.BackSide
+        });
         
-        // Ключевые города мира
-        const cities = [
-            { name: 'New York', lat: 40.7128, lon: -74.0060 },
-            { name: 'London', lat: 51.5074, lon: -0.1278 },
-            { name: 'Tokyo', lat: 35.6762, lon: 139.6503 },
-            { name: 'Moscow', lat: 55.7558, lon: 37.6173 },
-            { name: 'Singapore', lat: 1.3521, lon: 103.8198 },
-            { name: 'Sydney', lat: -33.8688, lon: 151.2093 },
-            { name: 'Frankfurt', lat: 50.1109, lon: 8.6821 },
-            { name: 'São Paulo', lat: -23.5505, lon: -46.6333 },
-            { name: 'Mumbai', lat: 19.0760, lon: 72.8777 },
-            { name: 'Dubai', lat: 25.2048, lon: 55.2708 }
+        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+        glow.position.copy(position);
+        this.scene.add(glow);
+    }
+    
+    createSampleNetwork() {
+        console.log('Creating sample network data...');
+        
+        const sampleNodes = [
+            { name: "Москва", latitude: 55.7558, longitude: 37.6173, type: "datacenter", network_type: "existing" },
+            { name: "Франкфурт", latitude: 50.1109, longitude: 8.6821, type: "ix", network_type: "existing" },
+            { name: "Сингапур", latitude: 1.3521, longitude: 103.8198, type: "datacenter", network_type: "existing" },
+            { name: "Нью-Йорк", latitude: 40.7128, longitude: -74.0060, type: "city", network_type: "existing" },
+            { name: "Токио", latitude: 35.6762, longitude: 139.6503, type: "city", network_type: "existing" },
+            // Предлагаемая сеть
+            { name: "Starlink Gateway", latitude: 51.5074, longitude: -0.1278, type: "satellite", network_type: "proposed" },
+            { name: "SUI Relay Node", latitude: 48.8566, longitude: 2.3522, type: "router", network_type: "proposed" }
         ];
         
-        cities.forEach(city => {
-            data.push({
-                id: `demo_${type}_${city.name}`,
-                name: city.name,
-                latitude: city.lat,
-                longitude: city.lon,
-                network_type: type,
-                node_type: type === 'existing' ? 'data_center' : 'satellite',
-                description: `${type === 'existing' ? 'Existing' : 'Proposed'} network node in ${city.name}`,
-                capacity_gbps: type === 'existing' ? 100 : 50
-            });
-        });
+        const sampleConnections = [
+            { from: { lat: 55.7558, lon: 37.6173 }, to: { lat: 50.1109, lon: 8.6821 }, type: "terrestrial", network_type: "existing" },
+            { from: { lat: 50.1109, lon: 8.6821 }, to: { lat: 40.7128, lon: -74.0060 }, type: "undersea", network_type: "existing" },
+            { from: { lat: 1.3521, lon: 103.8198 }, to: { lat: 35.6762, lon: 139.6503 }, type: "undersea", network_type: "existing" },
+            // Предлагаемые соединения
+            { from: { lat: 51.5074, lon: -0.1278 }, to: { lat: 40.7128, lon: -74.0060 }, type: "satellite", network_type: "proposed" }
+        ];
         
-        return data;
+        const sampleEquipment = [
+            { name: "Cisco Router", latitude: 55.7558, longitude: 37.6173, type: "router" },
+            { name: "Juniper Switch", latitude: 50.1109, longitude: 8.6821, type: "switch" },
+            { name: "Dell Server", latitude: 1.3521, longitude: 103.8198, type: "server" },
+            { name: "Starlink Dish", latitude: 51.5074, longitude: -0.1278, type: "satellite" }
+        ];
+        
+        this.createNetworkNodes(sampleNodes);
+        this.createNetworkConnections(sampleConnections);
+        this.createNetworkEquipment(sampleEquipment);
     }
     
-    addNetworkElements() {
-        // Добавляем узлы существующей сети
-        this.networkData.existing.forEach(node => {
-            this.addNode(node, 0x0099ff, 5);
-        });
-        
-        // Добавляем узлы предлагаемой сети
-        this.networkData.proposed.forEach(node => {
-            this.addNode(node, 0x9d4edd, 4);
-        });
-        
-        // Добавляем соединения
-        this.addConnections();
+createControls() {
+    if (!this.camera || !this.renderer) {
+        console.error('Cannot create controls: camera or renderer not initialized');
+        return;
     }
     
-    addNode(nodeData, color, size) {
-        const { latitude, longitude } = nodeData;
+    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.05;
+    this.controls.rotateSpeed = 0.5;
+    this.controls.minDistance = 4;
+    this.controls.maxDistance = 20;
+    
+    if (this.config.autoRotate) {
+        this.controls.autoRotate = true;
+        this.controls.autoRotateSpeed = this.config.rotationSpeed * 50;
+    }
+    
+    console.log('OrbitControls created');
+}
+    
+    setupRaycaster() {
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
         
-        // Конвертируем координаты
-        const phi = (90 - latitude) * (Math.PI / 180);
-        const theta = (longitude + 180) * (Math.PI / 180);
-        const radius = 205; // Немного выше поверхности
+        this.container.addEventListener('click', (event) => {
+            this.mouse.x = (event.clientX / this.container.clientWidth) * 2 - 1;
+            this.mouse.y = -(event.clientY / this.container.clientHeight) * 2 + 1;
+            
+            this.raycaster.setFromCamera(this.mouse, this.camera);
+            
+            // Проверяем клики по узлам
+            const intersects = this.raycaster.intersectObjects(this.nodes.concat(this.equipment));
+            
+            if (intersects.length > 0) {
+                const object = intersects[0].object;
+                this.showObjectInfo(object.userData);
+            }
+        });
+    }
+    
+    showObjectInfo(data) {
+        // Создаём всплывающее окно с информацией
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = `
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 30, 46, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #8a2be2;
+            color: white;
+            font-family: 'CGXYZ PC', monospace;
+            z-index: 1000;
+            max-width: 400px;
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.5);
+        `;
+        
+        infoDiv.innerHTML = `
+            <h3 style="margin-top: 0; color: #00ffff;">${data.name || data.type}</h3>
+            <p><strong>Тип:</strong> ${data.type}</p>
+            ${data.latitude ? `<p><strong>Координаты:</strong> ${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}</p>` : ''}
+            ${data.network_type ? `<p><strong>Сеть:</strong> ${data.network_type}</p>` : ''}
+            ${data.description ? `<p>${data.description}</p>` : ''}
+            <button onclick="this.parentElement.remove()" style="background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Закрыть</button>
+        `;
+        
+        this.container.appendChild(infoDiv);
+        
+        // Автоудаление через 10 секунд
+        setTimeout(() => {
+            if (infoDiv.parentElement) {
+                infoDiv.remove();
+            }
+        }, 10000);
+    }
+    
+    latLonToVector(lat, lon, radius) {
+        const phi = (90 - lat) * (Math.PI / 180);
+        const theta = (lon + 180) * (Math.PI / 180);
         
         const x = -(radius * Math.sin(phi) * Math.cos(theta));
         const y = radius * Math.cos(phi);
         const z = radius * Math.sin(phi) * Math.sin(theta);
         
-        // Создаем узел
-        const geometry = new THREE.SphereGeometry(size, 16, 16);
-        const material = new THREE.MeshBasicMaterial({ color });
-        const node = new THREE.Mesh(geometry, material);
-        node.position.set(x, y, z);
-        
-        // Сохраняем данные узла
-        node.userData = nodeData;
-        
-        // Добавляем свечение
-        const glowGeometry = new THREE.SphereGeometry(size * 1.5, 16, 16);
-        const glowMaterial = new THREE.MeshBasicMaterial({
-            color,
-            transparent: true,
-            opacity: 0.3
-        });
-        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-        glow.position.set(x, y, z);
-        glow.userData = { ...nodeData, isGlow: true };
-        
-        this.scene.add(node);
-        this.scene.add(glow);
-        
-        this.nodes.push(node);
-        this.nodes.push(glow);
-        
-        // Добавляем пульсацию
-        this.addPulseAnimation(glow);
-        
-        return node;
+        return new THREE.Vector3(x, y, z);
     }
     
-    addConnections() {
-        // Создаем соединения между основными узлами
-        const connections = [
-            { from: 'New York', to: 'London', type: 'submarine', color: 0x00ff88 },
-            { from: 'London', to: 'Frankfurt', type: 'terrestrial', color: 0x0099ff },
-            { from: 'Tokyo', to: 'Singapore', type: 'submarine', color: 0x00ff88 },
-            { from: 'New York', to: 'São Paulo', type: 'submarine', color: 0x00ff88 },
-            { from: 'Dubai', to: 'Mumbai', type: 'terrestrial', color: 0x0099ff },
-            { from: 'Sydney', to: 'Singapore', type: 'satellite', color: 0xff9900 }
-        ];
-        
-        connections.forEach(conn => {
-            this.addConnection(conn);
-        });
-    }
-    
-    addConnection(connection) {
-        // Находим узлы
-        const fromNode = this.findNodeByName(connection.from);
-        const toNode = this.findNodeByName(connection.to);
-        
-        if (!fromNode || !toNode) return;
-        
-        // Создаем кривую для соединения
-        const curve = new THREE.CatmullRomCurve3([
-            fromNode.position,
-            this.getMidpoint(fromNode.position, toNode.position, 50),
-            toNode.position
-        ]);
-        
-        // Создаем геометрию линии
-        const points = curve.getPoints(50);
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        
-        // Материал в зависимости от типа соединения
-        let material;
-        if (connection.type === 'submarine') {
-            material = new THREE.LineDashedMaterial({
-                color: connection.color,
-                dashSize: 3,
-                gapSize: 1,
-                linewidth: 2
-            });
-        } else {
-            material = new THREE.LineBasicMaterial({
-                color: connection.color,
-                linewidth: connection.type === 'satellite' ? 1 : 2,
-                transparent: connection.type === 'satellite',
-                opacity: connection.type === 'satellite' ? 0.6 : 1
-            });
-        }
-        
-        const line = new THREE.Line(geometry, material);
-        if (connection.type === 'submarine') {
-            line.computeLineDistances();
-        }
-        
-        this.scene.add(line);
-        this.connections.push(line);
-        
-        // Добавляем анимацию потока данных для спутниковых соединений
-        if (connection.type === 'satellite') {
-            this.addDataFlow(curve, connection.color);
-        }
-    }
-    
-    findNodeByName(name) {
-        return this.nodes.find(node => 
-            node.userData && node.userData.name === name && !node.userData.isGlow
-        );
-    }
-    
-    getMidpoint(p1, p2, height) {
-        const midpoint = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
-        midpoint.normalize().multiplyScalar(205 + height);
-        return midpoint;
-    }
-    
-    addDataFlow(curve, color) {
-        // Создаем сферу для анимации потока данных
-        const geometry = new THREE.SphereGeometry(1, 8, 8);
-        const material = new THREE.MeshBasicMaterial({ color });
-        const sphere = new THREE.Mesh(geometry, material);
-        
-        sphere.userData = {
-            curve: curve,
-            progress: Math.random(),
-            speed: 0.002 + Math.random() * 0.003
-        };
-        
-        this.scene.add(sphere);
-        this.connections.push(sphere);
-    }
-    
-    addPulseAnimation(glow) {
-        glow.userData.pulse = {
-            scale: 1,
-            direction: 1,
-            speed: 0.01
-        };
-    }
-    
-    setupLighting() {
-        // Окружающий свет
-        const ambientLight = new THREE.AmbientLight(0x404040);
-        this.scene.add(ambientLight);
-        
-        // Направленный свет (солнце)
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(5, 3, 5);
-        directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
-        this.scene.add(directionalLight);
-        
-        // Точечный свет для эффектов
-        const pointLight = new THREE.PointLight(0x0099ff, 0.5, 1000);
-        pointLight.position.set(0, 0, 0);
-        this.scene.add(pointLight);
-    }
-    
-    setupControls() {
-        // Raycaster для взаимодействия
-        this.raycaster = new THREE.Raycaster();
-        this.mouse = new THREE.Vector2();
-        
-        // Обработка кликов
-        this.container.addEventListener('click', (e) => this.onMouseClick(e));
-        
-        // Обработка перемещения мыши
-        this.container.addEventListener('mousemove', (e) => this.onMouseMove(e));
-        
-        // Обработка колесика мыши
-        this.container.addEventListener('wheel', (e) => this.onMouseWheel(e));
-    }
-    
-    setupResizeHandler() {
-        window.addEventListener('resize', () => {
-            const width = this.container.clientWidth;
-            const height = this.container.clientHeight;
-            
-            this.camera.aspect = width / height;
-            this.camera.updateProjectionMatrix();
-            this.renderer.setSize(width, height);
-        });
-    }
-    
-    onMouseMove(event) {
-        const rect = this.container.getBoundingClientRect();
-        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-        
-        this.raycaster.setFromCamera(this.mouse, this.camera);
-        
-        // Находим пересечения
-        const intersects = this.raycaster.intersectObjects(this.nodes);
-        
-        // Сбрасываем подсветку всех узлов
-        this.nodes.forEach(node => {
-            if (node.scale.x > 1) {
-                node.scale.set(1, 1, 1);
-            }
-        });
-        
-        // Подсвечиваем узел под курсором
-        if (intersects.length > 0) {
-            const node = intersects[0].object;
-            node.scale.set(1.3, 1.3, 1.3);
-            
-            // Показываем подсказку
-            this.showTooltip(node.userData, event.clientX, event.clientY);
-        } else {
-            this.hideTooltip();
-        }
-    }
-    
-    onMouseClick(event) {
-        this.raycaster.setFromCamera(this.mouse, this.camera);
-        const intersects = this.raycaster.intersectObjects(this.nodes);
-        
-        if (intersects.length > 0) {
-            const node = intersects[0].object;
-            if (node.userData && !node.userData.isGlow) {
-                this.showNodeDetails(node.userData);
-            }
-        }
-    }
-    
-    onMouseWheel(event) {
-        event.preventDefault();
-        
-        const delta = event.deltaY * 0.01;
-        this.zoomLevel = THREE.MathUtils.clamp(this.zoomLevel + delta, 250, 1000);
-        
-        this.camera.position.z = this.zoomLevel;
-    }
-    
-    showTooltip(nodeData, x, y) {
-        let tooltip = document.getElementById('globe-tooltip');
-        if (!tooltip) {
-            tooltip = document.createElement('div');
-            tooltip.id = 'globe-tooltip';
-            tooltip.style.cssText = `
-                position: fixed;
-                background: rgba(30, 30, 46, 0.95);
-                border: 1px solid #9d4edd;
-                border-radius: 8px;
-                padding: 12px 15px;
-                color: white;
-                z-index: 10000;
-                pointer-events: none;
-                backdrop-filter: blur(5px);
-                max-width: 300px;
-                font-size: 0.9rem;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            `;
-            document.body.appendChild(tooltip);
-        }
-        
-        tooltip.innerHTML = `
-            <div style="font-weight: bold; color: #00d4ff; margin-bottom: 5px;">${nodeData.name}</div>
-            <div style="font-size: 0.8rem; color: #aaa; margin-bottom: 3px;">
-                ${nodeData.node_type || 'Network Node'}
-            </div>
-            <div style="font-size: 0.8rem;">
-                <span style="color: #9d4edd;">${nodeData.network_type === 'existing' ? '🌐 Existing' : '🚀 Proposed'}</span>
-                <span style="margin: 0 10px;">•</span>
-                <span>${nodeData.capacity_gbps || '0'} Gbps</span>
-            </div>
-        `;
-        
-        tooltip.style.left = (x + 15) + 'px';
-        tooltip.style.top = (y + 15) + 'px';
-        tooltip.style.display = 'block';
-    }
-    
-    hideTooltip() {
-        const tooltip = document.getElementById('globe-tooltip');
-        if (tooltip) {
-            tooltip.style.display = 'none';
-        }
-    }
-    
-    showNodeDetails(nodeData) {
-        // Показываем модальное окно с деталями узла
-        if (typeof window.showNodeDetails === 'function') {
-            window.showNodeDetails(nodeData);
-        }
-    }
-    
-    animate() {
-        requestAnimationFrame(() => this.animate());
-        
-        // Вращение глобуса
-        if (this.isRotating && this.globe) {
-            this.globe.rotation.y += this.rotationSpeed;
-        }
-        
-        // Вращение облаков
-        if (this.clouds) {
-            this.clouds.rotation.y += this.rotationSpeed * 0.5;
-        }
-        
-        // Анимация пульсации узлов
-        this.nodes.forEach(node => {
-            if (node.userData && node.userData.pulse) {
-                const { pulse } = node.userData;
-                pulse.scale += pulse.direction * pulse.speed;
-                
-                if (pulse.scale > 1.5) pulse.direction = -1;
-                if (pulse.scale < 0.8) pulse.direction = 1;
-                
-                node.scale.set(pulse.scale, pulse.scale, pulse.scale);
-            }
-        });
-        
-        // Анимация потока данных
-        this.connections.forEach(obj => {
-            if (obj.userData && obj.userData.curve) {
-                const { curve, progress, speed } = obj.userData;
-                obj.userData.progress = (progress + speed) % 1;
-                
-                const point = curve.getPointAt(obj.userData.progress);
-                obj.position.copy(point);
-            }
-        });
-        
-        // Рендеринг
-        this.renderer.render(this.scene, this.camera);
-    }
-    
-    hideLoading() {
-        const loading = this.container.querySelector('.globe-loading');
-        if (loading) {
-            loading.style.opacity = '0';
-            setTimeout(() => {
-                loading.style.display = 'none';
-            }, 300);
-        }
-    }
-    
-    showFallback() {
-        const loading = this.container.querySelector('.globe-loading');
-        if (loading) {
-            loading.innerHTML = `
-                <div style="text-align: center; padding: 40px;">
-                    <div style="font-size: 48px; color: #ff9900; margin-bottom: 20px;">🌍</div>
-                    <h3 style="color: var(--color-neon-blue); margin-bottom: 15px;">3D Network Globe</h3>
-                    <p style="color: var(--color-text); margin-bottom: 30px;">
-                        Advanced visualization of global network infrastructure
-                    </p>
-                    <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px; max-width: 400px; margin: 0 auto;">
-                        <h4 style="color: var(--color-neon-purple); margin-bottom: 15px;">🎮 Interactive Features:</h4>
-                        <ul style="text-align: left; padding-left: 20px;">
-                            <li><strong>Drag:</strong> Rotate the globe</li>
-                            <li><strong>Scroll:</strong> Zoom in/out</li>
-                            <li><strong>Click nodes:</strong> View details</li>
-                            <li><strong>Hover:</strong> See node information</li>
-                        </ul>
-                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--color-border);">
-                            <p><span style="color: #0099ff;">●</span> Existing Network</p>
-                            <p><span style="color: #9d4edd;">●</span> Proposed Network</p>
-                            <p><span style="color: #00ff88;">●</span> Submarine Cables</p>
-                            <p><span style="color: #ff9900;">●</span> Satellite Links</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-    }
-    
-    // Публичные методы для управления глобусом
-    setRotation(enabled) {
-        this.isRotating = enabled;
-    }
-    
-    setRotationSpeed(speed) {
-        this.rotationSpeed = speed;
+    // Публичные методы для управления
+    toggleRotation() {
+        this.config.autoRotate = !this.config.autoRotate;
+        this.controls.autoRotate = this.config.autoRotate;
+        console.log('Auto-rotation:', this.config.autoRotate ? 'ON' : 'OFF');
     }
     
     resetView() {
-        this.camera.position.set(0, 0, 500);
-        this.camera.lookAt(0, 0, 0);
-        this.zoomLevel = 500;
+        this.controls.reset();
+        this.camera.position.set(0, 2, 8);
+        console.log('View reset');
     }
     
-    toggleNetworkType(type) {
-        // Показываем/скрываем узлы в зависимости от типа сети
-        this.nodes.forEach(node => {
-            if (node.userData && !node.userData.isGlow) {
-                const showNode = 
-                    type === 'hybrid' ||
-                    node.userData.network_type === type;
-                
-                node.visible = showNode;
-                
-                // Также скрываем/показываем свечение
-                const glow = this.nodes.find(n => 
-                    n.userData && 
-                    n.userData.isGlow && 
-                    n.userData.id === node.userData.id
-                );
-                if (glow) glow.visible = showNode;
-            }
+    zoomIn() {
+        this.config.zoomLevel = Math.min(this.config.zoomLevel * 1.2, 3.0);
+        this.camera.position.multiplyScalar(0.83);
+        console.log('Zoom in:', this.config.zoomLevel.toFixed(2));
+    }
+    
+    zoomOut() {
+        this.config.zoomLevel = Math.max(this.config.zoomLevel / 1.2, 0.5);
+        this.camera.position.multiplyScalar(1.2);
+        console.log('Zoom out:', this.config.zoomLevel.toFixed(2));
+    }
+    
+    toggleEquipment() {
+        this.config.showEquipment = !this.config.showEquipment;
+        this.equipment.forEach(eq => eq.visible = this.config.showEquipment);
+        console.log('Equipment:', this.config.showEquipment ? 'SHOW' : 'HIDE');
+    }
+    
+    toggleCables() {
+        this.config.showCables = !this.config.showCables;
+        this.connections.forEach(conn => conn.visible = this.config.showCables);
+        console.log('Cables:', this.config.showCables ? 'SHOW' : 'HIDE');
+    }
+    
+    switchNetwork(networkType) {
+        console.log('Switching to network:', networkType);
+        
+        // Скрываем все слои
+        Object.keys(this.networkLayers).forEach(key => {
+            const layer = this.networkLayers[key];
+            layer.nodes.forEach(node => node.visible = false);
+            layer.connections.forEach(conn => conn.visible = false);
         });
+        
+        // Показываем выбранный слой
+        if (this.networkLayers[networkType]) {
+            this.networkLayers[networkType].nodes.forEach(node => node.visible = true);
+            this.networkLayers[networkType].connections.forEach(conn => conn.visible = true);
+        }
+        
+        // Для гибридной сети показываем оба слоя
+        if (networkType === 'hybrid') {
+            this.networkLayers.existing.nodes.forEach(node => node.visible = true);
+            this.networkLayers.existing.connections.forEach(conn => conn.visible = true);
+            this.networkLayers.proposed.nodes.forEach(node => node.visible = true);
+            this.networkLayers.proposed.connections.forEach(conn => conn.visible = true);
+        }
+        
+        this.config.currentNetwork = networkType;
     }
     
-    toggleLayer(layer, visible) {
-        // Управление видимостью слоев
-        switch(layer) {
-            case 'submarine':
-                this.connections.forEach(conn => {
-                    if (conn.material.color.getHex() === 0x00ff88) {
-                        conn.visible = visible;
-                    }
-                });
-                break;
-            case 'terrestrial':
-                this.connections.forEach(conn => {
-                    if (conn.material.color.getHex() === 0x0099ff && 
-                        !conn.userData?.curve) {
-                        conn.visible = visible;
-                    }
-                });
-                break;
-            case 'satellite':
-                this.connections.forEach(conn => {
-                    if (conn.material.color.getHex() === 0xff9900) {
-                        conn.visible = visible;
-                    }
-                });
-                break;
-            case 'nodes':
-                this.nodes.forEach(node => {
-                    if (!node.userData?.isGlow) {
-                        node.visible = visible;
-                    }
-                });
-                break;
-        }
+ animate() {
+    requestAnimationFrame(() => this.animate());
+    
+    const delta = this.clock.getDelta();
+    
+    // Вращение Земли
+    if (this.earth) {
+        this.earth.rotation.y += this.config.rotationSpeed;
     }
+    
+    // Вращение облаков
+    if (this.clouds) {
+        this.clouds.rotation.y += this.config.rotationSpeed * 1.5;
+    }
+    
+    // Вращение атмосферы
+    if (this.atmosphere) {
+        this.atmosphere.rotation.y += this.config.rotationSpeed * 0.5;
+    }
+    
+    // Анимация оборудования
+    this.equipment.forEach(eq => {
+        eq.rotation.y += delta * 0.5;
+    });
+    
+    if (this.controls) {
+        this.controls.update();
+    }
+    
+    // Рендер
+    this.renderer.render(this.scene, this.camera);
 }
-
-// Инициализация глобуса при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-    window.Z96AGlobe = new Z96AGlobe('globe-container');
-});
+}
+// Глобальные методы для кнопок
+window.NetworkGlobe = NetworkGlobe;
+console.log('NetworkGlobe class loaded');
